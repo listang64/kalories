@@ -2,6 +2,10 @@ import { cleanKey, DEFAULT_MODEL, FALLBACK_MODEL } from './localSettings'
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
 const TIMEOUT = 30_000
+const TEST_TIMEOUT = 15_000
+const FALLBACK_PERIOD = 5 * 60_000
+
+let fallbackUntil = 0
 
 export type GeminiErrorKind =
   | 'no-key'
@@ -58,13 +62,16 @@ function kindForStatus(status: number): GeminiErrorKind {
 }
 
 function describe(error: unknown): string {
-  if (error instanceof DOMException && error.name === 'AbortError') return 'Pas de réponse en 30 s'
   return error instanceof Error ? `${error.name} : ${error.message}` : String(error)
 }
 
-async function send(url: string, init: RequestInit): Promise<Response> {
+function isTimeout(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
+async function send(url: string, init: RequestInit, timeout: number): Promise<Response> {
   const controller = new AbortController()
-  const timer = window.setTimeout(() => controller.abort(), TIMEOUT)
+  const timer = window.setTimeout(() => controller.abort(), timeout)
   try {
     return await fetch(url, { ...init, signal: controller.signal })
   } finally {
@@ -72,29 +79,34 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   }
 }
 
-async function sendWithRetry(url: string, init: RequestInit): Promise<Response> {
+async function sendWithRetry(url: string, init: RequestInit, timeout: number): Promise<Response> {
   try {
-    return await send(url, init)
+    return await send(url, init, timeout)
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    if (isTimeout(error)) throw error
     await new Promise((resolve) => window.setTimeout(resolve, RETRY_DELAY))
-    return send(url, init)
+    return send(url, init, timeout)
   }
 }
 
-export async function generateContent(body: object, key: string, model: string): Promise<string> {
+export async function generateContent(body: object, key: string, model: string, timeout = TIMEOUT): Promise<string> {
   const apiKey = cleanKey(key)
   if (!apiKey) throw new GeminiError('no-key')
   if (!navigator.onLine) throw new GeminiError('offline')
   const name = model.replace(/^models\//, '').trim() || DEFAULT_MODEL
   let response: Response
   try {
-    response = await sendWithRetry(`${ENDPOINT}/${encodeURIComponent(name)}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(body),
-    })
+    response = await sendWithRetry(
+      `${ENDPOINT}/${encodeURIComponent(name)}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(body),
+      },
+      timeout,
+    )
   } catch (error) {
+    if (isTimeout(error)) throw new GeminiError('busy', `Pas de réponse en ${timeout / 1000} s`)
     throw new GeminiError('unavailable', describe(error))
   }
   if (!response.ok) {
@@ -109,20 +121,27 @@ export function isTemporary(error: unknown): boolean {
   return error instanceof GeminiError && (error.kind === 'quota' || error.kind === 'busy')
 }
 
-export async function generateWithFallback(body: object, key: string, model: string) {
-  try {
-    return { text: await generateContent(body, key, model), model }
-  } catch (error) {
-    if (!isTemporary(error) || model === FALLBACK_MODEL) throw error
+function modelOrder(model: string): string[] {
+  if (model === FALLBACK_MODEL) return [model]
+  return Date.now() < fallbackUntil ? [FALLBACK_MODEL, model] : [model, FALLBACK_MODEL]
+}
+
+export async function generateWithFallback(body: object, key: string, model: string, timeout = TIMEOUT) {
+  let lastError: unknown = null
+  for (const name of modelOrder(model)) {
     try {
-      return { text: await generateContent(body, key, FALLBACK_MODEL), model: FALLBACK_MODEL }
-    } catch (fallbackError) {
-      throw fallbackError instanceof GeminiError && fallbackError.kind === 'model' ? error : fallbackError
+      return { text: await generateContent(body, key, name, timeout), model: name }
+    } catch (error) {
+      const missingFallback = name !== model && error instanceof GeminiError && error.kind === 'model'
+      if (!isTemporary(error) && !missingFallback) throw error
+      if (name === model) fallbackUntil = Date.now() + FALLBACK_PERIOD
+      if (!missingFallback) lastError = error
     }
   }
+  throw lastError
 }
 
 export async function testGeminiKey(key: string, model: string): Promise<string> {
   const body = { contents: [{ role: 'user', parts: [{ text: 'Réponds simplement : OK' }] }] }
-  return (await generateWithFallback(body, key, model)).model
+  return (await generateWithFallback(body, key, model, TEST_TIMEOUT)).model
 }
