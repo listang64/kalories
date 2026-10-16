@@ -12,6 +12,8 @@ interface Props {
 
 const TAP = { scale: 0.9 }
 const SPRING = { type: 'spring', stiffness: 500, damping: 24 } as const
+const ORANGE_BUTTON =
+  'relative grid size-13 place-items-center rounded-full bg-accent text-black shadow-[0_0_22px_rgba(255,122,26,0.35)]'
 
 export function HomeActions({ shoppingCount, onHistory, onAdd, onShopping }: Props) {
   return (
@@ -23,7 +25,7 @@ export function HomeActions({ shoppingCount, onHistory, onAdd, onShopping }: Pro
           onClick={onHistory}
           whileTap={TAP}
           transition={SPRING}
-          className="grid size-13 place-items-center rounded-full border border-line bg-surface-2 text-text"
+          className={ORANGE_BUTTON}
         >
           <ChartIcon />
         </motion.button>
@@ -38,7 +40,7 @@ export function HomeActions({ shoppingCount, onHistory, onAdd, onShopping }: Pro
           onClick={onShopping}
           whileTap={TAP}
           transition={SPRING}
-          className="relative grid size-13 place-items-center rounded-full bg-accent text-black shadow-[0_0_22px_rgba(255,122,26,0.35)]"
+          className={ORANGE_BUTTON}
         >
           <CartIcon />
           {shoppingCount > 0 && (

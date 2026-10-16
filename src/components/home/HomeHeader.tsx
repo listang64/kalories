@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useOnline } from '../../hooks/useOnline'
 import { formatLongDate } from '../../lib/dates'
 import { GearIcon } from '../icons/GearIcon'
+import { WeatherBadge } from './WeatherBadge'
 
 interface Props {
   dateKey: string
@@ -14,8 +15,10 @@ export function HomeHeader({ dateKey, onSettings }: Props) {
   return (
     <header className="flex items-start justify-between pt-3">
       <div>
-        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">Aujourd’hui</h1>
-        <p className="text-[15px] text-text-2">{formatLongDate(dateKey)}</p>
+        <h1 className="text-[clamp(22px,6.8vw,28px)] leading-tight font-semibold tracking-[-0.02em]">
+          {formatLongDate(dateKey)}
+        </h1>
+        <WeatherBadge dateKey={dateKey} />
       </div>
       <div className="flex items-center gap-1">
         <AnimatePresence>

@@ -3,6 +3,7 @@ import type { Profile } from '../../config/users'
 import { signOutUser } from '../../hooks/useAuth'
 import { formatBuildDate } from '../../lib/format'
 import { applyUpdate, checkForUpdate, type UpdateCheck } from '../../lib/pwa'
+import { WEATHER_PLACE } from '../../lib/weather'
 import { useAppStore } from '../../store/appStore'
 import { ProfileOrb } from '../ProfileOrb'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
@@ -51,6 +52,12 @@ export function AppSettings({ profile }: { profile: Profile }) {
         <SettingsRow>
           <span className="flex-1 text-[17px]">Mise en ligne</span>
           <span className="text-[15px] text-text-2">{formatBuildDate(__BUILD_DATE__)}</span>
+        </SettingsRow>
+        <SettingsRow>
+          <span className="flex-1 text-[17px]">Météo</span>
+          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="text-[15px] text-text-2">
+            Open-Meteo · {WEATHER_PLACE}
+          </a>
         </SettingsRow>
         <SettingsRow>
           {updateReady ? (
