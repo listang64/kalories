@@ -85,9 +85,24 @@
   animation: orb-spin 16s linear infinite;
 }
 
+@keyframes bar-flow {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@utility bar-flow {
+  background-size: 200% 100%;
+  animation: bar-flow 5s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orb-breathe,
-  .orb-swirl {
+  .orb-swirl,
+  .bar-flow {
     animation: none;
   }
 }

@@ -1,4 +1,9 @@
-import { motion } from 'motion/react'
+import { useRef } from 'react'
+import { PROFILES } from '../../config/users'
+import { OrbCss } from './fallback/OrbCss'
+import { FluidCanvas } from './FluidCanvas'
+import type { FluidGauge } from './fluidGauge'
+import { useFluidSupport } from './support'
 
 interface Props {
   size: number
@@ -6,22 +11,42 @@ interface Props {
   onPress: () => void
 }
 
+const GLOW_RATIO = 0.34
+const OPEN_DELAY = 220
+const COLORS = [PROFILES.nico.colorA, PROFILES.nico.colorB, PROFILES.chachou.colorA, PROFILES.chachou.colorB]
+
 export function FluidOrb({ size, label, onPress }: Props) {
+  const fluid = useFluidSupport()
+  const gauge = useRef<FluidGauge | null>(null)
+
+  if (!fluid.enabled) return <OrbCss size={size} label={label} onPress={onPress} />
+
+  const glow = Math.round(size * GLOW_RATIO)
+  const press = (down: boolean) => gauge.current?.setPressed(down)
+  const open = () => {
+    gauge.current?.startRipple()
+    window.setTimeout(onPress, OPEN_DELAY)
+  }
+
   return (
-    <motion.button
+    <button
       type="button"
       aria-label={label}
-      onClick={onPress}
-      whileTap={{ scale: 0.94 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+      onClick={open}
+      onPointerDown={() => press(true)}
+      onPointerUp={() => press(false)}
+      onPointerLeave={() => press(false)}
+      onPointerCancel={() => press(false)}
       className="relative rounded-full"
       style={{ width: size, height: size }}
     >
-      <span className="orb-breathe absolute inset-0 overflow-hidden rounded-full shadow-[0_0_48px_rgba(170,60,200,0.35)]">
-        <span className="orb-swirl absolute -inset-1/4 blur-md" />
-        <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_32%_26%,rgba(255,255,255,0.5),transparent_42%)]" />
-        <span className="absolute inset-0 rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_-10px_24px_rgba(0,0,0,0.35)]" />
-      </span>
-    </motion.button>
+      <FluidCanvas
+        options={{ shape: 'orb', side: 1, margin: glow, thickness: 0 }}
+        colors={COLORS}
+        onFail={fluid.fail}
+        onReady={(g) => (gauge.current = g)}
+        style={{ inset: -glow }}
+      />
+    </button>
   )
 }

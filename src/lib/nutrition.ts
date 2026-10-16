@@ -25,3 +25,8 @@ export function autoMacroGoals(kcal: number): Macros {
 export function ratio(value: number, goal: number): number {
   return goal > 0 ? value / goal : 0
 }
+
+export function gaugeLevel(value: number, goal: number) {
+  const level = ratio(value, goal)
+  return { fill: Math.min(Math.max(level, 0), 1), over: level > 1 }
+}
