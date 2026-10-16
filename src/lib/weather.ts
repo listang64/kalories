@@ -3,14 +3,15 @@ export type WeatherKind = 'clear' | 'partly' | 'cloudy' | 'fog' | 'drizzle' | 'r
 export interface Weather {
   date: string
   max: number
-  kind: WeatherKind
+  morning: WeatherKind
+  afternoon: WeatherKind
   fetchedAt: number
 }
 
 export const WEATHER_PLACE = 'Hasparren'
 
 const URL =
-  'https://api.open-meteo.com/v1/forecast?latitude=43.3842&longitude=-1.3053&daily=temperature_2m_max,weather_code&timezone=Europe%2FParis&forecast_days=1'
+  'https://api.open-meteo.com/v1/forecast?latitude=43.3842&longitude=-1.3053&daily=temperature_2m_max&hourly=weather_code&timezone=Europe%2FParis&forecast_days=1'
 const CACHE_KEY = 'kalories.weather'
 const MAX_AGE = 30 * 60_000
 
@@ -36,10 +37,31 @@ function kindOf(code: number): WeatherKind {
   return 'cloudy'
 }
 
+type Hours = readonly [from: number, to: number]
+
+const MORNING: Hours = [7, 12]
+const AFTERNOON: Hours = [12, 19]
+
+function periodKind(codes: number[]): WeatherKind {
+  const wet = codes.filter((code) => code >= 51)
+  if (wet.length > 0) return kindOf(Math.max(...wet))
+  const counts = new Map<WeatherKind, number>()
+  codes.map(kindOf).forEach((kind) => counts.set(kind, (counts.get(kind) ?? 0) + 1))
+  return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'cloudy'
+}
+
+function codesBetween(times: string[], codes: (number | null)[], [from, to]: Hours): number[] {
+  return times.flatMap((time, i) => {
+    const hour = Number(time.slice(11, 13))
+    const code = codes[i]
+    return hour >= from && hour < to && typeof code === 'number' ? [code] : []
+  })
+}
+
 export function readCachedWeather(date: string): Weather | null {
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as Weather | null
-    return cached?.date === date ? cached : null
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as Partial<Weather> | null
+    return cached?.date === date && cached.morning && cached.afternoon ? (cached as Weather) : null
   } catch {
     return null
   }
@@ -50,18 +72,30 @@ export function isFresh(weather: Weather | null, date: string): boolean {
 }
 
 interface ForecastResponse {
-  daily?: { time?: string[]; temperature_2m_max?: (number | null)[]; weather_code?: (number | null)[] }
+  daily?: { time?: string[]; temperature_2m_max?: (number | null)[] }
+  hourly?: { time?: string[]; weather_code?: (number | null)[] }
 }
 
 export async function fetchWeather(): Promise<Weather> {
   const response = await fetch(URL)
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
-  const { daily } = (await response.json()) as ForecastResponse
+  const { daily, hourly } = (await response.json()) as ForecastResponse
   const date = daily?.time?.[0]
   const max = daily?.temperature_2m_max?.[0]
-  const code = daily?.weather_code?.[0]
-  if (!date || typeof max !== 'number' || typeof code !== 'number') throw new Error('Météo illisible')
-  const weather: Weather = { date, max: Math.round(max), kind: kindOf(code), fetchedAt: Date.now() }
+  const times = hourly?.time ?? []
+  const codes = hourly?.weather_code ?? []
+  const morning = codesBetween(times, codes, MORNING)
+  const afternoon = codesBetween(times, codes, AFTERNOON)
+  if (!date || typeof max !== 'number' || morning.length === 0 || afternoon.length === 0) {
+    throw new Error('Météo illisible')
+  }
+  const weather: Weather = {
+    date,
+    max: Math.round(max),
+    morning: periodKind(morning),
+    afternoon: periodKind(afternoon),
+    fetchedAt: Date.now(),
+  }
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(weather))
   } catch {
