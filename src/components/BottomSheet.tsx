@@ -1,18 +1,20 @@
 import type { ReactNode } from 'react'
 import { AnimatePresence, motion, useDragControls } from 'motion/react'
+import { ChevronIcon } from './icons/ChevronIcon'
 import { CloseIcon } from './icons/CloseIcon'
 
 interface Props {
   open: boolean
   title: string
   onClose: () => void
+  onBack?: () => void
   children: ReactNode
 }
 
 const CLOSE_DISTANCE = 120
 const CLOSE_VELOCITY = 600
 
-export function BottomSheet({ open, title, onClose, children }: Props) {
+export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
   const controls = useDragControls()
 
   return (
@@ -46,8 +48,18 @@ export function BottomSheet({ open, title, onClose, children }: Props) {
           >
             <div onPointerDown={(e) => controls.start(e)} className="touch-none px-5 pt-2 pb-3">
               <div className="mx-auto h-1.5 w-10 rounded-full bg-white/20" />
-              <div className="mt-3 flex items-center justify-between">
-                <h2 className="text-[20px] font-semibold">{title}</h2>
+              <div className="mt-3 flex items-center gap-2">
+                {onBack && (
+                  <button
+                    type="button"
+                    aria-label="Retour"
+                    onClick={onBack}
+                    className="-ml-2 grid size-9 place-items-center rounded-full text-text-2"
+                  >
+                    <ChevronIcon size={22} direction="left" />
+                  </button>
+                )}
+                <h2 className="flex-1 text-[20px] font-semibold">{title}</h2>
                 <button
                   type="button"
                   aria-label="Fermer"

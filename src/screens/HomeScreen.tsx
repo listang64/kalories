@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AddMealSheet } from '../components/AddMealSheet'
 import { BottomSheet } from '../components/BottomSheet'
 import { AddButton } from '../components/home/AddButton'
 import { CalorieLegend } from '../components/home/CalorieLegend'
@@ -22,6 +23,7 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
   const showToast = useAppStore((s) => s.showToast)
+  const openAdd = useAppStore((s) => s.openAdd)
 
   const soon = () => showToast('Bientôt disponible')
   const nico: PersonEntry = { profile: PROFILES.nico, day: data.nico }
@@ -43,11 +45,12 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       </div>
       <CalorieLegend entries={[nico, chachou]} />
       <div className="flex justify-center pt-4 pb-3">
-        <AddButton onPress={soon} />
+        <AddButton onPress={() => openAdd()} />
       </div>
       <BottomSheet open={overlay === 'settings'} title="Paramètres" onClose={() => setOverlay(null)}>
         <SettingsScreen profile={profile} />
       </BottomSheet>
+      <AddMealSheet />
     </main>
   )
 }
