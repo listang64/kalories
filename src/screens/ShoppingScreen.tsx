@@ -58,7 +58,7 @@ export function ShoppingScreen({ profile }: { profile: Profile }) {
         <div role="alert" className="mt-4 shrink-0 rounded-card border border-accent/30 bg-accent/10 px-4 py-3">
           <p className="text-[15px] leading-snug">La base refuse l’accès à la liste de courses.</p>
           <p className="mt-1 text-[13px] leading-snug text-text-2">
-            Publie les nouvelles règles dans Firebase → Firestore → Règles. La liste se reconnecte toute seule ensuite.
+            Déconnecte-toi puis reconnecte-toi depuis les Paramètres. La liste se reconnecte toute seule ensuite.
           </p>
         </div>
       )}

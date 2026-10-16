@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { shoppingCollection, shoppingItemFromDoc, type ShoppingItem } from '../lib/shopping'
+import { shoppingDoc, shoppingItemsFromDoc, type ShoppingItem } from '../lib/shopping'
 
 const RETRY_DELAY = 5000
 
@@ -17,15 +17,8 @@ export function useShoppingList(): ShoppingState {
     let timer = 0
     const subscribe = () => {
       unsubscribe = onSnapshot(
-        shoppingCollection,
-        (snapshot) =>
-          setState({
-            denied: false,
-            items: snapshot.docs
-              .map(shoppingItemFromDoc)
-              .filter((item): item is ShoppingItem => item !== null)
-              .sort((a, b) => a.order - b.order),
-          }),
+        shoppingDoc,
+        (snapshot) => setState({ denied: false, items: shoppingItemsFromDoc(snapshot) }),
         (error) => {
           setState((current) => ({ ...current, denied: error.code === 'permission-denied' }))
           timer = window.setTimeout(subscribe, RETRY_DELAY)
