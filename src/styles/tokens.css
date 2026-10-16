@@ -57,6 +57,41 @@
   padding-bottom: var(--safe-bottom);
 }
 
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility orb-breathe {
+  animation: orb-breathe 4s ease-in-out infinite;
+}
+
+@utility orb-swirl {
+  background:
+    radial-gradient(circle at 30% 30%, var(--nico-2) 0, transparent 38%),
+    radial-gradient(circle at 70% 68%, var(--chachou-2) 0, transparent 38%),
+    conic-gradient(from 0deg, var(--nico), var(--chachou), #9333ea, var(--chachou-2), var(--nico));
+  animation: orb-spin 16s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-breathe,
+  .orb-swirl {
+    animation: none;
+  }
+}
+
 @layer base {
   html,
   body,

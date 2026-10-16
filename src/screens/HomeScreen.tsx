@@ -1,52 +1,48 @@
-import { useEffect, useState } from 'react'
-import { FirebaseError } from 'firebase/app'
-import { doc, getDoc } from 'firebase/firestore'
-import { AppVersion } from '../components/AppVersion'
-import { ProfileOrb } from '../components/ProfileOrb'
-import { db } from '../config/firebase'
-import type { Profile } from '../config/users'
-import { signOutUser } from '../hooks/useAuth'
-
-type DbStatus = 'checking' | 'ok' | 'denied' | 'offline'
-
-const DB_LABEL: Record<DbStatus, string> = {
-  checking: 'Connexion à la base…',
-  ok: 'Base de données connectée ✓',
-  denied: 'Accès refusé : colle les règles Firestore',
-  offline: 'Base injoignable pour l’instant',
-}
-
-function useDbStatus(uid: string) {
-  const [status, setStatus] = useState<DbStatus>('checking')
-  useEffect(() => {
-    getDoc(doc(db, 'users', uid))
-      .then(() => setStatus('ok'))
-      .catch((err: unknown) => {
-        const denied = err instanceof FirebaseError && err.code === 'permission-denied'
-        setStatus(denied ? 'denied' : 'offline')
-      })
-  }, [uid])
-  return status
-}
+import { useState } from 'react'
+import { BottomSheet } from '../components/BottomSheet'
+import { AddButton } from '../components/home/AddButton'
+import { CalorieLegend } from '../components/home/CalorieLegend'
+import { CalorieRing, type PersonEntry } from '../components/home/CalorieRing'
+import { HomeHeader } from '../components/home/HomeHeader'
+import { MacroBlock } from '../components/home/MacroBlock'
+import { otherProfile, PROFILES, type Profile } from '../config/users'
+import { useHomeData } from '../hooks/useHomeData'
+import { useToday } from '../hooks/useToday'
+import { useAppStore } from '../store/appStore'
+import { SettingsScreen } from './SettingsScreen'
 
 export function HomeScreen({ profile }: { profile: Profile }) {
-  const dbStatus = useDbStatus(profile.uid)
+  const today = useToday()
+  const data = useHomeData()
+  const [viewed, setViewed] = useState(profile)
+  const overlay = useAppStore((s) => s.overlay)
+  const setOverlay = useAppStore((s) => s.setOverlay)
+  const showToast = useAppStore((s) => s.showToast)
+
+  const soon = () => showToast('Bientôt disponible')
+  const nico: PersonEntry = { profile: PROFILES.nico, day: data.nico }
+  const chachou: PersonEntry = { profile: PROFILES.chachou, day: data.chachou }
 
   return (
-    <main className="safe-screen relative flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
-      <ProfileOrb profile={profile} size={72} />
-      <h1 className="text-2xl font-semibold">Salut {profile.name}</h1>
-      <p className={`text-sm ${dbStatus === 'denied' ? 'text-accent' : 'text-text-2'}`}>
-        {DB_LABEL[dbStatus]}
-      </p>
-      <button
-        type="button"
-        onClick={() => void signOutUser()}
-        className="mt-4 h-11 rounded-full border border-line bg-surface-2 px-5 text-sm"
-      >
-        Se déconnecter
-      </button>
-      <AppVersion className="absolute inset-x-0 bottom-[calc(var(--safe-bottom)+20px)]" />
+    <main className="safe-screen flex h-full flex-col px-5">
+      <HomeHeader dateKey={today} onSettings={() => setOverlay('settings')} />
+      <div className="mt-5">
+        <MacroBlock
+          profile={viewed}
+          day={data[viewed.id]}
+          onToggle={() => setViewed(otherProfile(viewed))}
+        />
+      </div>
+      <div className="my-3 flex min-h-0 flex-1">
+        <CalorieRing left={nico} right={chachou} onOrb={soon} />
+      </div>
+      <CalorieLegend entries={[nico, chachou]} />
+      <div className="flex justify-center pt-4 pb-3">
+        <AddButton onPress={soon} />
+      </div>
+      <BottomSheet open={overlay === 'settings'} title="Paramètres" onClose={() => setOverlay(null)}>
+        <SettingsScreen profile={profile} />
+      </BottomSheet>
     </main>
   )
 }
