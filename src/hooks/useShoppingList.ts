@@ -2,24 +2,42 @@ import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
 import { shoppingCollection, shoppingItemFromDoc, type ShoppingItem } from '../lib/shopping'
 
-export function useShoppingList(): ShoppingItem[] {
-  const [items, setItems] = useState<ShoppingItem[]>([])
+const RETRY_DELAY = 5000
 
-  useEffect(
-    () =>
-      onSnapshot(
+interface ShoppingState {
+  items: ShoppingItem[]
+  denied: boolean
+}
+
+export function useShoppingList(): ShoppingState {
+  const [state, setState] = useState<ShoppingState>({ items: [], denied: false })
+
+  useEffect(() => {
+    let unsubscribe = () => {}
+    let timer = 0
+    const subscribe = () => {
+      unsubscribe = onSnapshot(
         shoppingCollection,
         (snapshot) =>
-          setItems(
-            snapshot.docs
+          setState({
+            denied: false,
+            items: snapshot.docs
               .map(shoppingItemFromDoc)
               .filter((item): item is ShoppingItem => item !== null)
               .sort((a, b) => a.order - b.order),
-          ),
-        () => undefined,
-      ),
-    [],
-  )
+          }),
+        (error) => {
+          setState((current) => ({ ...current, denied: error.code === 'permission-denied' }))
+          timer = window.setTimeout(subscribe, RETRY_DELAY)
+        },
+      )
+    }
+    subscribe()
+    return () => {
+      window.clearTimeout(timer)
+      unsubscribe()
+    }
+  }, [])
 
-  return items
+  return state
 }

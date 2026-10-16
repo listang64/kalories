@@ -34,6 +34,7 @@ export function useAnalyzeMeal() {
       useAppStore.getState().setAnalysisError({
         message: geminiErrorMessage(error),
         action: needsSettings(error) ? 'settings' : 'retry',
+        detail: error instanceof GeminiError ? error.detail : '',
       })
     }
   }, [])

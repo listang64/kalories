@@ -34,6 +34,7 @@ export interface EditTarget {
 export interface AnalysisError {
   message: string
   action: 'retry' | 'settings' | null
+  detail?: string
 }
 
 const MAX_PHOTOS = 6

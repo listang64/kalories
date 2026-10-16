@@ -8,6 +8,7 @@ import {
   writeBatch,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
+import { FirebaseError } from 'firebase/app'
 import { db } from '../config/firebase'
 
 export interface ShoppingItem {
@@ -21,6 +22,12 @@ export interface ShoppingItem {
 export const shoppingCollection = collection(db, 'shopping')
 
 const MAX_NAME = 80
+
+export function shoppingErrorMessage(error: unknown): string {
+  return error instanceof FirebaseError && error.code === 'permission-denied'
+    ? 'Refusé : publie les nouvelles règles Firestore'
+    : 'Action impossible pour l’instant'
+}
 
 export function splitNames(text: string): string[] {
   return text

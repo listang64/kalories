@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useKeyboardInset } from '../../hooks/useKeyboardInset'
-import { deleteShoppingItem, updateShoppingItem, type ShoppingItem } from '../../lib/shopping'
+import { deleteShoppingItem, shoppingErrorMessage, updateShoppingItem, type ShoppingItem } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
 
 interface Props {
@@ -47,7 +47,7 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
   const [name, setName] = useState(item.name)
   const [quantity, setQuantity] = useState(item.quantity)
   const showToast = useAppStore((s) => s.showToast)
-  const fail = () => showToast('Action impossible')
+  const fail = (error: unknown) => showToast(shoppingErrorMessage(error))
 
   const save = () => {
     if (!name.trim()) return

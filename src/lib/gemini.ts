@@ -1,4 +1,4 @@
-import { DEFAULT_MODEL, FALLBACK_MODEL } from './localSettings'
+import { cleanKey, DEFAULT_MODEL, FALLBACK_MODEL } from './localSettings'
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
 const TIMEOUT = 30_000
@@ -47,32 +47,59 @@ interface GeminiErrorBody {
   error?: { message?: string }
 }
 
+const RETRY_DELAY = 800
+
 function kindForStatus(status: number): GeminiErrorKind {
   if (status === 400 || status === 401 || status === 403) return 'invalid-key'
   if (status === 404) return 'model'
   if (status === 429) return 'quota'
-  if (status === 503) return 'busy'
+  if (status >= 500) return 'busy'
   return 'unavailable'
 }
 
+function describe(error: unknown): string {
+  if (error instanceof DOMException && error.name === 'AbortError') return 'Pas de réponse en 30 s'
+  return error instanceof Error ? `${error.name} : ${error.message}` : String(error)
+}
+
+async function send(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), TIMEOUT)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timer)
+  }
+}
+
+async function sendWithRetry(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await send(url, init)
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    await new Promise((resolve) => window.setTimeout(resolve, RETRY_DELAY))
+    return send(url, init)
+  }
+}
+
 export async function generateContent(body: object, key: string, model: string): Promise<string> {
-  if (!key) throw new GeminiError('no-key')
+  const apiKey = cleanKey(key)
+  if (!apiKey) throw new GeminiError('no-key')
   if (!navigator.onLine) throw new GeminiError('offline')
   const name = model.replace(/^models\//, '').trim() || DEFAULT_MODEL
   let response: Response
   try {
-    response = await fetch(`${ENDPOINT}/${encodeURIComponent(name)}:generateContent`, {
+    response = await sendWithRetry(`${ENDPOINT}/${encodeURIComponent(name)}:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(TIMEOUT),
     })
-  } catch {
-    throw new GeminiError('unavailable')
+  } catch (error) {
+    throw new GeminiError('unavailable', describe(error))
   }
   if (!response.ok) {
     const data = (await response.json().catch(() => ({}))) as GeminiErrorBody
-    throw new GeminiError(kindForStatus(response.status), data.error?.message ?? '')
+    throw new GeminiError(kindForStatus(response.status), `HTTP ${response.status} · ${data.error?.message ?? ''}`)
   }
   const data = (await response.json().catch(() => null)) as GeminiResponse | null
   return data?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''

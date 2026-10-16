@@ -50,7 +50,10 @@ export function CaptureScreen() {
       {draft.photos.length > 0 && <PhotoStrip photos={draft.photos} onRemove={removePhoto} />}
       {error && (
         <div role="alert" className="flex shrink-0 items-center gap-3 rounded-card border border-accent/30 bg-accent/10 py-3 pr-3 pl-4">
-          <p className="flex-1 text-[15px] leading-snug">{error.message}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] leading-snug">{error.message}</p>
+            {error.detail && <p className="mt-0.5 line-clamp-2 text-[12px] text-text-2">{error.detail}</p>}
+          </div>
           {error.action && (
             <button
               type="button"

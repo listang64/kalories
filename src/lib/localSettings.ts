@@ -6,6 +6,10 @@ const MODEL_STORAGE = 'kalories.geminiModel'
 export const DEFAULT_MODEL = 'gemini-flash-latest'
 export const FALLBACK_MODEL = 'gemini-3.5-flash-lite'
 
+export function cleanKey(key: string): string {
+  return key.replace(/[^A-Za-z0-9_-]/g, '')
+}
+
 function read(name: string): string {
   try {
     return localStorage.getItem(name) ?? ''
@@ -31,10 +35,10 @@ interface LocalSettings {
 }
 
 export const useLocalSettings = create<LocalSettings>()((set) => ({
-  geminiKey: read(KEY_STORAGE),
+  geminiKey: cleanKey(read(KEY_STORAGE)),
   geminiModel: read(MODEL_STORAGE) || DEFAULT_MODEL,
   setGeminiKey: (key) => {
-    const geminiKey = key.trim()
+    const geminiKey = cleanKey(key)
     write(KEY_STORAGE, geminiKey)
     set({ geminiKey })
   },

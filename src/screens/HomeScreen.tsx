@@ -25,7 +25,7 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   const today = useToday()
   const data = useHomeData(useProfiles(), useDayMeals(today))
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
-  const shoppingCount = useShoppingList().length
+  const shoppingCount = useShoppingList().items.length
   const [viewed, setViewed] = useState(profile)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
