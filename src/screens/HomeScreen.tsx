@@ -19,6 +19,7 @@ import { useLocalSettings } from '../lib/localSettings'
 import { useAppStore } from '../store/appStore'
 import { DayDetailScreen } from './DayDetailScreen'
 import { HistoryScreen } from './HistoryScreen'
+import { LoansScreen } from './LoansScreen'
 import { SettingsScreen } from './SettingsScreen'
 import { ShoppingScreen } from './ShoppingScreen'
 
@@ -40,7 +41,7 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
-        <HomeHeader dateKey={today} onSettings={() => setOverlay('settings')} />
+        <HomeHeader dateKey={today} onLoans={() => setOverlay('loans')} onSettings={() => setOverlay('settings')} />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
       <Rise index={1} className="mt-5">
@@ -77,6 +78,9 @@ export function HomeScreen({ profile }: { profile: Profile }) {
         action={<SortButton items={shopping.items} />}
       >
         <ShoppingScreen profile={profile} items={shopping.items} denied={shopping.denied} />
+      </BottomSheet>
+      <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
+        <LoansScreen profile={profile} />
       </BottomSheet>
       <AddMealSheet
         profile={profile}

@@ -1,17 +1,18 @@
 import { useState, type FormEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { DeniedBanner } from '../components/DeniedBanner'
 import { CartIcon } from '../components/icons/CartIcon'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { ItemEditor } from '../components/shopping/ItemEditor'
 import { ShoppingBubble } from '../components/shopping/ShoppingBubble'
 import { AISLES } from '../config/aisles'
 import { otherProfile, type Profile } from '../config/users'
+import { sharedErrorMessage } from '../lib/shared'
 import {
   addShoppingItems,
   clearShoppingItems,
   deleteShoppingItem,
-  shoppingErrorMessage,
   splitNames,
   type ShoppingItem,
 } from '../lib/shopping'
@@ -43,7 +44,7 @@ export function ShoppingScreen({ profile, items, denied }: Props) {
   const [editing, setEditing] = useState<ShoppingItem | null>(null)
   const [clearing, setClearing] = useState(false)
   const showToast = useAppStore((s) => s.showToast)
-  const fail = (error: unknown) => showToast(shoppingErrorMessage(error))
+  const fail = (error: unknown) => showToast(sharedErrorMessage(error))
 
   const add = (event: FormEvent) => {
     event.preventDefault()
@@ -74,14 +75,7 @@ export function ShoppingScreen({ profile, items, denied }: Props) {
           <PlusIcon size={20} strokeWidth={2} />
         </button>
       </form>
-      {denied && (
-        <div role="alert" className="mt-4 shrink-0 rounded-card border border-accent/30 bg-accent/10 px-4 py-3">
-          <p className="text-[15px] leading-snug">La base refuse l’accès à la liste de courses.</p>
-          <p className="mt-1 text-[13px] leading-snug text-text-2">
-            Déconnecte-toi puis reconnecte-toi depuis les Paramètres. La liste se reconnecte toute seule ensuite.
-          </p>
-        </div>
-      )}
+      {denied && <DeniedBanner what="à la liste de courses" />}
       <div className="mt-5 flex shrink-0 items-center px-1">
         <p className="label flex-1">
           {items.length} article{items.length > 1 ? 's' : ''}

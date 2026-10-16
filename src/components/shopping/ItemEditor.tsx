@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useKeyboardInset } from '../../hooks/useKeyboardInset'
-import { deleteShoppingItem, shoppingErrorMessage, updateShoppingItem, type ShoppingItem } from '../../lib/shopping'
+import { useState } from 'react'
+import { sharedErrorMessage } from '../../lib/shared'
+import { deleteShoppingItem, updateShoppingItem, type ShoppingItem } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
+import { BottomPanel } from '../BottomPanel'
+import { Field, FIELD_INPUT } from '../Field'
 
 interface Props {
   item: ShoppingItem | null
@@ -10,36 +11,10 @@ interface Props {
 }
 
 export function ItemEditor({ item, onClose }: Props) {
-  const inset = useKeyboardInset()
-
   return (
-    <AnimatePresence>
-      {item && (
-        <div className="fixed inset-0 z-50">
-          <motion.div
-            className="absolute inset-0 bg-black/60"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Modifier l’article"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 420, damping: 40 }}
-            style={{ bottom: inset }}
-            className="absolute inset-x-0 rounded-t-sheet border-t border-line bg-surface-2 px-5 pt-2 pb-[calc(var(--safe-bottom)+16px)]"
-          >
-            <div className="mx-auto h-1.5 w-10 rounded-full bg-white/20" />
-            <EditorForm key={item.id} item={item} onClose={onClose} />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <BottomPanel open={item !== null} label="Modifier l’article" onClose={onClose}>
+      {item && <EditorForm key={item.id} item={item} onClose={onClose} />}
+    </BottomPanel>
   )
 }
 
@@ -47,7 +22,7 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
   const [name, setName] = useState(item.name)
   const [quantity, setQuantity] = useState(item.quantity)
   const showToast = useAppStore((s) => s.showToast)
-  const fail = (error: unknown) => showToast(shoppingErrorMessage(error))
+  const fail = (error: unknown) => showToast(sharedErrorMessage(error))
 
   const save = () => {
     if (!name.trim()) return
@@ -75,7 +50,7 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
           onChange={(e) => setName(e.target.value)}
           maxLength={80}
           enterKeyHint="done"
-          className="mt-1.5 h-12 w-full rounded-card border border-line bg-black/30 px-4 text-base outline-none focus:border-white/20"
+          className={FIELD_INPUT}
         />
       </Field>
       <Field label="Quantité">
@@ -85,7 +60,7 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
           maxLength={40}
           placeholder="ex. 2, 500 g, 1 paquet"
           enterKeyHint="done"
-          className="mt-1.5 h-12 w-full rounded-card border border-line bg-black/30 px-4 text-base outline-none placeholder:text-text-2 focus:border-white/20"
+          className={FIELD_INPUT}
         />
       </Field>
       <div className="mt-2 grid grid-cols-2 gap-2.5">
@@ -101,14 +76,5 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
         </button>
       </div>
     </form>
-  )
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="label px-1">{label}</span>
-      {children}
-    </label>
   )
 }

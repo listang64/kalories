@@ -49,11 +49,6 @@ export function statsFor(points: DayPoint[], id: ProfileId, goal: number, today:
   }
 }
 
-export function formatShortDate(key: string): string {
-  const [y = 1970, m = 1, d = 1] = key.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-}
-
 export function formatDayName(key: string): string {
   const [y = 1970, m = 1, d = 1] = key.split('-').map(Number)
   const label = new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })

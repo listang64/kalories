@@ -2,14 +2,16 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useOnline } from '../../hooks/useOnline'
 import { formatLongDate } from '../../lib/dates'
 import { GearIcon } from '../icons/GearIcon'
+import { HandshakeIcon } from '../icons/HandshakeIcon'
 import { WeatherBadge } from './WeatherBadge'
 
 interface Props {
   dateKey: string
+  onLoans: () => void
   onSettings: () => void
 }
 
-export function HomeHeader({ dateKey, onSettings }: Props) {
+export function HomeHeader({ dateKey, onLoans, onSettings }: Props) {
   const online = useOnline()
 
   return (
@@ -35,6 +37,14 @@ export function HomeHeader({ dateKey, onSettings }: Props) {
             </motion.span>
           )}
         </AnimatePresence>
+        <button
+          type="button"
+          aria-label="Prêts"
+          onClick={onLoans}
+          className="grid size-11 place-items-center rounded-full text-text-2 transition-colors active:bg-white/8"
+        >
+          <HandshakeIcon />
+        </button>
         <button
           type="button"
           aria-label="Paramètres"

@@ -1,7 +1,7 @@
 import { deleteField, doc, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
-import { FirebaseError } from 'firebase/app'
 import { isAisle, type Aisle } from '../config/aisles'
 import { db } from '../config/firebase'
+import { newId } from './shared'
 
 export interface ShoppingItem {
   id: string
@@ -17,21 +17,11 @@ export const shoppingDoc = doc(db, 'users', 'liste-de-courses')
 const MAX_NAME = 80
 const MAX_QUANTITY = 40
 
-export function shoppingErrorMessage(error: unknown): string {
-  return error instanceof FirebaseError && error.code === 'permission-denied'
-    ? 'Refusé : reconnecte-toi à Kalories'
-    : 'Action impossible pour l’instant'
-}
-
 export function splitNames(text: string): string[] {
   return text
     .split(/[,;\n]/)
     .map((name) => name.trim().slice(0, MAX_NAME))
     .filter(Boolean)
-}
-
-function newId(index: number): string {
-  return `i${Date.now().toString(36)}${index}${Math.random().toString(36).slice(2, 7)}`
 }
 
 export function addShoppingItems(names: string[], uid: string): Promise<void> {

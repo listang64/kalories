@@ -1,8 +1,8 @@
-import { useRef } from 'react'
-import { motion, useMotionValue, useTransform } from 'motion/react'
+import { motion } from 'motion/react'
 import { profileByUid } from '../../config/users'
 import type { ShoppingItem } from '../../lib/shopping'
 import { TrashIcon } from '../icons/TrashIcon'
+import { SwipeButton } from '../SwipeButton'
 
 interface Props {
   item: ShoppingItem
@@ -10,13 +10,7 @@ interface Props {
   onDelete: () => void
 }
 
-const SWIPE = 72
-
 export function ShoppingBubble({ item, onEdit, onDelete }: Props) {
-  const x = useMotionValue(0)
-  const backgroundColor = useTransform(x, [-SWIPE, 0], ['rgba(255,122,26,0.95)', 'rgba(26,26,29,1)'])
-  const trash = useTransform(x, [-SWIPE, -16], [1, 0])
-  const dragged = useRef(false)
   const author = profileByUid(item.addedBy)
   const label = item.quantity ? `${item.name}, ${item.quantity}` : item.name
 
@@ -29,22 +23,13 @@ export function ShoppingBubble({ item, onEdit, onDelete }: Props) {
       transition={{ type: 'spring', stiffness: 520, damping: 28 }}
       className="list-none"
     >
-      <motion.button
-        type="button"
-        aria-label={`${label}. Toucher pour modifier, glisser à gauche pour supprimer`}
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.9, right: 0.04 }}
-        style={{ x, backgroundColor }}
-        onPointerDown={() => (dragged.current = false)}
-        onDragStart={() => (dragged.current = true)}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -SWIPE || info.velocity.x < -700) onDelete()
-        }}
-        onTap={() => !dragged.current && onEdit()}
-        onKeyDown={(e) => (e.key === 'Delete' || e.key === 'Backspace') && onDelete()}
-        className="relative flex h-11 max-w-full items-center gap-2 overflow-hidden rounded-full border border-line pr-4 pl-3 text-[16px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+      <SwipeButton
+        label={`${label}. Toucher pour modifier, glisser à gauche pour supprimer`}
+        action={<TrashIcon size={16} />}
+        onTap={onEdit}
+        onSwipe={onDelete}
+        className="h-11 max-w-full rounded-full pr-4 pl-3 text-[16px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+        contentClassName="flex min-w-0 items-center gap-2"
       >
         <span
           aria-hidden="true"
@@ -56,10 +41,7 @@ export function ShoppingBubble({ item, onEdit, onDelete }: Props) {
         />
         <span className="relative truncate">{item.name}</span>
         {item.quantity && <span className="relative shrink-0 text-text-2">· {item.quantity}</span>}
-        <motion.span style={{ opacity: trash }} className="absolute right-3 text-black">
-          <TrashIcon size={16} />
-        </motion.span>
-      </motion.button>
+      </SwipeButton>
     </motion.li>
   )
 }

@@ -36,6 +36,22 @@ export function dayLabel(key: string, today: string): string {
   return formatLongDate(key)
 }
 
+export function formatShortDate(key: string): string {
+  return dateFromKey(key).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+}
+
+export function daysBetween(from: string, to: string): number {
+  return Math.round((dateFromKey(to).getTime() - dateFromKey(from).getTime()) / 86_400_000)
+}
+
+export function formatSince(days: number): string {
+  if (days <= 0) return 'aujourd’hui'
+  if (days === 1) return 'hier'
+  if (days < 14) return `il y a ${days} jours`
+  if (days < 60) return `il y a ${Math.round(days / 7)} sem.`
+  return `il y a ${Math.round(days / 30)} mois`
+}
+
 export function formatTime(date: Date): string {
   return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }

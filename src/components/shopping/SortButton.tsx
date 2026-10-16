@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { classifyAisles } from '../../lib/aisles'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { useLocalSettings } from '../../lib/localSettings'
-import { saveAisles, shoppingErrorMessage, type ShoppingItem } from '../../lib/shopping'
+import { sharedErrorMessage } from '../../lib/shared'
+import { saveAisles, type ShoppingItem } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
 
 export function SortButton({ items }: { items: ShoppingItem[] }) {
@@ -16,7 +17,7 @@ export function SortButton({ items }: { items: ShoppingItem[] }) {
     setSorting(true)
     try {
       const aisles = await classifyAisles(pending, geminiKey, geminiModel)
-      saveAisles(aisles).catch((error: unknown) => showToast(shoppingErrorMessage(error)))
+      saveAisles(aisles).catch((error: unknown) => showToast(sharedErrorMessage(error)))
     } catch (error) {
       showToast(geminiErrorMessage(error))
     } finally {
