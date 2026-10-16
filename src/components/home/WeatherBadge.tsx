@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useWeather } from '../../hooks/useWeather'
 import { WEATHER_LABELS, WEATHER_PLACE, type WeatherKind } from '../../lib/weather'
+import { ArrowUpIcon } from '../icons/ArrowUpIcon'
 import { WeatherIcon } from '../icons/WeatherIcon'
 
 const TICK = 'absolute bottom-0 h-[7px] w-[1.5px] rounded-full bg-white/30'
@@ -20,7 +21,12 @@ export function WeatherBadge({ dateKey }: { dateKey: string }) {
             exit={{ opacity: 0 }}
             className="flex h-9 items-end gap-3"
           >
-            <span className="pb-px text-[20px] leading-none font-semibold tabular-nums">{weather.max}°</span>
+            <span className="flex items-center gap-0.5 pb-px text-[20px] leading-none font-semibold tabular-nums">
+              <span className="text-accent">
+                <ArrowUpIcon size={17} strokeWidth={2.5} />
+              </span>
+              {weather.max}°
+            </span>
             <DaySchema morning={weather.morning} afternoon={weather.afternoon} />
           </motion.div>
         )}
@@ -37,8 +43,8 @@ function DaySchema({ morning, afternoon }: { morning: WeatherKind; afternoon: We
       <span className={`${TICK} left-1/2 -translate-x-1/2`} />
       <span className={`${TICK} right-0`} />
       {[morning, afternoon].map((kind, i) => (
-        <span key={i} className="grid w-11 place-items-center">
-          <WeatherIcon kind={kind} size={22} />
+        <span key={i} className="grid w-12 place-items-center">
+          <WeatherIcon kind={kind} size={26} />
         </span>
       ))}
     </div>
