@@ -82,8 +82,12 @@ export interface MealRequest {
 
 export function analyzeMeal({ type, note, photos }: MealRequest, key: string, model: string) {
   const description = note.trim() || 'aucune, analyse uniquement les photos'
+  const several =
+    photos.length > 1
+      ? ` ${photos.length} photos jointes : elles peuvent montrer le même plat sous plusieurs angles ou des plats différents du même repas, ne compte jamais deux fois le même aliment.`
+      : ''
   const parts: Part[] = [
-    { text: `Repas : ${mealLabel(type)}. Description : ${description}` },
+    { text: `Repas : ${mealLabel(type)}. Description : ${description}.${several}` },
     ...photos.map((src) => ({ inlineData: { mimeType: 'image/jpeg', data: base64Of(src) } })),
   ]
   return requestItems(parts, key, model)

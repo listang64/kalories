@@ -3,7 +3,15 @@ import { DEFAULT_MODEL, FALLBACK_MODEL } from './localSettings'
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
 const TIMEOUT = 30_000
 
-export type GeminiErrorKind = 'no-key' | 'invalid-key' | 'model' | 'quota' | 'busy' | 'unavailable' | 'unreadable'
+export type GeminiErrorKind =
+  | 'no-key'
+  | 'offline'
+  | 'invalid-key'
+  | 'model'
+  | 'quota'
+  | 'busy'
+  | 'unavailable'
+  | 'unreadable'
 
 export class GeminiError extends Error {
   readonly kind: GeminiErrorKind
@@ -18,6 +26,7 @@ export class GeminiError extends Error {
 
 const MESSAGES: Record<GeminiErrorKind, string> = {
   'no-key': 'Ajoute ta clé Gemini dans les Paramètres',
+  offline: 'Pas de connexion : l’analyse demande du réseau',
   'invalid-key': 'Clé Gemini refusée',
   model: 'Modèle Gemini introuvable',
   quota: 'Trop de demandes, réessaie dans une minute',
@@ -48,6 +57,7 @@ function kindForStatus(status: number): GeminiErrorKind {
 
 export async function generateContent(body: object, key: string, model: string): Promise<string> {
   if (!key) throw new GeminiError('no-key')
+  if (!navigator.onLine) throw new GeminiError('offline')
   const name = model.replace(/^models\//, '').trim() || DEFAULT_MODEL
   let response: Response
   try {

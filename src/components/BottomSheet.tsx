@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { AnimatePresence, motion, useDragControls } from 'motion/react'
 import { ChevronIcon } from './icons/ChevronIcon'
 import { CloseIcon } from './icons/CloseIcon'
@@ -16,6 +16,20 @@ const CLOSE_VELOCITY = 600
 
 export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
   const controls = useDragControls()
+  const panel = useRef<HTMLElement>(null)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    if (!open) return
+    const frame = requestAnimationFrame(() => panel.current?.focus({ preventScroll: true }))
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && closeRef.current()
+    window.addEventListener('keydown', onKey)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   return (
     <AnimatePresence>
@@ -29,6 +43,8 @@ export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
             onClick={onClose}
           />
           <motion.section
+            ref={panel}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={title}
@@ -44,7 +60,7 @@ export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
             onDragEnd={(_, info) => {
               if (info.offset.y > CLOSE_DISTANCE || info.velocity.y > CLOSE_VELOCITY) onClose()
             }}
-            className="absolute inset-x-0 top-[calc(var(--safe-top)+12px)] bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-surface"
+            className="absolute inset-x-0 top-[calc(var(--safe-top)+12px)] bottom-0 flex flex-col rounded-t-sheet border-t border-line bg-surface outline-none"
           >
             <div onPointerDown={(e) => controls.start(e)} className="touch-none px-5 pt-2 pb-3">
               <div className="mx-auto h-1.5 w-10 rounded-full bg-white/20" />
@@ -54,7 +70,7 @@ export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
                     type="button"
                     aria-label="Retour"
                     onClick={onBack}
-                    className="-ml-2 grid size-9 place-items-center rounded-full text-text-2"
+                    className="-ml-2 grid size-10 place-items-center rounded-full text-text-2"
                   >
                     <ChevronIcon size={22} direction="left" />
                   </button>
@@ -64,7 +80,7 @@ export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
                   type="button"
                   aria-label="Fermer"
                   onClick={onClose}
-                  className="grid size-9 place-items-center rounded-full bg-surface-2 text-text-2"
+                  className="grid size-10 place-items-center rounded-full bg-surface-2 text-text-2"
                 >
                   <CloseIcon size={20} />
                 </button>

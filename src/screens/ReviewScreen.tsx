@@ -58,7 +58,7 @@ export function ReviewScreen({ profile, progress }: Props) {
         type="button"
         disabled={items.length === 0}
         onClick={validate}
-        className="mt-3 h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent transition-opacity disabled:opacity-35 disabled:shadow-none"
+        className="press mt-3 h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent disabled:opacity-35 disabled:shadow-none"
       >
         {editing ? 'Enregistrer' : 'Valider le repas'}
       </button>

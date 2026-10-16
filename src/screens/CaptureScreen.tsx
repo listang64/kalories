@@ -66,9 +66,10 @@ export function CaptureScreen() {
         type="button"
         disabled={!canAnalyze}
         onClick={() => void analyze()}
-        className="h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent transition-opacity disabled:opacity-35 disabled:shadow-none"
+        className="press h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent disabled:opacity-35 disabled:shadow-none"
       >
         Analyser
+        {draft.photos.length > 0 && ` · ${draft.photos.length} photo${draft.photos.length > 1 ? 's' : ''}`}
       </button>
     </div>
   )

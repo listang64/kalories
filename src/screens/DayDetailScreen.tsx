@@ -76,7 +76,7 @@ export function DayDetailScreen({ profile }: { profile: Profile }) {
         <button
           type="button"
           onClick={() => add()}
-          className="mt-3 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent"
+          className="press mt-3 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent"
         >
           <PlusIcon size={22} strokeWidth={2} />
           Ajouter

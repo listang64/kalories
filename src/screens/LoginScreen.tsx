@@ -87,7 +87,7 @@ export function LoginScreen() {
           type="submit"
           disabled={!password || busy}
           tabIndex={selected ? 0 : -1}
-          className="h-13 w-full rounded-full bg-accent font-semibold text-black shadow-accent transition-opacity disabled:opacity-40"
+          className="press h-13 w-full rounded-full bg-accent font-semibold text-black shadow-accent disabled:opacity-40"
         >
           {busy ? 'Connexion…' : 'Entrer'}
         </button>

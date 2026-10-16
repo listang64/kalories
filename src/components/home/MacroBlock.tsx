@@ -20,6 +20,7 @@ export function MacroBlock({ profile, day, onToggle }: Props) {
           style={{ background: profile.colorB, boxShadow: `0 0 8px ${profile.colorA}` }}
         />
         {profile.name}
+        <span className="sr-only">, toucher pour voir l’autre profil</span>
       </span>
       <span className="mt-2.5 flex flex-col gap-3">
         {MACROS.map((meta) => (

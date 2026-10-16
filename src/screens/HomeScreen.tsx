@@ -7,6 +7,7 @@ import { CalorieRing, type PersonEntry } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
+import { Rise } from '../components/Rise'
 import { otherProfile, PROFILES, type Profile } from '../config/users'
 import { useDayMeals } from '../hooks/useDayMeals'
 import { useHomeData } from '../hooks/useHomeData'
@@ -33,22 +34,26 @@ export function HomeScreen({ profile }: { profile: Profile }) {
 
   return (
     <main className="safe-screen flex h-full flex-col px-5">
-      <HomeHeader dateKey={today} onSettings={() => setOverlay('settings')} />
-      {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
-      <div className="mt-5">
+      <Rise index={0}>
+        <HomeHeader dateKey={today} onSettings={() => setOverlay('settings')} />
+        {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
+      </Rise>
+      <Rise index={1} className="mt-5">
         <MacroBlock
           profile={viewed}
           day={data[viewed.id]}
           onToggle={() => setViewed(otherProfile(viewed))}
         />
-      </div>
-      <div className="my-3 flex min-h-0 flex-1">
+      </Rise>
+      <Rise index={2} className="my-3 flex min-h-0 flex-1">
         <CalorieRing left={nico} right={chachou} onOrb={() => setOverlay('day')} />
-      </div>
-      <CalorieLegend entries={[nico, chachou]} />
-      <div className="flex justify-center pt-4 pb-3">
+      </Rise>
+      <Rise index={3}>
+        <CalorieLegend entries={[nico, chachou]} />
+      </Rise>
+      <Rise index={4} className="flex justify-center pt-4 pb-3">
         <AddButton onPress={() => openAdd()} />
-      </div>
+      </Rise>
       <BottomSheet open={overlay === 'day'} title="Journée" onClose={() => setOverlay(null)}>
         <DayDetailScreen profile={profile} />
       </BottomSheet>
