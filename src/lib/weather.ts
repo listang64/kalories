@@ -12,7 +12,7 @@ export const WEATHER_PLACE = 'Hasparren'
 
 const URL =
   'https://api.open-meteo.com/v1/forecast?latitude=43.3842&longitude=-1.3053&daily=temperature_2m_max&hourly=weather_code&timezone=Europe%2FParis&forecast_days=1'
-const CACHE_KEY = 'kalories.weather'
+const CACHE_KEY = 'kalories.weather-v2'
 const MAX_AGE = 30 * 60_000
 
 export const WEATHER_LABELS: Record<WeatherKind, string> = {
@@ -39,8 +39,8 @@ function kindOf(code: number): WeatherKind {
 
 type Hours = readonly [from: number, to: number]
 
-const MORNING: Hours = [7, 12]
-const AFTERNOON: Hours = [12, 19]
+const MORNING: Hours = [8, 12]
+const AFTERNOON: Hours = [13, 17]
 
 function periodKind(codes: number[]): WeatherKind {
   const wet = codes.filter((code) => code >= 51)
@@ -54,7 +54,7 @@ function codesBetween(times: string[], codes: (number | null)[], [from, to]: Hou
   return times.flatMap((time, i) => {
     const hour = Number(time.slice(11, 13))
     const code = codes[i]
-    return hour >= from && hour < to && typeof code === 'number' ? [code] : []
+    return hour >= from && hour <= to && typeof code === 'number' ? [code] : []
   })
 }
 
