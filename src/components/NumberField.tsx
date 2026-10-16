@@ -8,9 +8,10 @@ interface Props {
   min: number
   max: number
   onCommit: (value: number) => void
+  inputClassName?: string
 }
 
-export function NumberField({ label, value, suffix, min, max, onCommit }: Props) {
+export function NumberField({ label, value, suffix, min, max, onCommit, inputClassName = 'w-20 text-right' }: Props) {
   const [draft, setDraft] = useState<string | null>(null)
 
   const commit = () => {
@@ -35,7 +36,7 @@ export function NumberField({ label, value, suffix, min, max, onCommit }: Props)
         onChange={(e) => setDraft(e.target.value.replace(/\D/g, '').slice(0, 5))}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-        className="w-20 bg-transparent text-right text-[17px] font-semibold tabular-nums outline-none"
+        className={`bg-transparent text-[17px] font-semibold tabular-nums outline-none ${inputClassName}`}
       />
       <span className="text-[15px] text-text-2">{suffix}</span>
     </span>

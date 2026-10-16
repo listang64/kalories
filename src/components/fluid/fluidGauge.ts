@@ -9,12 +9,13 @@ export interface FluidOptions {
   side: -1 | 1
   margin: number
   thickness: number
+  spin?: number
 }
 
 const SHAPE_ID: Record<FluidShape, number> = { bar: 0, arc: 1, orb: 2 }
 const UNIFORMS = [
   'uRes', 'uTime', 'uFill', 'uSlosh', 'uOver', 'uColA', 'uColB', 'uColC', 'uColD',
-  'uShape', 'uSide', 'uGeom', 'uDpr', 'uPress', 'uRipple', 'uMargin',
+  'uShape', 'uSide', 'uGeom', 'uDpr', 'uPress', 'uRipple', 'uMargin', 'uSpin',
 ] as const
 type UniformName = (typeof UNIFORMS)[number]
 
@@ -86,6 +87,7 @@ export class FluidGauge implements FluidItem {
     UNIFORMS.forEach((name) => this.uniforms.set(name, gl.getUniformLocation(program, name)))
     gl.uniform1f(this.u('uShape'), SHAPE_ID[this.options.shape])
     gl.uniform1f(this.u('uSide'), this.options.side)
+    gl.uniform1f(this.u('uSpin'), this.options.spin ?? 1)
     this.applyColors()
     this.applySize()
     return true

@@ -24,6 +24,8 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   const setOverlay = useAppStore((s) => s.setOverlay)
   const showToast = useAppStore((s) => s.showToast)
   const openAdd = useAppStore((s) => s.openAdd)
+  const settingsOnTop = useAppStore((s) => s.settingsOnTop)
+  const closeSettings = useAppStore((s) => s.closeSettings)
 
   const soon = () => showToast('Bientôt disponible')
   const nico: PersonEntry = { profile: PROFILES.nico, day: data.nico }
@@ -47,10 +49,10 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       <div className="flex justify-center pt-4 pb-3">
         <AddButton onPress={() => openAdd()} />
       </div>
-      <BottomSheet open={overlay === 'settings'} title="Paramètres" onClose={() => setOverlay(null)}>
+      <AddMealSheet progress={{ kcal: data[profile.id].totals.kcal, goal: data[profile.id].goals.kcal }} />
+      <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
         <SettingsScreen profile={profile} />
       </BottomSheet>
-      <AddMealSheet />
     </main>
   )
 }

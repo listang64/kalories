@@ -24,6 +24,7 @@ uniform float uDpr;
 uniform float uPress;
 uniform float uRipple;
 uniform float uMargin;
+uniform float uSpin;
 
 const float PI = 3.14159265;
 const vec3 ACCENT = vec3(1.0, 0.478, 0.102);
@@ -158,11 +159,11 @@ vec4 orb(vec2 p) {
 
   float edge = clamp(0.5 - d, 0.0, 1.0);
   vec2 uv = p / R;
-  float a = uTime * 0.2;
+  float a = uTime * 0.2 * uSpin;
   vec2 w = mat2(cos(a), -sin(a), sin(a), cos(a)) * uv * 0.95;
   vec2 warp = vec2(snoise(w * 0.8 + uTime * 0.1), snoise(w * 0.8 - uTime * 0.1 + 5.2));
   float n = 0.75 * snoise(w + 0.7 * warp) + 0.25 * snoise(w * 2.2 - uTime * 0.05);
-  float b = uTime * 0.16;
+  float b = uTime * 0.16 * uSpin;
   float m = smoothstep(-0.45, 0.45, 0.85 * n + 0.8 * dot(uv, vec2(cos(b), sin(b))));
   float tone = 0.5 + 0.5 * fbm(w * 1.4 - uTime * 0.08);
   vec3 violet = mix(uColA, uColB, tone);

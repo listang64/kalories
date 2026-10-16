@@ -16,7 +16,7 @@ export function FluidCanvas({ options, colors, fill = 1, over = false, style, on
   const gaugeRef = useRef<FluidGauge | null>(null)
   const latest = useRef({ colors, fill, over, onFail, onReady })
   latest.current = { colors, fill, over, onFail, onReady }
-  const { shape, side, margin, thickness } = options
+  const { shape, side, margin, thickness, spin } = options
 
   useLayoutEffect(() => {
     const host = hostRef.current
@@ -24,7 +24,7 @@ export function FluidCanvas({ options, colors, fill = 1, over = false, style, on
     const canvas = document.createElement('canvas')
     canvas.style.cssText = 'display:block;width:100%;height:100%'
     host.appendChild(canvas)
-    const gauge = createFluidGauge(canvas, { shape, side, margin, thickness })
+    const gauge = createFluidGauge(canvas, { shape, side, margin, thickness, spin })
     if (!gauge) {
       canvas.remove()
       latest.current.onFail()
@@ -45,7 +45,7 @@ export function FluidCanvas({ options, colors, fill = 1, over = false, style, on
       gaugeRef.current = null
       latest.current.onReady?.(null)
     }
-  }, [shape, side, margin, thickness])
+  }, [shape, side, margin, thickness, spin])
 
   const colorKey = colors.join()
   useEffect(() => {

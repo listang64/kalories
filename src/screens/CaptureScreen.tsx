@@ -1,5 +1,6 @@
 import { CameraView } from '../components/capture/CameraView'
 import { PhotoStrip } from '../components/capture/PhotoStrip'
+import { useAnalyzeMeal } from '../hooks/useAnalyzeMeal'
 import { fileToJpeg } from '../lib/image'
 import { useAppStore } from '../store/appStore'
 
@@ -10,6 +11,9 @@ export function CaptureScreen() {
   const addPhoto = useAppStore((s) => s.addPhoto)
   const removePhoto = useAppStore((s) => s.removePhoto)
   const showToast = useAppStore((s) => s.showToast)
+  const error = useAppStore((s) => s.analysisError)
+  const openSettingsOnTop = useAppStore((s) => s.openSettingsOnTop)
+  const analyze = useAnalyzeMeal()
   const canAnalyze = draft.note.trim() !== '' || draft.photos.length > 0
 
   const add = (src: string) => {
@@ -44,10 +48,24 @@ export function CaptureScreen() {
       />
       <CameraView active={active} onPhoto={add} onFiles={(files) => void importFiles(files)} />
       {draft.photos.length > 0 && <PhotoStrip photos={draft.photos} onRemove={removePhoto} />}
+      {error && (
+        <div role="alert" className="flex shrink-0 items-center gap-3 rounded-card border border-accent/30 bg-accent/10 py-3 pr-3 pl-4">
+          <p className="flex-1 text-[15px] leading-snug">{error.message}</p>
+          {error.action && (
+            <button
+              type="button"
+              onClick={error.action === 'retry' ? () => void analyze() : openSettingsOnTop}
+              className="h-9 shrink-0 rounded-full px-3 text-[15px] font-semibold text-accent"
+            >
+              {error.action === 'retry' ? 'Réessayer' : 'Paramètres'}
+            </button>
+          )}
+        </div>
+      )}
       <button
         type="button"
         disabled={!canAnalyze}
-        onClick={() => showToast('L’analyse Gemini arrive à l’étape 7')}
+        onClick={() => void analyze()}
         className="h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent transition-opacity disabled:opacity-35 disabled:shadow-none"
       >
         Analyser

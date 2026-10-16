@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 interface Props {
   size: number
   label: string
-  onPress: () => void
+  onPress?: () => void
 }
 
 export function OrbCss({ size, label, onPress }: Props) {
@@ -12,7 +12,8 @@ export function OrbCss({ size, label, onPress }: Props) {
       type="button"
       aria-label={label}
       onClick={onPress}
-      whileTap={{ scale: 0.94 }}
+      disabled={!onPress}
+      whileTap={onPress ? { scale: 0.94 } : undefined}
       transition={{ type: 'spring', stiffness: 500, damping: 22 }}
       className="relative rounded-full"
       style={{ width: size, height: size }}
