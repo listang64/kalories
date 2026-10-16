@@ -9,6 +9,19 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(process.env.GITHUB_SHA?.slice(0, 7) ?? 'dev'),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'firebase', test: /node_modules[\\/]@?firebase/ },
+            { name: 'vendor', test: /node_modules/ },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

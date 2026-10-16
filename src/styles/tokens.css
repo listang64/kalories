@@ -21,8 +21,6 @@
   --halo-accent: 0 0 28px rgba(255, 122, 26, 0.35);
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
-  --safe-left: env(safe-area-inset-left);
-  --safe-right: env(safe-area-inset-right);
 }
 
 @theme inline {
@@ -57,8 +55,6 @@
 @utility safe-screen {
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
 }
 
 @layer base {

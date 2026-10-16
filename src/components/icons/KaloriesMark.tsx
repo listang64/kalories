@@ -12,7 +12,7 @@ export function KaloriesMark({ size = 96 }: { size?: number }) {
   const glow = `${id}g`
 
   return (
-    <svg width={size} height={size} viewBox="0 0 512 512" aria-hidden="true">
+    <svg width={size} height={size} viewBox="64 64 384 384" overflow="visible" aria-hidden="true">
       <defs>
         <linearGradient id={nico} x1="0" y1="1" x2="0" y2="0">
           <stop offset="0" stopColor="var(--nico)" />

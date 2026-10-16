@@ -1,25 +1,31 @@
-import { Logo } from './components/Logo'
+import { AnimatePresence, motion } from 'motion/react'
 import { Toast } from './components/Toast'
 import { useAppUpdate } from './hooks/useAppUpdate'
-
-const buildDate = new Date(__BUILD_DATE__).toLocaleString('fr-FR', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-})
+import { useAuth } from './hooks/useAuth'
+import { HomeScreen } from './screens/HomeScreen'
+import { LoginScreen } from './screens/LoginScreen'
 
 export default function App() {
   useAppUpdate()
+  const { profile, ready } = useAuth()
 
   return (
-    <main className="safe-screen relative flex h-full flex-col items-center justify-center">
-      <Logo size={112} />
-      <p className="label mt-6">Bientôt : Nico & Chachou</p>
-      <footer className="absolute inset-x-0 bottom-[calc(var(--safe-bottom)+20px)] text-center text-xs text-text-2 tabular-nums">
-        Version {__APP_VERSION__} · {buildDate}
-      </footer>
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        {ready && (
+          <motion.div
+            key={profile ? `home-${profile.id}` : 'login'}
+            className="h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {profile ? <HomeScreen profile={profile} /> : <LoginScreen />}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Toast />
-    </main>
+    </>
   )
 }
