@@ -3,7 +3,7 @@ import { browserLocalPersistence, initializeAuth } from 'firebase/auth'
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentMultipleTabManager,
+  persistentSingleTabManager,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -20,5 +20,7 @@ export const app = initializeApp(firebaseConfig)
 export const auth = initializeAuth(app, { persistence: browserLocalPersistence })
 
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager({ forceOwnership: true }),
+  }),
 })
