@@ -9,9 +9,9 @@ export function AddButton({ onPress }: { onPress: () => void }) {
       onClick={onPress}
       whileTap={{ scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-      className="grid size-20 place-items-center rounded-full bg-accent text-black shadow-[0_0_32px_rgba(255,122,26,0.45)]"
+      className="grid size-22 place-items-center rounded-full bg-accent text-black shadow-[0_0_36px_rgba(255,122,26,0.45)]"
     >
-      <PlusIcon size={36} strokeWidth={2} />
+      <PlusIcon size={40} strokeWidth={2} />
     </motion.button>
   )
 }

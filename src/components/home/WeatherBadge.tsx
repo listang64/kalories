@@ -9,7 +9,7 @@ export function WeatherBadge({ dateKey }: { dateKey: string }) {
   const weather = useWeather(dateKey)
 
   return (
-    <div className="mt-1.5 h-9">
+    <div className="mt-2 flex h-9 justify-center">
       <AnimatePresence>
         {weather && (
           <motion.div
