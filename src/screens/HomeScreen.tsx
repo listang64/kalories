@@ -8,6 +8,7 @@ import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
 import { Rise } from '../components/Rise'
+import { SortButton } from '../components/shopping/SortButton'
 import { otherProfile, PROFILES, type Profile } from '../config/users'
 import { useDayMeals } from '../hooks/useDayMeals'
 import { useHomeData } from '../hooks/useHomeData'
@@ -25,7 +26,7 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   const today = useToday()
   const data = useHomeData(useProfiles(), useDayMeals(today))
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
-  const shoppingCount = useShoppingList().items.length
+  const shopping = useShoppingList()
   const [viewed, setViewed] = useState(profile)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
@@ -57,7 +58,7 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       </Rise>
       <Rise index={4} className="pt-4 pb-3">
         <HomeActions
-          shoppingCount={shoppingCount}
+          shoppingCount={shopping.items.length}
           onHistory={() => setOverlay('history')}
           onAdd={() => openAdd()}
           onShopping={() => setOverlay('shopping')}
@@ -69,8 +70,13 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       <BottomSheet open={overlay === 'history'} title="Historique" onClose={() => setOverlay(null)}>
         <HistoryScreen />
       </BottomSheet>
-      <BottomSheet open={overlay === 'shopping'} title="Liste de courses" onClose={() => setOverlay(null)}>
-        <ShoppingScreen profile={profile} />
+      <BottomSheet
+        open={overlay === 'shopping'}
+        title="Liste de courses"
+        onClose={() => setOverlay(null)}
+        action={<SortButton items={shopping.items} />}
+      >
+        <ShoppingScreen profile={profile} items={shopping.items} denied={shopping.denied} />
       </BottomSheet>
       <AddMealSheet
         profile={profile}

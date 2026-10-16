@@ -51,7 +51,7 @@ function EditorForm({ item, onClose }: { item: ShoppingItem; onClose: () => void
 
   const save = () => {
     if (!name.trim()) return
-    updateShoppingItem(item.id, name, quantity).catch(fail)
+    updateShoppingItem(item, name, quantity).catch(fail)
     onClose()
   }
 

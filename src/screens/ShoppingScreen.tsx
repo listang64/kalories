@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { AnimatePresence } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CartIcon } from '../components/icons/CartIcon'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { ItemEditor } from '../components/shopping/ItemEditor'
 import { ShoppingBubble } from '../components/shopping/ShoppingBubble'
+import { AISLES } from '../config/aisles'
 import { otherProfile, type Profile } from '../config/users'
-import { useShoppingList } from '../hooks/useShoppingList'
 import {
   addShoppingItems,
   clearShoppingItems,
@@ -17,8 +17,28 @@ import {
 } from '../lib/shopping'
 import { useAppStore } from '../store/appStore'
 
-export function ShoppingScreen({ profile }: { profile: Profile }) {
-  const { items, denied } = useShoppingList()
+interface Props {
+  profile: Profile
+  items: ShoppingItem[]
+  denied: boolean
+}
+
+interface Group {
+  id: string
+  label: string
+  items: ShoppingItem[]
+}
+
+function groupByAisle(items: ShoppingItem[]): Group[] {
+  const pending = items.filter((item) => item.aisle === null)
+  const sorted = AISLES.map((aisle) => ({ ...aisle, items: items.filter((item) => item.aisle === aisle.id) })).filter(
+    (group) => group.items.length > 0,
+  )
+  if (pending.length === 0) return sorted
+  return [{ id: 'pending', label: sorted.length > 0 ? 'À trier' : '', items: pending }, ...sorted]
+}
+
+export function ShoppingScreen({ profile, items, denied }: Props) {
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<ShoppingItem | null>(null)
   const [clearing, setClearing] = useState(false)
@@ -86,14 +106,17 @@ export function ShoppingScreen({ profile }: { profile: Profile }) {
         ) : (
           <ul className="flex flex-wrap gap-2.5">
             <AnimatePresence initial={false}>
-              {items.map((item) => (
-                <ShoppingBubble
-                  key={item.id}
-                  item={item}
-                  onEdit={() => setEditing(item)}
-                  onDelete={() => deleteShoppingItem(item.id).catch(fail)}
-                />
-              ))}
+              {groupByAisle(items).flatMap((group) => [
+                ...(group.label ? [<AisleLabel key={`aisle-${group.id}`} label={group.label} />] : []),
+                ...group.items.map((item) => (
+                  <ShoppingBubble
+                    key={item.id}
+                    item={item}
+                    onEdit={() => setEditing(item)}
+                    onDelete={() => deleteShoppingItem(item.id).catch(fail)}
+                  />
+                )),
+              ])}
             </AnimatePresence>
           </ul>
         )}
@@ -117,5 +140,19 @@ export function ShoppingScreen({ profile }: { profile: Profile }) {
         }}
       />
     </div>
+  )
+}
+
+function AisleLabel({ label }: { label: string }) {
+  return (
+    <motion.li
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="label basis-full list-none px-1 pt-3 first:pt-0"
+    >
+      {label}
+    </motion.li>
   )
 }

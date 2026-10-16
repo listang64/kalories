@@ -8,13 +8,14 @@ interface Props {
   title: string
   onClose: () => void
   onBack?: () => void
+  action?: ReactNode
   children: ReactNode
 }
 
 const CLOSE_DISTANCE = 120
 const CLOSE_VELOCITY = 600
 
-export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
+export function BottomSheet({ open, title, onClose, onBack, action, children }: Props) {
   const controls = useDragControls()
   const panel = useRef<HTMLElement>(null)
   const closeRef = useRef(onClose)
@@ -76,6 +77,7 @@ export function BottomSheet({ open, title, onClose, onBack, children }: Props) {
                   </button>
                 )}
                 <h2 className="flex-1 text-[20px] font-semibold">{title}</h2>
+                {action}
                 <button
                   type="button"
                   aria-label="Fermer"
