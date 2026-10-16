@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { mealLabel } from '../config/meals'
+import type { Profile } from '../config/users'
 import { CaptureScreen } from '../screens/CaptureScreen'
 import { ReviewScreen } from '../screens/ReviewScreen'
 import { useAppStore, type AddStep } from '../store/appStore'
@@ -18,7 +19,12 @@ const slide = {
   exit: (direction: number) => ({ opacity: 0, x: -48 * direction }),
 }
 
-export function AddMealSheet({ progress }: { progress: DayProgress }) {
+interface Props {
+  profile: Profile
+  progress: DayProgress
+}
+
+export function AddMealSheet({ profile, progress }: Props) {
   const open = useAppStore((s) => s.overlay === 'add')
   const step = useAppStore((s) => s.addStep)
   const type = useAppStore((s) => s.draft.type)
@@ -66,7 +72,7 @@ export function AddMealSheet({ progress }: { progress: DayProgress }) {
             )}
             {step === 'capture' && <CaptureScreen />}
             {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
-            {step === 'review' && <ReviewScreen progress={progress} />}
+            {step === 'review' && <ReviewScreen profile={profile} progress={progress} />}
           </motion.div>
         </AnimatePresence>
       </BottomSheet>

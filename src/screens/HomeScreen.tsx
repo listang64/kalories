@@ -8,6 +8,7 @@ import { GeminiBanner } from '../components/home/GeminiBanner'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
 import { otherProfile, PROFILES, type Profile } from '../config/users'
+import { useDayMeals } from '../hooks/useDayMeals'
 import { useHomeData } from '../hooks/useHomeData'
 import { useProfiles } from '../hooks/useProfiles'
 import { useToday } from '../hooks/useToday'
@@ -17,7 +18,7 @@ import { SettingsScreen } from './SettingsScreen'
 
 export function HomeScreen({ profile }: { profile: Profile }) {
   const today = useToday()
-  const data = useHomeData(useProfiles())
+  const data = useHomeData(useProfiles(), useDayMeals(today))
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
   const [viewed, setViewed] = useState(profile)
   const overlay = useAppStore((s) => s.overlay)
@@ -49,7 +50,10 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       <div className="flex justify-center pt-4 pb-3">
         <AddButton onPress={() => openAdd()} />
       </div>
-      <AddMealSheet progress={{ kcal: data[profile.id].totals.kcal, goal: data[profile.id].goals.kcal }} />
+      <AddMealSheet
+        profile={profile}
+        progress={{ kcal: data[profile.id].totals.kcal, goal: data[profile.id].goals.kcal }}
+      />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
         <SettingsScreen profile={profile} />
       </BottomSheet>

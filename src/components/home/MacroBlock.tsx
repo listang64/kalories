@@ -2,6 +2,7 @@ import { MACROS, type MacroMeta } from '../../config/macros'
 import type { Profile } from '../../config/users'
 import type { PersonDay } from '../../hooks/useHomeData'
 import { formatInt } from '../../lib/format'
+import { AnimatedNumber } from '../AnimatedNumber'
 import { BarGauge } from '../fluid/BarGauge'
 
 interface Props {
@@ -48,7 +49,9 @@ function MacroRow({ meta, name, value, goal }: RowProps) {
       <span className="mb-1.5 flex items-baseline justify-between">
         <span className="label">{meta.label}</span>
         <span className="text-[13px] tabular-nums">
-          <span className={value > goal ? 'text-accent' : 'text-text'}>{formatInt(value)}</span>
+          <span className={value > goal ? 'text-accent' : 'text-text'}>
+            <AnimatedNumber value={value} />
+          </span>
           <span className="text-text-2"> / {formatInt(goal)} g</span>
         </span>
       </span>

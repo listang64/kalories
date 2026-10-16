@@ -80,8 +80,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   toast: null,
   session: 0,
   ...resetFlow(),
-  setOverlay: (overlay) =>
-    set((s) => (overlay === null ? { overlay, session: s.session + 1, ...resetFlow() } : { overlay })),
+  setOverlay: (overlay) => set((s) => (overlay === null ? { overlay, session: s.session + 1 } : { overlay })),
   openSettingsOnTop: () => set({ settingsOnTop: true }),
   closeSettings: () => (get().settingsOnTop ? set({ settingsOnTop: false, analysisError: null }) : get().setOverlay(null)),
   setUpdateReady: (updateReady) => set({ updateReady }),

@@ -1,7 +1,7 @@
 import { mealLabel, type MealType } from '../config/meals'
 import { GeminiError, generateWithFallback } from './gemini'
 import { base64Of } from './image'
-import type { Confidence, MealItem } from './nutrition'
+import { parseItem, type MealItem } from './nutrition'
 
 const SYSTEM_PROMPT = `Tu es un nutritionniste expert. On te donne une description et/ou des photos d'un repas.
 - Identifie chaque aliment séparément (riz, poulet, sauce, pain, boisson…).
@@ -46,43 +46,11 @@ export interface Analysis {
   comment: string
 }
 
-const CONFIDENCES: Confidence[] = ['haute', 'moyenne', 'basse']
-
-function number(value: unknown, max: number): number | null {
-  const n = typeof value === 'number' ? value : Number(value)
-  return Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : null
-}
-
-function toItem(raw: unknown): MealItem | null {
-  if (!raw || typeof raw !== 'object') return null
-  const r = raw as Record<string, unknown>
-  const name = typeof r.name === 'string' ? r.name.trim() : ''
-  const grams = number(r.grams, 5000)
-  const kcal100 = number(r.kcal100, 900)
-  const carbs100 = number(r.carbs100, 100)
-  const fat100 = number(r.fat100, 100)
-  const protein100 = number(r.protein100, 100)
-  if (!name || grams === null || kcal100 === null || carbs100 === null || fat100 === null || protein100 === null) {
-    return null
-  }
-  const confidence = CONFIDENCES.find((c) => c === r.confidence) ?? 'moyenne'
-  const round1 = (value: number) => Math.round(value * 10) / 10
-  return {
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    grams: Math.round(grams),
-    kcal100: round1(kcal100),
-    carbs100: round1(carbs100),
-    fat100: round1(fat100),
-    protein100: round1(protein100),
-    confidence,
-  }
-}
-
 function parse(text: string): Analysis | null {
   try {
     const data = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')) as { items?: unknown; comment?: unknown }
     if (!Array.isArray(data.items)) return null
-    const items = data.items.map(toItem).filter((item): item is MealItem => item !== null)
+    const items = data.items.map(parseItem).filter((item): item is MealItem => item !== null)
     return { items, comment: typeof data.comment === 'string' ? data.comment : '' }
   } catch {
     return null

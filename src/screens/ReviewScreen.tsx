@@ -2,15 +2,31 @@ import { AnimatePresence } from 'motion/react'
 import { AddFoodRow } from '../components/review/AddFoodRow'
 import { ItemCard } from '../components/review/ItemCard'
 import { ReviewSummary, type DayProgress } from '../components/review/ReviewSummary'
+import type { Profile } from '../config/users'
+import { saveMeal } from '../lib/meals'
 import { useAppStore } from '../store/appStore'
 
-export function ReviewScreen({ progress }: { progress: DayProgress }) {
+interface Props {
+  profile: Profile
+  progress: DayProgress
+}
+
+export function ReviewScreen({ profile, progress }: Props) {
   const items = useAppStore((s) => s.review)
   const type = useAppStore((s) => s.draft.type)
   const setMealType = useAppStore((s) => s.setMealType)
   const updateItem = useAppStore((s) => s.updateItem)
   const removeItem = useAppStore((s) => s.removeItem)
   const showToast = useAppStore((s) => s.showToast)
+  const setOverlay = useAppStore((s) => s.setOverlay)
+
+  const validate = () => {
+    const { draft, review } = useAppStore.getState()
+    saveMeal(profile, { type: draft.type, note: draft.note, items: review }).catch(() =>
+      showToast('Enregistrement impossible'),
+    )
+    setOverlay(null)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -33,7 +49,7 @@ export function ReviewScreen({ progress }: { progress: DayProgress }) {
       <button
         type="button"
         disabled={items.length === 0}
-        onClick={() => showToast('L’enregistrement arrive à l’étape 8')}
+        onClick={validate}
         className="mt-3 h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent transition-opacity disabled:opacity-35 disabled:shadow-none"
       >
         Valider le repas

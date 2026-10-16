@@ -1,4 +1,5 @@
 import { formatInt } from '../../lib/format'
+import { AnimatedNumber } from '../AnimatedNumber'
 import type { PersonEntry } from './CalorieRing'
 
 export function CalorieLegend({ entries }: { entries: PersonEntry[] }) {
@@ -23,11 +24,15 @@ function LegendItem({ profile, day }: PersonEntry) {
         {profile.name}
       </span>
       <p className="mt-0.5 whitespace-nowrap">
-        <span className={`text-[22px] font-semibold ${over ? 'text-accent' : ''}`}>{formatInt(kcal)}</span>
+        <span className={`text-[22px] font-semibold ${over ? 'text-accent' : ''}`}>
+          <AnimatedNumber value={kcal} />
+        </span>
         <span className="text-[13px] text-text-2"> / {formatInt(goal)} kcal</span>
       </p>
       <span className={`text-[13px] ${over ? 'text-accent' : 'text-text-2'}`}>
-        {over ? `+${formatInt(-rest)} kcal` : `reste ${formatInt(rest)}`}
+        {over ? '+' : 'reste '}
+        <AnimatedNumber value={Math.abs(rest)} />
+        {over && ' kcal'}
       </span>
     </div>
   )
