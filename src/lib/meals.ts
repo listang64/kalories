@@ -1,8 +1,15 @@
-import { addDoc, collection, serverTimestamp, type QueryDocumentSnapshot } from 'firebase/firestore'
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  updateDoc,
+  type QueryDocumentSnapshot,
+} from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { MEAL_TYPES, type MealType } from '../config/meals'
 import type { Profile } from '../config/users'
-import { todayKey } from './dates'
 import { mealTotals, parseItem, sumTotals, type MealItem, type Totals } from './nutrition'
 
 export interface Meal {
@@ -35,17 +42,31 @@ function cleanItems(items: MealItem[]): MealItem[] {
   }))
 }
 
-export function saveMeal(profile: Profile, meal: MealInput): Promise<unknown> {
+export function saveMeal(profile: Profile, meal: MealInput, date: string): Promise<unknown> {
   const items = cleanItems(meal.items)
   return addDoc(mealsCollection, {
     uid: profile.uid,
-    date: todayKey(),
+    date,
     type: meal.type,
     createdAt: serverTimestamp(),
     note: meal.note.trim(),
     items,
     totals: mealTotals(items),
   })
+}
+
+export function updateMeal(id: string, meal: Omit<MealInput, 'note'>): Promise<void> {
+  const items = cleanItems(meal.items)
+  return updateDoc(doc(mealsCollection, id), {
+    type: meal.type,
+    items,
+    totals: mealTotals(items),
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export function deleteMeal(id: string): Promise<void> {
+  return deleteDoc(doc(mealsCollection, id))
 }
 
 export function mealFromDoc(snapshot: QueryDocumentSnapshot): Meal | null {

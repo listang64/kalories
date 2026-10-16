@@ -1,9 +1,11 @@
 import { AnimatePresence } from 'motion/react'
 import { AddFoodRow } from '../components/review/AddFoodRow'
 import { ItemCard } from '../components/review/ItemCard'
-import { ReviewSummary, type DayProgress } from '../components/review/ReviewSummary'
+import { ReviewSummary } from '../components/review/ReviewSummary'
+import type { DayProgress } from '../lib/nutrition'
 import type { Profile } from '../config/users'
-import { saveMeal } from '../lib/meals'
+import { todayKey } from '../lib/dates'
+import { saveMeal, updateMeal } from '../lib/meals'
 import { useAppStore } from '../store/appStore'
 
 interface Props {
@@ -19,12 +21,18 @@ export function ReviewScreen({ profile, progress }: Props) {
   const removeItem = useAppStore((s) => s.removeItem)
   const showToast = useAppStore((s) => s.showToast)
   const setOverlay = useAppStore((s) => s.setOverlay)
+  const closeEdit = useAppStore((s) => s.closeEdit)
+  const editing = useAppStore((s) => s.editing !== null)
 
   const validate = () => {
-    const { draft, review } = useAppStore.getState()
-    saveMeal(profile, { type: draft.type, note: draft.note, items: review }).catch(() =>
-      showToast('Enregistrement impossible'),
-    )
+    const { draft, review, editing: target, addTarget } = useAppStore.getState()
+    const fail = () => showToast('Enregistrement impossible')
+    if (target) {
+      updateMeal(target.mealId, { type: draft.type, items: review }).catch(fail)
+      return closeEdit()
+    }
+    const meal = { type: draft.type, note: draft.note, items: review }
+    saveMeal(profile, meal, addTarget?.date ?? todayKey()).catch(fail)
     setOverlay(null)
   }
 
@@ -52,7 +60,7 @@ export function ReviewScreen({ profile, progress }: Props) {
         onClick={validate}
         className="mt-3 h-14 shrink-0 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent transition-opacity disabled:opacity-35 disabled:shadow-none"
       >
-        Valider le repas
+        {editing ? 'Enregistrer' : 'Valider le repas'}
       </button>
     </div>
   )

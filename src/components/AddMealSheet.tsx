@@ -9,7 +9,7 @@ import { BottomSheet } from './BottomSheet'
 import { AnalyzingView } from './capture/AnalyzingView'
 import { ConfirmDialog } from './ConfirmDialog'
 import { MealTypeButtons } from './MealTypeButtons'
-import type { DayProgress } from './review/ReviewSummary'
+import type { DayProgress } from '../lib/nutrition'
 
 const ORDER: AddStep[] = ['type', 'capture', 'analyzing', 'review']
 
@@ -25,7 +25,10 @@ interface Props {
 }
 
 export function AddMealSheet({ profile, progress }: Props) {
-  const open = useAppStore((s) => s.overlay === 'add')
+  const open = useAppStore((s) => s.overlay === 'add' || s.editing !== null)
+  const editing = useAppStore((s) => s.editing)
+  const addTarget = useAppStore((s) => s.addTarget)
+  const closeEdit = useAppStore((s) => s.closeEdit)
   const step = useAppStore((s) => s.addStep)
   const type = useAppStore((s) => s.draft.type)
   const dirty = useAppStore((s) => s.reviewDirty)
@@ -41,14 +44,18 @@ export function AddMealSheet({ profile, progress }: Props) {
     previous.current = step
   }, [step])
 
-  const close = () => (step === 'review' && dirty ? setConfirming(true) : setOverlay(null))
-  const back = {
+  const finish = editing ? closeEdit : () => setOverlay(null)
+  const close = () => (step === 'review' && dirty ? setConfirming(true) : finish())
+  const back = editing ? undefined : {
     type: undefined,
     capture: () => setAddStep('type'),
     analyzing: cancelAnalysis,
     review: () => setAddStep('capture'),
   }[step]
-  const title = { type: 'Ajouter un repas', capture: mealLabel(type), analyzing: 'Analyse', review: 'Ton repas' }[step]
+  const title = editing
+    ? 'Modifier le repas'
+    : { type: 'Ajouter un repas', capture: mealLabel(type), analyzing: 'Analyse', review: 'Ton repas' }[step]
+  const base = editing?.progress ?? addTarget?.progress ?? progress
 
   return (
     <>
@@ -72,7 +79,7 @@ export function AddMealSheet({ profile, progress }: Props) {
             )}
             {step === 'capture' && <CaptureScreen />}
             {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
-            {step === 'review' && <ReviewScreen profile={profile} progress={progress} />}
+            {step === 'review' && <ReviewScreen profile={profile} progress={base} />}
           </motion.div>
         </AnimatePresence>
       </BottomSheet>
@@ -85,7 +92,7 @@ export function AddMealSheet({ profile, progress }: Props) {
         onCancel={() => setConfirming(false)}
         onConfirm={() => {
           setConfirming(false)
-          setOverlay(null)
+          finish()
         }}
       />
     </>

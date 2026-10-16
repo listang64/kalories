@@ -23,3 +23,19 @@ export function msUntilMidnight(now = new Date()): number {
   const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
   return next.getTime() - now.getTime()
 }
+
+export function addDays(key: string, delta: number): string {
+  const date = dateFromKey(key)
+  date.setDate(date.getDate() + delta)
+  return todayKey(date)
+}
+
+export function dayLabel(key: string, today: string): string {
+  if (key === today) return 'Aujourd’hui'
+  if (key === addDays(today, -1)) return 'Hier'
+  return formatLongDate(key)
+}
+
+export function formatTime(date: Date): string {
+  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}

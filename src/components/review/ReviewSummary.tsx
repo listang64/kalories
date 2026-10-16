@@ -1,13 +1,8 @@
 import type { MealType } from '../../config/meals'
 import { formatInt } from '../../lib/format'
-import { itemTotals, sumTotals, type MealItem } from '../../lib/nutrition'
+import { itemTotals, sumTotals, type DayProgress, type MealItem } from '../../lib/nutrition'
 import { AnimatedNumber } from '../AnimatedNumber'
 import { MealTypeChip } from './MealTypeChip'
-
-export interface DayProgress {
-  kcal: number
-  goal: number
-}
 
 interface Props {
   items: MealItem[]

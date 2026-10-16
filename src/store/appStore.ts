@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { probableMealType, type MealType } from '../config/meals'
-import type { MealItem } from '../lib/nutrition'
+import type { Meal } from '../lib/meals'
+import type { DayProgress, MealItem } from '../lib/nutrition'
 
 export type Overlay = 'settings' | 'add' | 'day'
 export type AddStep = 'type' | 'capture' | 'analyzing' | 'review'
@@ -18,6 +19,16 @@ export interface MealDraft {
 
 export interface ReviewItem extends MealItem {
   id: string
+}
+
+export interface AddTarget {
+  date: string
+  progress: DayProgress
+}
+
+export interface EditTarget {
+  mealId: string
+  progress: DayProgress
 }
 
 export interface AnalysisError {
@@ -39,7 +50,11 @@ const resetFlow = (type?: MealType) => ({
   review: [] as ReviewItem[],
   reviewDirty: false,
   analysisError: null,
+  addTarget: null,
+  editing: null,
 })
+
+const withIds = (items: MealItem[]): ReviewItem[] => items.map((item) => ({ ...item, id: newId() }))
 
 interface AppState {
   overlay: Overlay | null
@@ -52,13 +67,17 @@ interface AppState {
   review: ReviewItem[]
   reviewDirty: boolean
   analysisError: AnalysisError | null
+  addTarget: AddTarget | null
+  editing: EditTarget | null
   setOverlay: (overlay: Overlay | null) => void
   openSettingsOnTop: () => void
   closeSettings: () => void
   setUpdateReady: (ready: boolean) => void
   showToast: (message: string) => void
   hideToast: () => void
-  openAdd: (type?: MealType) => void
+  openAdd: (type?: MealType, target?: AddTarget) => void
+  startEdit: (meal: Meal, progress: DayProgress, items?: MealItem[]) => void
+  closeEdit: () => void
   setAddStep: (step: AddStep) => void
   chooseMealType: (type: MealType) => void
   setMealType: (type: MealType) => void
@@ -86,7 +105,19 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setUpdateReady: (updateReady) => set({ updateReady }),
   showToast: (toast) => set({ toast }),
   hideToast: () => set({ toast: null }),
-  openAdd: (type) => set((s) => ({ overlay: 'add', session: s.session + 1, ...resetFlow(type) })),
+  openAdd: (type, target) =>
+    set((s) => ({ overlay: 'add', session: s.session + 1, ...resetFlow(type), addTarget: target ?? null })),
+  startEdit: (meal, progress, items) =>
+    set((s) => ({
+      session: s.session + 1,
+      ...resetFlow(meal.type),
+      addStep: 'review',
+      draft: { type: meal.type, note: meal.note, photos: [] },
+      review: withIds(items ?? meal.items),
+      reviewDirty: items !== undefined,
+      editing: { mealId: meal.id, progress },
+    })),
+  closeEdit: () => set((s) => ({ editing: null, session: s.session + 1 })),
   setAddStep: (addStep) => set({ addStep }),
   chooseMealType: (type) => set((s) => ({ addStep: 'capture', draft: { ...s.draft, type } })),
   setMealType: (type) => set((s) => ({ draft: { ...s.draft, type }, reviewDirty: true })),
@@ -100,10 +131,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set((s) => ({ draft: { ...s.draft, photos: s.draft.photos.filter((photo) => photo.id !== id) } })),
   setAnalysisError: (analysisError) => set({ analysisError }),
   cancelAnalysis: () => set((s) => ({ session: s.session + 1, addStep: 'capture' })),
-  startReview: (items) =>
-    set({ addStep: 'review', review: items.map((item) => ({ ...item, id: newId() })), reviewDirty: false }),
-  appendItems: (items) =>
-    set((s) => ({ review: [...s.review, ...items.map((item) => ({ ...item, id: newId() }))], reviewDirty: true })),
+  startReview: (items) => set({ addStep: 'review', review: withIds(items), reviewDirty: false }),
+  appendItems: (items) => set((s) => ({ review: [...s.review, ...withIds(items)], reviewDirty: true })),
   updateItem: (id, patch) =>
     set((s) => ({ review: s.review.map((item) => (item.id === id ? { ...item, ...patch } : item)), reviewDirty: true })),
   removeItem: (id) => set((s) => ({ review: s.review.filter((item) => item.id !== id), reviewDirty: true })),

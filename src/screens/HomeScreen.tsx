@@ -14,6 +14,7 @@ import { useProfiles } from '../hooks/useProfiles'
 import { useToday } from '../hooks/useToday'
 import { useLocalSettings } from '../lib/localSettings'
 import { useAppStore } from '../store/appStore'
+import { DayDetailScreen } from './DayDetailScreen'
 import { SettingsScreen } from './SettingsScreen'
 
 export function HomeScreen({ profile }: { profile: Profile }) {
@@ -23,12 +24,10 @@ export function HomeScreen({ profile }: { profile: Profile }) {
   const [viewed, setViewed] = useState(profile)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
-  const showToast = useAppStore((s) => s.showToast)
   const openAdd = useAppStore((s) => s.openAdd)
   const settingsOnTop = useAppStore((s) => s.settingsOnTop)
   const closeSettings = useAppStore((s) => s.closeSettings)
 
-  const soon = () => showToast('Bientôt disponible')
   const nico: PersonEntry = { profile: PROFILES.nico, day: data.nico }
   const chachou: PersonEntry = { profile: PROFILES.chachou, day: data.chachou }
 
@@ -44,12 +43,15 @@ export function HomeScreen({ profile }: { profile: Profile }) {
         />
       </div>
       <div className="my-3 flex min-h-0 flex-1">
-        <CalorieRing left={nico} right={chachou} onOrb={soon} />
+        <CalorieRing left={nico} right={chachou} onOrb={() => setOverlay('day')} />
       </div>
       <CalorieLegend entries={[nico, chachou]} />
       <div className="flex justify-center pt-4 pb-3">
         <AddButton onPress={() => openAdd()} />
       </div>
+      <BottomSheet open={overlay === 'day'} title="Journée" onClose={() => setOverlay(null)}>
+        <DayDetailScreen profile={profile} />
+      </BottomSheet>
       <AddMealSheet
         profile={profile}
         progress={{ kcal: data[profile.id].totals.kcal, goal: data[profile.id].goals.kcal }}

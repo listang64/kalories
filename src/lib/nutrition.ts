@@ -14,6 +14,11 @@ export interface DayGoals extends Macros {
 
 export type MacroKey = keyof Macros
 
+export interface DayProgress {
+  kcal: number
+  goal: number
+}
+
 export function autoMacroGoals(kcal: number): Macros {
   return {
     carbs: Math.round((kcal * 0.5) / 4),
