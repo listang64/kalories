@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { AddMealSheet } from '../components/AddMealSheet'
 import { BottomSheet } from '../components/BottomSheet'
-import { AddButton } from '../components/home/AddButton'
 import { CalorieLegend } from '../components/home/CalorieLegend'
 import { CalorieRing, type PersonEntry } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
+import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
 import { Rise } from '../components/Rise'
@@ -12,16 +12,20 @@ import { otherProfile, PROFILES, type Profile } from '../config/users'
 import { useDayMeals } from '../hooks/useDayMeals'
 import { useHomeData } from '../hooks/useHomeData'
 import { useProfiles } from '../hooks/useProfiles'
+import { useShoppingList } from '../hooks/useShoppingList'
 import { useToday } from '../hooks/useToday'
 import { useLocalSettings } from '../lib/localSettings'
 import { useAppStore } from '../store/appStore'
 import { DayDetailScreen } from './DayDetailScreen'
+import { HistoryScreen } from './HistoryScreen'
 import { SettingsScreen } from './SettingsScreen'
+import { ShoppingScreen } from './ShoppingScreen'
 
 export function HomeScreen({ profile }: { profile: Profile }) {
   const today = useToday()
   const data = useHomeData(useProfiles(), useDayMeals(today))
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
+  const shoppingCount = useShoppingList().length
   const [viewed, setViewed] = useState(profile)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
@@ -51,11 +55,22 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       <Rise index={3}>
         <CalorieLegend entries={[nico, chachou]} />
       </Rise>
-      <Rise index={4} className="flex justify-center pt-4 pb-3">
-        <AddButton onPress={() => openAdd()} />
+      <Rise index={4} className="pt-4 pb-3">
+        <HomeActions
+          shoppingCount={shoppingCount}
+          onHistory={() => setOverlay('history')}
+          onAdd={() => openAdd()}
+          onShopping={() => setOverlay('shopping')}
+        />
       </Rise>
       <BottomSheet open={overlay === 'day'} title="Journée" onClose={() => setOverlay(null)}>
         <DayDetailScreen profile={profile} />
+      </BottomSheet>
+      <BottomSheet open={overlay === 'history'} title="Historique" onClose={() => setOverlay(null)}>
+        <HistoryScreen />
+      </BottomSheet>
+      <BottomSheet open={overlay === 'shopping'} title="Liste de courses" onClose={() => setOverlay(null)}>
+        <ShoppingScreen profile={profile} />
       </BottomSheet>
       <AddMealSheet
         profile={profile}

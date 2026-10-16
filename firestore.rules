@@ -14,5 +14,12 @@ service cloud.firestore {
         && request.resource.data.uid in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2']
         && request.resource.data.items is list;
     }
+    match /shopping/{itemId} {
+      allow read, delete: if isCouple();
+      allow create, update: if isCouple()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80;
+    }
   }
 }

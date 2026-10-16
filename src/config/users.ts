@@ -8,6 +8,7 @@ export interface Profile {
   color: 'violet' | 'rouge'
   colorA: string
   colorB: string
+  chartColor: string
 }
 
 export const PROFILES: Record<ProfileId, Profile> = {
@@ -19,6 +20,7 @@ export const PROFILES: Record<ProfileId, Profile> = {
     color: 'violet',
     colorA: '#7C3AED',
     colorB: '#C084FC',
+    chartColor: '#A855F7',
   },
   chachou: {
     id: 'chachou',
@@ -28,6 +30,7 @@ export const PROFILES: Record<ProfileId, Profile> = {
     color: 'rouge',
     colorA: '#E11D48',
     colorB: '#FB7185',
+    chartColor: '#F43F5E',
   },
 }
 
