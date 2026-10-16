@@ -12,7 +12,7 @@ interface Props {
 }
 
 const GLOW = 14
-const THICKNESS = 14
+const THICKNESS = 10
 
 export function BarGauge(props: Props) {
   const { value, goal, colorA, colorB, label } = props
@@ -22,7 +22,7 @@ export function BarGauge(props: Props) {
   if (!fluid.enabled) return <BarSvg {...props} />
 
   return (
-    <div role="img" aria-label={label} className="relative h-3.5">
+    <div role="img" aria-label={label} className="relative h-2.5">
       <FluidCanvas
         options={{ shape: 'bar', side: 1, margin: GLOW, thickness: THICKNESS }}
         colors={[colorA, colorB]}

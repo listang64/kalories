@@ -17,7 +17,7 @@ export function HomeHeader({ dateKey, onLoans, onSettings }: Props) {
   return (
     <header className="pt-3">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-[clamp(19px,5.9vw,28px)] leading-tight font-semibold tracking-[-0.02em] text-accent">
+        <h1 className="text-[clamp(19px,5.9vw,28px)] leading-tight font-semibold tracking-[-0.02em] text-accent underline decoration-accent/50 decoration-2 underline-offset-[6px]">
           {formatLongDate(dateKey)}
         </h1>
         <div className="flex items-center gap-1">

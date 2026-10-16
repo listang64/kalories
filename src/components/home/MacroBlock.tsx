@@ -22,7 +22,7 @@ export function MacroBlock({ profile, day, onToggle }: Props) {
         {profile.name}
         <span className="sr-only">, toucher pour voir l’autre profil</span>
       </span>
-      <span className="mt-2.5 flex flex-col gap-3">
+      <span className="mt-2 flex flex-col gap-2.5">
         {MACROS.map((meta) => (
           <MacroRow
             key={meta.key}
@@ -47,7 +47,7 @@ interface RowProps {
 function MacroRow({ meta, name, value, goal }: RowProps) {
   return (
     <span className="block">
-      <span className="mb-1.5 flex items-baseline justify-between">
+      <span className="mb-1 flex items-baseline justify-between">
         <span className="label">{meta.label}</span>
         <span className="text-[13px] tabular-nums">
           <span className={value > goal ? 'text-accent' : 'text-text'}>

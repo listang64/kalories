@@ -1,5 +1,6 @@
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { RotateNotice } from './components/RotateNotice'
 import { Toast } from './components/Toast'
 import { useAppUpdate } from './hooks/useAppUpdate'
 import { useAuth } from './hooks/useAuth'
@@ -29,6 +30,7 @@ export default function App() {
         </AnimatePresence>
       </ErrorBoundary>
       <Toast />
+      <RotateNotice />
     </MotionConfig>
   )
 }
