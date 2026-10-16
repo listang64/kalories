@@ -50,5 +50,9 @@ export const useLocalSettings = create<LocalSettings>()((set) => ({
 }))
 
 export function maskKey(key: string): string {
-  return `•••• ${key.slice(-4)}`
+  return `${key.slice(0, 4)}…${key.slice(-4)}`
+}
+
+export function looksLikeGeminiKey(key: string): boolean {
+  return /^AIza[0-9A-Za-z_-]{35}$/.test(key)
 }

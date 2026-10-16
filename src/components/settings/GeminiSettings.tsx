@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { GeminiError, geminiErrorMessage, isTemporary, testGeminiKey } from '../../lib/gemini'
-import { DEFAULT_MODEL, maskKey, useLocalSettings } from '../../lib/localSettings'
+import { cleanKey, DEFAULT_MODEL, looksLikeGeminiKey, maskKey, useLocalSettings } from '../../lib/localSettings'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
 
 type TestState =
@@ -76,15 +76,28 @@ function KeyRow({ geminiKey, onSave }: { geminiKey: string; onSave: (key: string
     setEditing(false)
   }
 
+  const paste = async () => {
+    const text = await navigator.clipboard?.readText().catch(() => '')
+    if (text) setDraft(cleanKey(text))
+  }
+
   if (!editing) {
     return (
-      <SettingsRow>
-        <span className="flex-1 text-[17px]">Clé API</span>
-        <span className="font-mono text-[15px] text-text-2">{maskKey(geminiKey)}</span>
-        <button type="button" onClick={() => setEditing(true)} className="text-[15px] text-accent">
-          Modifier
-        </button>
-      </SettingsRow>
+      <div>
+        <SettingsRow>
+          <span className="flex-1 text-[17px]">Clé API</span>
+          <span className="font-mono text-[15px] text-text-2">{maskKey(geminiKey)}</span>
+          <button type="button" onClick={() => setEditing(true)} className="text-[15px] text-accent">
+            Modifier
+          </button>
+        </SettingsRow>
+        {!looksLikeGeminiKey(geminiKey) && (
+          <p className="px-4 pb-3 text-[13px] leading-snug text-accent">
+            Cette clé fait {geminiKey.length} caractères : une clé Gemini en fait 39 et commence par « AIza ». Recolle-la
+            depuis AI Studio.
+          </p>
+        )}
+      </div>
     )
   }
 
@@ -103,6 +116,11 @@ function KeyRow({ geminiKey, onSave }: { geminiKey: string; onSave: (key: string
         enterKeyHint="done"
         className={`${INPUT} [-webkit-text-security:disc]`}
       />
+      {!draft && 'clipboard' in navigator && (
+        <button type="button" onClick={() => void paste()} className="text-[15px] text-accent">
+          Coller
+        </button>
+      )}
       {geminiKey && (
         <button type="button" onClick={() => setEditing(false)} className="text-[15px] text-text-2">
           Annuler
