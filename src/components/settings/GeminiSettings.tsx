@@ -93,8 +93,8 @@ function KeyRow({ geminiKey, onSave }: { geminiKey: string; onSave: (key: string
         </SettingsRow>
         {!looksLikeGeminiKey(geminiKey) && (
           <p className="px-4 pb-3 text-[13px] leading-snug text-accent">
-            Cette clé fait {geminiKey.length} caractères : une clé Gemini en fait 39 et commence par « AIza ». Recolle-la
-            depuis AI Studio.
+            Cette clé ne ressemble pas à une clé Gemini : elle doit commencer par « AQ. » ou « AIza ». Recolle-la depuis
+            AI Studio.
           </p>
         )}
       </div>

@@ -7,7 +7,7 @@ export const DEFAULT_MODEL = 'gemini-flash-latest'
 export const FALLBACK_MODEL = 'gemini-3.5-flash-lite'
 
 export function cleanKey(key: string): string {
-  return key.replace(/[^A-Za-z0-9_-]/g, '')
+  return key.replace(/[^\x21-\x7E]/g, '')
 }
 
 function read(name: string): string {
@@ -54,5 +54,5 @@ export function maskKey(key: string): string {
 }
 
 export function looksLikeGeminiKey(key: string): boolean {
-  return /^AIza[0-9A-Za-z_-]{35}$/.test(key)
+  return /^(AIza[\w-]{35}|AQ\.[\w.-]{20,})$/.test(key)
 }
