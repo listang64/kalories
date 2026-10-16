@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #000000;
+  --surface: #0f0f11;
+  --surface-2: #1a1a1d;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f5f5f7;
+  --text-2: #8e8e93;
+  --accent: #ff7a1a;
+  --nico: #7c3aed;
+  --nico-2: #c084fc;
+  --chachou: #e11d48;
+  --chachou-2: #fb7185;
+  --carbs: #ff8a1f;
+  --fat: #ffc940;
+  --protein: #f2ede6;
+  --r-sheet: 24px;
+  --r-card: 16px;
+  --font: -apple-system, "SF Pro Display", Inter, system-ui, sans-serif;
+  --halo-accent: 0 0 28px rgba(255, 122, 26, 0.35);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-accent: var(--accent);
+  --color-nico: var(--nico);
+  --color-nico-2: var(--nico-2);
+  --color-chachou: var(--chachou);
+  --color-chachou-2: var(--chachou-2);
+  --color-carbs: var(--carbs);
+  --color-fat: var(--fat);
+  --color-protein: var(--protein);
+  --radius-sheet: var(--r-sheet);
+  --radius-card: var(--r-card);
+  --font-sans: var(--font);
+  --shadow-accent: var(--halo-accent);
+}
+
+@utility label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+@utility safe-screen {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    font-size: 16px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
