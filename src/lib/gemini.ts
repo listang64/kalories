@@ -1,9 +1,9 @@
-import { DEFAULT_MODEL } from './localSettings'
+import { DEFAULT_MODEL, FALLBACK_MODEL } from './localSettings'
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
 const TIMEOUT = 30_000
 
-export type GeminiErrorKind = 'no-key' | 'invalid-key' | 'model' | 'quota' | 'unavailable' | 'unreadable'
+export type GeminiErrorKind = 'no-key' | 'invalid-key' | 'model' | 'quota' | 'busy' | 'unavailable' | 'unreadable'
 
 export class GeminiError extends Error {
   readonly kind: GeminiErrorKind
@@ -21,6 +21,7 @@ const MESSAGES: Record<GeminiErrorKind, string> = {
   'invalid-key': 'Clé Gemini refusée',
   model: 'Modèle Gemini introuvable',
   quota: 'Trop de demandes, réessaie dans une minute',
+  busy: 'Gemini est surchargé, réessaie dans un instant',
   unavailable: 'Analyse impossible pour l’instant',
   unreadable: 'Réponse de Gemini illisible',
 }
@@ -41,6 +42,7 @@ function kindForStatus(status: number): GeminiErrorKind {
   if (status === 400 || status === 401 || status === 403) return 'invalid-key'
   if (status === 404) return 'model'
   if (status === 429) return 'quota'
+  if (status === 503) return 'busy'
   return 'unavailable'
 }
 
@@ -66,6 +68,24 @@ export async function generateContent(body: object, key: string, model: string):
   return data?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''
 }
 
-export async function testGeminiKey(key: string, model: string): Promise<void> {
-  await generateContent({ contents: [{ role: 'user', parts: [{ text: 'Réponds simplement : OK' }] }] }, key, model)
+export function isTemporary(error: unknown): boolean {
+  return error instanceof GeminiError && (error.kind === 'quota' || error.kind === 'busy')
+}
+
+export async function generateWithFallback(body: object, key: string, model: string) {
+  try {
+    return { text: await generateContent(body, key, model), model }
+  } catch (error) {
+    if (!isTemporary(error) || model === FALLBACK_MODEL) throw error
+    try {
+      return { text: await generateContent(body, key, FALLBACK_MODEL), model: FALLBACK_MODEL }
+    } catch (fallbackError) {
+      throw fallbackError instanceof GeminiError && fallbackError.kind === 'model' ? error : fallbackError
+    }
+  }
+}
+
+export async function testGeminiKey(key: string, model: string): Promise<string> {
+  const body = { contents: [{ role: 'user', parts: [{ text: 'Réponds simplement : OK' }] }] }
+  return (await generateWithFallback(body, key, model)).model
 }

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { GeminiError, geminiErrorMessage, testGeminiKey } from '../../lib/gemini'
+import { GeminiError, geminiErrorMessage, isTemporary, testGeminiKey } from '../../lib/gemini'
 import { DEFAULT_MODEL, maskKey, useLocalSettings } from '../../lib/localSettings'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
 
 type TestState =
-  | { status: 'idle' | 'running' | 'ok' }
+  | { status: 'idle' | 'running' | 'busy' }
+  | { status: 'ok'; fallback: boolean }
   | { status: 'error'; message: string; detail: string }
 
 const INPUT = 'min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-text-2'
@@ -16,9 +17,10 @@ export function GeminiSettings() {
   const run = async () => {
     setTest({ status: 'running' })
     try {
-      await testGeminiKey(geminiKey, geminiModel)
-      setTest({ status: 'ok' })
+      const used = await testGeminiKey(geminiKey, geminiModel)
+      setTest({ status: 'ok', fallback: used !== geminiModel })
     } catch (error) {
+      if (isTemporary(error)) return setTest({ status: 'busy' })
       const detail = error instanceof GeminiError ? error.detail : ''
       setTest({ status: 'error', message: geminiErrorMessage(error), detail })
     }
@@ -46,7 +48,14 @@ export function GeminiSettings() {
         >
           {test.status === 'running' ? 'Test en cours…' : 'Tester la clé'}
         </button>
-        {test.status === 'ok' && <p className="mt-1 text-[15px]">✓ Clé valide, Gemini répond</p>}
+        {test.status === 'ok' && (
+          <p className="mt-1 text-[15px]">
+            ✓ Clé valide, Gemini répond{test.fallback && ' (avec le modèle de secours)'}
+          </p>
+        )}
+        {test.status === 'busy' && (
+          <p className="mt-1 text-[15px]">✓ Clé acceptée, mais Gemini est surchargé : réessaie plus tard</p>
+        )}
         {test.status === 'error' && <p className="mt-1 text-[15px] text-accent">{test.message}</p>}
         {test.status === 'error' && test.detail && (
           <p className="mt-1 line-clamp-3 text-[13px] text-text-2">{test.detail}</p>
