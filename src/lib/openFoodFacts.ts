@@ -1,7 +1,12 @@
 import { parseItem, type MealItem } from './nutrition'
 
+export type Grade = 'a' | 'b' | 'c' | 'd' | 'e'
+
+export const GRADES: Grade[] = ['a', 'b', 'c', 'd', 'e']
+
 export interface Product {
   barcode: string
+  nutriscore: Grade | null
   name: string
   brand: string
   image: string
@@ -16,6 +21,7 @@ export interface Product {
 export type Lookup = { status: 'found'; product: Product } | { status: 'not-found' | 'no-nutrition' | 'offline' | 'unavailable' }
 
 interface RawProduct {
+  nutriscore_grade?: string
   product_name?: string
   product_name_fr?: string
   brands?: string
@@ -27,7 +33,7 @@ interface RawProduct {
 
 const ENDPOINT = 'https://world.openfoodfacts.org/api/v2/product'
 const FIELDS =
-  'product_name,product_name_fr,brands,product_quantity,serving_quantity,image_front_small_url,nutriments'
+  'nutriscore_grade,product_name,product_name_fr,brands,product_quantity,serving_quantity,image_front_small_url,nutriments'
 const KJ_PER_KCAL = 4.184
 
 function amount(value: unknown): number | null {
@@ -40,6 +46,10 @@ function positive(value: unknown): number | null {
   return n !== null && n > 0 ? n : null
 }
 
+function isGrade(value: unknown): value is Grade {
+  return GRADES.some((grade) => grade === value)
+}
+
 function toProduct(barcode: string, raw: RawProduct): Product | null {
   const n = raw.nutriments ?? {}
   const kj = positive(n.energy_100g)
@@ -47,6 +57,7 @@ function toProduct(barcode: string, raw: RawProduct): Product | null {
   if (kcal100 === null) return null
   return {
     barcode,
+    nutriscore: isGrade(raw.nutriscore_grade) ? raw.nutriscore_grade : null,
     name: (raw.product_name_fr || raw.product_name || '').trim() || 'Produit scanné',
     brand: (raw.brands ?? '').split(',')[0]?.trim() ?? '',
     image: raw.image_front_small_url ?? '',

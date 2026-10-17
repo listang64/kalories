@@ -4,6 +4,7 @@ import { itemTotals, type MealItem } from '../../lib/nutrition'
 import { productItem, type Product } from '../../lib/openFoodFacts'
 import { AnimatedNumber } from '../AnimatedNumber'
 import { Stepper } from '../Stepper'
+import { NutriScore } from './NutriScore'
 
 interface Props {
   product: Product
@@ -34,7 +35,8 @@ export function ProductPanel({ product, onAdd, onRescan }: Props) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-4 rounded-card border border-line bg-surface-2 p-3">
+      <NutriScore grade={product.nutriscore} />
+      <div className="mt-3 flex items-center gap-4 rounded-card border border-line bg-surface-2 p-3">
         {product.image ? (
           <img src={product.image} alt="" className="size-16 shrink-0 rounded-xl bg-white object-contain" />
         ) : (
