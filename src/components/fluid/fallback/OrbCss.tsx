@@ -1,12 +1,16 @@
+import type { CSSProperties } from 'react'
 import { motion } from 'motion/react'
 
 interface Props {
   size: number
   label: string
+  colors: string[]
   onPress?: () => void
 }
 
-export function OrbCss({ size, label, onPress }: Props) {
+export function OrbCss({ size, label, colors, onPress }: Props) {
+  const palette = Object.fromEntries(colors.map((color, i) => [`--orb-${i + 1}`, color])) as CSSProperties
+
   return (
     <motion.button
       type="button"
@@ -16,7 +20,7 @@ export function OrbCss({ size, label, onPress }: Props) {
       whileTap={onPress ? { scale: 0.94 } : undefined}
       transition={{ type: 'spring', stiffness: 500, damping: 22 }}
       className="relative rounded-full"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, ...palette }}
     >
       <span className="orb-breathe absolute inset-0 overflow-hidden rounded-full shadow-[0_0_48px_rgba(170,60,200,0.35)]">
         <span className="orb-swirl absolute -inset-1/4 blur-md" />

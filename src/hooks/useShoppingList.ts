@@ -1,6 +1,7 @@
-import { shoppingDoc, shoppingItemsFromDoc } from '../lib/shopping'
+import { useSharedRef } from '../lib/household'
+import { shoppingItemsFromDoc } from '../lib/shopping'
 import { useSharedDoc } from './useSharedDoc'
 
 export function useShoppingList() {
-  return useSharedDoc(shoppingDoc, shoppingItemsFromDoc)
+  return useSharedDoc(useSharedRef('courses'), shoppingItemsFromDoc)
 }

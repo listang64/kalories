@@ -1,6 +1,6 @@
-import type { Profile } from '../../config/users'
 import { formatInt } from '../../lib/format'
 import type { PersonStats } from '../../lib/history'
+import type { Profile } from '../../lib/profiles'
 import { AnimatedNumber } from '../AnimatedNumber'
 
 interface Entry {
@@ -11,9 +11,9 @@ interface Entry {
 
 export function StatsCards({ entries }: { entries: Entry[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className={`grid gap-3 ${entries.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
       {entries.map(({ profile, stats, goal }) => (
-        <StatCard key={profile.id} profile={profile} stats={stats} goal={goal} />
+        <StatCard key={profile.uid} profile={profile} stats={stats} goal={goal} />
       ))}
     </div>
   )

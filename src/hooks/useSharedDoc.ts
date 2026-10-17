@@ -4,22 +4,32 @@ import { onSnapshot, type DocumentReference, type DocumentSnapshot } from 'fireb
 const RETRY_DELAY = 5000
 
 interface SharedState<T> {
+  path: string
   items: T[]
   denied: boolean
 }
 
-export function useSharedDoc<T>(ref: DocumentReference, parse: (snapshot: DocumentSnapshot) => T[]): SharedState<T> {
-  const [state, setState] = useState<SharedState<T>>({ items: [], denied: false })
+export function useSharedDoc<T>(
+  ref: DocumentReference | null,
+  parse: (snapshot: DocumentSnapshot) => T[],
+): Omit<SharedState<T>, 'path'> {
+  const path = ref?.path ?? ''
+  const [state, setState] = useState<SharedState<T>>({ path, items: [], denied: false })
 
   useEffect(() => {
+    if (!ref) return
     let unsubscribe = () => {}
     let timer = 0
     const subscribe = () => {
       unsubscribe = onSnapshot(
         ref,
-        (snapshot) => setState({ denied: false, items: parse(snapshot) }),
+        (snapshot) => setState({ path: ref.path, denied: false, items: parse(snapshot) }),
         (error) => {
-          setState((current) => ({ ...current, denied: error.code === 'permission-denied' }))
+          setState((current) => ({
+            path: ref.path,
+            items: current.path === ref.path ? current.items : [],
+            denied: error.code === 'permission-denied',
+          }))
           timer = window.setTimeout(subscribe, RETRY_DELAY)
         },
       )
@@ -31,5 +41,5 @@ export function useSharedDoc<T>(ref: DocumentReference, parse: (snapshot: Docume
     }
   }, [ref, parse])
 
-  return state
+  return state.path === path ? state : { items: [], denied: false }
 }

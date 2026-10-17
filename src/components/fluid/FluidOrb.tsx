@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { PROFILES } from '../../config/users'
+import { colorById } from '../../config/colors'
+import { useSession } from '../../store/sessionStore'
 import { OrbCss } from './fallback/OrbCss'
 import { FluidCanvas } from './FluidCanvas'
 import type { FluidGauge } from './fluidGauge'
@@ -14,19 +15,26 @@ interface Props {
 
 const GLOW_RATIO = 0.34
 const OPEN_DELAY = 220
-const COLORS = [PROFILES.nico.colorA, PROFILES.nico.colorB, PROFILES.chachou.colorA, PROFILES.chachou.colorB]
+const BRAND = [colorById('violet'), colorById('rouge')] as const
+
+function useOrbColors(): string[] {
+  const people = useSession((s) => s.people)
+  const [first, second] = people[0] ? [people[0], people[1] ?? people[0]] : BRAND
+  return [first.colorA, first.colorB, second.colorA, second.colorB]
+}
 
 export function FluidOrb({ size, label, onPress, spin = 1 }: Props) {
   const fluid = useFluidSupport()
   const gauge = useRef<FluidGauge | null>(null)
+  const colors = useOrbColors()
 
-  if (!fluid.enabled) return <OrbCss size={size} label={label} onPress={onPress} />
+  if (!fluid.enabled) return <OrbCss size={size} label={label} colors={colors} onPress={onPress} />
 
   const glow = Math.round(size * GLOW_RATIO)
   const canvas = (
     <FluidCanvas
       options={{ shape: 'orb', side: 1, margin: glow, thickness: 0, spin }}
-      colors={COLORS}
+      colors={colors}
       onFail={fluid.fail}
       onReady={(g) => (gauge.current = g)}
       style={{ inset: -glow }}

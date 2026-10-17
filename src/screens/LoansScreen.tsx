@@ -5,14 +5,19 @@ import { HandshakeIcon } from '../components/icons/HandshakeIcon'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { LoanCard } from '../components/loans/LoanCard'
 import { LoanEditor, type LoanDraft } from '../components/loans/LoanEditor'
-import { otherProfile, type Profile } from '../config/users'
 import { useLoans } from '../hooks/useLoans'
 import { useToday } from '../hooks/useToday'
 import { returnLoan, type Loan } from '../lib/loans'
+import type { Profile } from '../lib/profiles'
 import { sharedErrorMessage } from '../lib/shared'
 import { useAppStore } from '../store/appStore'
 
-export function LoansScreen({ profile }: { profile: Profile }) {
+interface Props {
+  me: Profile
+  partner: Profile | null
+}
+
+export function LoansScreen({ me, partner }: Props) {
   const { items: loans, denied } = useLoans()
   const today = useToday()
   const [draft, setDraft] = useState<LoanDraft>(null)
@@ -48,7 +53,7 @@ export function LoansScreen({ profile }: { profile: Profile }) {
             </span>
             <p className="text-[17px] font-semibold">Aucun prêt en cours</p>
             <p className="max-w-64 text-[15px] text-text-2">
-              Note ce que tu prêtes et à qui, {otherProfile(profile).name} le verra aussi.
+              {partner ? `Note ce que tu prêtes et à qui, ${partner.name} le verra aussi.` : 'Note ce que tu prêtes et à qui.'}
             </p>
           </div>
         ) : (
@@ -72,7 +77,7 @@ export function LoansScreen({ profile }: { profile: Profile }) {
           Touche un prêt pour le modifier · glisse-le à gauche quand il est rendu
         </p>
       )}
-      <LoanEditor draft={draft} uid={profile.uid} people={people} onReturn={giveBack} onClose={() => setDraft(null)} />
+      <LoanEditor draft={draft} uid={me.uid} people={people} onReturn={giveBack} onClose={() => setDraft(null)} />
     </div>
   )
 }

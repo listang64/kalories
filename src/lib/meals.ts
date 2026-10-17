@@ -9,7 +9,6 @@ import {
 } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { MEAL_TYPES, type MealType } from '../config/meals'
-import type { Profile } from '../config/users'
 import { mealTotals, parseItem, sumTotals, type MealItem, type Totals } from './nutrition'
 
 export interface Meal {
@@ -28,7 +27,14 @@ export interface MealInput {
   items: MealItem[]
 }
 
-export const mealsCollection = collection(db, 'meals')
+export interface MealRef {
+  id: string
+  uid: string
+}
+
+export function mealsOf(uid: string) {
+  return collection(db, 'users', uid, 'meals')
+}
 
 function cleanItems(items: MealItem[]): MealItem[] {
   return items.map(({ name, grams, kcal100, carbs100, fat100, protein100, confidence }) => ({
@@ -42,10 +48,10 @@ function cleanItems(items: MealItem[]): MealItem[] {
   }))
 }
 
-export function saveMeal(profile: Profile, meal: MealInput, date: string): Promise<unknown> {
+export function saveMeal(uid: string, meal: MealInput, date: string): Promise<unknown> {
   const items = cleanItems(meal.items)
-  return addDoc(mealsCollection, {
-    uid: profile.uid,
+  return addDoc(mealsOf(uid), {
+    uid,
     date,
     type: meal.type,
     createdAt: serverTimestamp(),
@@ -55,9 +61,9 @@ export function saveMeal(profile: Profile, meal: MealInput, date: string): Promi
   })
 }
 
-export function updateMeal(id: string, meal: Omit<MealInput, 'note'>): Promise<void> {
+export function updateMeal(ref: MealRef, meal: Omit<MealInput, 'note'>): Promise<void> {
   const items = cleanItems(meal.items)
-  return updateDoc(doc(mealsCollection, id), {
+  return updateDoc(doc(mealsOf(ref.uid), ref.id), {
     type: meal.type,
     items,
     totals: mealTotals(items),
@@ -65,8 +71,8 @@ export function updateMeal(id: string, meal: Omit<MealInput, 'note'>): Promise<v
   })
 }
 
-export function deleteMeal(id: string): Promise<void> {
-  return deleteDoc(doc(mealsCollection, id))
+export function deleteMeal(ref: MealRef): Promise<void> {
+  return deleteDoc(doc(mealsOf(ref.uid), ref.id))
 }
 
 export function mealFromDoc(snapshot: QueryDocumentSnapshot): Meal | null {

@@ -1,18 +1,12 @@
-import type { Profile } from '../../config/users'
 import { useElementSize } from '../../hooks/useElementSize'
-import type { PersonDay } from '../../hooks/useHomeData'
+import type { PersonEntry } from '../../hooks/useHomeData'
 import { formatInt } from '../../lib/format'
 import { ArcGauge } from '../fluid/ArcGauge'
 import { FluidOrb } from '../fluid/FluidOrb'
 
-export interface PersonEntry {
-  profile: Profile
-  day: PersonDay
-}
-
 interface Props {
   left: PersonEntry
-  right: PersonEntry
+  right: PersonEntry | null
   onOrb: () => void
 }
 
@@ -30,17 +24,18 @@ export function CalorieRing({ left, right, onOrb }: Props) {
           className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2"
           style={{ width: size, height: size }}
         >
-          {[left, right].map(({ profile, day }, i) => (
-            <ArcGauge
-              key={profile.id}
-              side={i === 0 ? 'left' : 'right'}
-              value={day.totals.kcal}
-              goal={day.goals.kcal}
-              colorA={profile.colorA}
-              colorB={profile.colorB}
-              size={size}
-              label={`${profile.name} : ${formatInt(day.totals.kcal)} sur ${formatInt(day.goals.kcal)} kcal`}
-            />
+          {[left, right ?? left].map(({ profile, day }, i) => (
+            <div key={`${profile.uid}-${i}`} aria-hidden={i === 1 && !right ? true : undefined}>
+              <ArcGauge
+                side={i === 0 ? 'left' : 'right'}
+                value={day.totals.kcal}
+                goal={day.goals.kcal}
+                colorA={profile.colorA}
+                colorB={profile.colorB}
+                size={size}
+                label={`${profile.name} : ${formatInt(day.totals.kcal)} sur ${formatInt(day.goals.kcal)} kcal`}
+              />
+            </div>
           ))}
           <div className="pointer-events-none absolute inset-0 grid place-items-center">
             <div className="pointer-events-auto">

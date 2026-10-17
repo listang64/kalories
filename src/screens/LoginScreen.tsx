@@ -1,34 +1,36 @@
-import { useRef, useState, type FormEvent } from 'react'
-import { motion } from 'motion/react'
+import { useState, type FormEvent } from 'react'
 import { Logo } from '../components/Logo'
-import { ProfileCard } from '../components/ProfileCard'
-import { PROFILE_LIST, type Profile } from '../config/users'
-import { authErrorMessage, signIn } from '../hooks/useAuth'
+import { authErrorMessage, lastEmail, resetPassword, signIn } from '../lib/auth'
+
+const INPUT =
+  'h-13 w-full rounded-card border border-line bg-surface-2 px-4 text-text outline-none placeholder:text-text-2 focus:border-white/25'
 
 export function LoginScreen() {
-  const [selected, setSelected] = useState<Profile | null>(null)
+  const [email, setEmail] = useState(lastEmail)
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null)
   const [busy, setBusy] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const select = (profile: Profile) => {
-    setSelected(profile)
-    setPassword('')
-    setError(null)
-    inputRef.current?.focus()
-  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!selected || !password || busy) return
+    if (!email.trim() || !password || busy) return
     setBusy(true)
-    setError(null)
+    setMessage(null)
     try {
-      await signIn(selected, password)
-    } catch (err) {
-      setError(authErrorMessage(err))
+      await signIn(email, password)
+    } catch (error) {
+      setMessage({ text: authErrorMessage(error), error: true })
       setBusy(false)
+    }
+  }
+
+  const forgot = async () => {
+    if (!email.trim()) return setMessage({ text: 'Écris d’abord ton adresse e-mail', error: true })
+    try {
+      await resetPassword(email)
+      setMessage({ text: 'E-mail envoyé : suis le lien pour choisir un nouveau mot de passe', error: false })
+    } catch (error) {
+      setMessage({ text: authErrorMessage(error), error: true })
     }
   }
 
@@ -37,61 +39,46 @@ export function LoginScreen() {
       <div className="pt-12">
         <Logo size={56} />
       </div>
-      <p className="label mt-10 text-center">Qui es-tu ?</p>
-      <div className="mt-4 flex gap-3">
-        {PROFILE_LIST.map((profile) => (
-          <ProfileCard
-            key={profile.id}
-            profile={profile}
-            selected={selected?.id === profile.id}
-            dimmed={selected !== null && selected.id !== profile.id}
-            onSelect={() => select(profile)}
-          />
-        ))}
-      </div>
-      <motion.form
-        onSubmit={submit}
-        aria-hidden={!selected}
-        initial={false}
-        animate={{ opacity: selected ? 1 : 0, y: selected ? 0 : 12 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-        className={`mt-5 flex flex-col gap-3 ${selected ? '' : 'pointer-events-none'}`}
-      >
+      <form onSubmit={submit} className="mt-10 flex flex-col gap-3">
         <input
           type="email"
           name="username"
           autoComplete="username"
-          value={selected?.email ?? ''}
-          readOnly
-          tabIndex={-1}
-          className="sr-only"
+          inputMode="email"
+          autoCapitalize="none"
+          placeholder="Adresse e-mail"
+          aria-label="Adresse e-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={INPUT}
         />
         <input
-          ref={inputRef}
           type="password"
           name="password"
           autoComplete="current-password"
           enterKeyHint="go"
           placeholder="Mot de passe"
+          aria-label="Mot de passe"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          tabIndex={selected ? 0 : -1}
-          className="h-13 w-full rounded-card border border-line bg-surface-2 px-4 text-text outline-none placeholder:text-text-2 focus:border-white/25"
+          className={INPUT}
         />
-        {error && (
-          <p role="alert" className="px-1 text-sm text-accent">
-            {error}
+        {message && (
+          <p role="alert" className={`px-1 text-sm ${message.error ? 'text-accent' : 'text-text-2'}`}>
+            {message.text}
           </p>
         )}
         <button
           type="submit"
-          disabled={!password || busy}
-          tabIndex={selected ? 0 : -1}
+          disabled={!email.trim() || !password || busy}
           className="press h-13 w-full rounded-full bg-accent font-semibold text-black shadow-accent disabled:opacity-40"
         >
           {busy ? 'Connexion…' : 'Entrer'}
         </button>
-      </motion.form>
+      </form>
+      <button type="button" onClick={() => void forgot()} className="mt-4 h-10 self-center text-[15px] text-text-2">
+        Mot de passe oublié ?
+      </button>
     </main>
   )
 }

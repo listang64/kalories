@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
-import { profileByUid } from '../../config/users'
 import { daysBetween, formatShortDate, formatSince } from '../../lib/dates'
 import type { Loan } from '../../lib/loans'
+import { usePerson } from '../../store/sessionStore'
 import { CheckIcon } from '../icons/CheckIcon'
 import { SwipeButton } from '../SwipeButton'
 
@@ -17,7 +17,7 @@ const LONG_LOAN = 30
 export function LoanCard({ loan, today, onEdit, onReturn }: Props) {
   const days = daysBetween(loan.date, today)
   const since = formatSince(days)
-  const lender = profileByUid(loan.lentBy)
+  const lender = usePerson(loan.lentBy)
 
   return (
     <motion.li

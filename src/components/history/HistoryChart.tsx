@@ -1,15 +1,14 @@
 import { useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { motion } from 'motion/react'
-import type { ProfileId } from '../../config/users'
 import { useElementSize } from '../../hooks/useElementSize'
 import { formatInt } from '../../lib/format'
 import { formatShortDate } from '../../lib/dates'
-import type { DayPoint } from '../../lib/history'
+import { valueOf, type DayPoint } from '../../lib/history'
 import { chartScale, monotonePath, runs, type Point } from './chartMath'
 import { ChartTooltip, TOOLTIP_WIDTH } from './ChartTooltip'
 
 export interface ChartSeries {
-  id: ProfileId
+  id: string
   name: string
   color: string
   goal: number
@@ -30,7 +29,7 @@ export function HistoryChart({ points, series }: Props) {
   const n = points.length
   const innerW = Math.max(1, width - PAD.left - PAD.right)
   const innerH = HEIGHT - PAD.top - PAD.bottom
-  const values = points.flatMap((p) => series.map((s) => p.values[s.id] ?? 0))
+  const values = points.flatMap((p) => series.map((s) => valueOf(p, s.id) ?? 0))
   const { max, ticks } = chartScale(Math.max(1500, ...values, ...series.map((s) => s.goal)))
   const x = (i: number) => PAD.left + (n > 1 ? (i / (n - 1)) * innerW : innerW / 2)
   const y = (v: number) => PAD.top + innerH * (1 - v / max)
@@ -105,7 +104,7 @@ export function HistoryChart({ points, series }: Props) {
             />
           ))}
           {series.map((s) =>
-            runs(points.map((p, i) => (p.values[s.id] === null ? null : ([x(i), y(p.values[s.id] ?? 0)] as Point)))).map(
+            runs(points.map((p, i) => (valueOf(p, s.id) === null ? null : ([x(i), y(valueOf(p, s.id) ?? 0)] as Point)))).map(
               ({ start, items }) => {
                 const line = monotonePath(items)
                 const last = items[items.length - 1]
@@ -173,7 +172,7 @@ export function HistoryChart({ points, series }: Props) {
   )
 }
 
-function lastIndex(points: DayPoint[], id: ProfileId): number | null {
-  for (let i = points.length - 1; i >= 0; i -= 1) if (points[i]?.values[id] !== null) return i
+function lastIndex(points: DayPoint[], id: string): number | null {
+  for (let i = points.length - 1; i >= 0; i -= 1) if ((points[i]?.values[id] ?? null) !== null) return i
   return null
 }

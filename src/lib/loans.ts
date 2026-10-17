@@ -1,5 +1,5 @@
-import { deleteField, doc, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
-import { db } from '../config/firebase'
+import { deleteField, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
+import { currentSharedDoc } from './household'
 import { newId } from './shared'
 
 export interface LoanInput {
@@ -13,8 +13,6 @@ export interface Loan extends LoanInput {
   lentBy: string
   order: number
 }
-
-export const loansDoc = doc(db, 'users', 'prets')
 
 const MAX_TEXT = 60
 const DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -31,22 +29,22 @@ function clean(input: LoanInput): LoanInput {
   }
 }
 
-export function addLoan(input: LoanInput, uid: string): Promise<void> {
+export async function addLoan(input: LoanInput, uid: string): Promise<void> {
   const loan = { ...clean(input), lentBy: uid, order: Date.now() }
-  return setDoc(loansDoc, { loans: { [newId()]: loan } }, { merge: true })
+  await setDoc(currentSharedDoc('prets'), { loans: { [newId()]: loan } }, { merge: true })
 }
 
-export function updateLoan(id: string, input: LoanInput): Promise<void> {
+export async function updateLoan(id: string, input: LoanInput): Promise<void> {
   const loan = clean(input)
-  return updateDoc(loansDoc, {
+  await updateDoc(currentSharedDoc('prets'), {
     [`loans.${id}.item`]: loan.item,
     [`loans.${id}.person`]: loan.person,
     [`loans.${id}.date`]: loan.date,
   })
 }
 
-export function returnLoan(id: string): Promise<void> {
-  return updateDoc(loansDoc, { [`loans.${id}`]: deleteField() })
+export async function returnLoan(id: string): Promise<void> {
+  await updateDoc(currentSharedDoc('prets'), { [`loans.${id}`]: deleteField() })
 }
 
 function parseLoan(id: string, value: unknown): Loan | null {

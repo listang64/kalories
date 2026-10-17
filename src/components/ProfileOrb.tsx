@@ -1,6 +1,11 @@
-import type { Profile } from '../config/users'
+import type { PersonColor } from '../config/colors'
 
-export function ProfileOrb({ profile, size = 56 }: { profile: Profile; size?: number }) {
+interface Props {
+  profile: Pick<PersonColor, 'colorA' | 'colorB'>
+  size?: number
+}
+
+export function ProfileOrb({ profile, size = 56 }: Props) {
   return (
     <span
       aria-hidden="true"

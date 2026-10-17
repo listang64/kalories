@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { mealLabel } from '../config/meals'
-import type { Profile } from '../config/users'
 import { CaptureScreen } from '../screens/CaptureScreen'
 import { ReviewScreen } from '../screens/ReviewScreen'
 import { useAppStore, type AddStep } from '../store/appStore'
@@ -10,6 +9,7 @@ import { AnalyzingView } from './capture/AnalyzingView'
 import { ConfirmDialog } from './ConfirmDialog'
 import { MealTypeButtons } from './MealTypeButtons'
 import type { DayProgress } from '../lib/nutrition'
+import type { Profile } from '../lib/profiles'
 
 const ORDER: AddStep[] = ['type', 'capture', 'analyzing', 'review']
 
@@ -20,11 +20,11 @@ const slide = {
 }
 
 interface Props {
-  profile: Profile
+  me: Profile
   progress: DayProgress
 }
 
-export function AddMealSheet({ profile, progress }: Props) {
+export function AddMealSheet({ me, progress }: Props) {
   const open = useAppStore((s) => s.overlay === 'add' || s.editing !== null)
   const editing = useAppStore((s) => s.editing)
   const addTarget = useAppStore((s) => s.addTarget)
@@ -79,7 +79,7 @@ export function AddMealSheet({ profile, progress }: Props) {
             )}
             {step === 'capture' && <CaptureScreen />}
             {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
-            {step === 'review' && <ReviewScreen profile={profile} progress={base} />}
+            {step === 'review' && <ReviewScreen uid={me.uid} progress={base} />}
           </motion.div>
         </AnimatePresence>
       </BottomSheet>

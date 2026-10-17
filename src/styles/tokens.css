@@ -82,9 +82,16 @@
 
 @utility orb-swirl {
   background:
-    radial-gradient(circle at 30% 30%, var(--nico-2) 0, transparent 38%),
-    radial-gradient(circle at 70% 68%, var(--chachou-2) 0, transparent 38%),
-    conic-gradient(from 0deg, var(--nico), var(--chachou), #9333ea, var(--chachou-2), var(--nico));
+    radial-gradient(circle at 30% 30%, var(--orb-2, var(--nico-2)) 0, transparent 38%),
+    radial-gradient(circle at 70% 68%, var(--orb-4, var(--chachou-2)) 0, transparent 38%),
+    conic-gradient(
+      from 0deg,
+      var(--orb-1, var(--nico)),
+      var(--orb-3, var(--chachou)),
+      var(--orb-2, var(--nico-2)),
+      var(--orb-4, var(--chachou-2)),
+      var(--orb-1, var(--nico))
+    );
   animation: orb-spin 16s linear infinite;
 }
 

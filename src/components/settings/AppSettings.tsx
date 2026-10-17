@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import type { Profile } from '../../config/users'
-import { signOutUser } from '../../hooks/useAuth'
+import { auth } from '../../config/firebase'
+import { signOutUser } from '../../lib/auth'
 import { formatBuildDate } from '../../lib/format'
+import type { Profile } from '../../lib/profiles'
 import { applyUpdate, checkForUpdate, type UpdateCheck } from '../../lib/pwa'
 import { useAppStore } from '../../store/appStore'
 import { ProfileOrb } from '../ProfileOrb'
@@ -17,7 +18,7 @@ const CHECK_LABEL: Record<CheckState, string> = {
   unsupported: 'Indisponible ici',
 }
 
-export function AppSettings({ profile }: { profile: Profile }) {
+export function AppSettings({ me }: { me: Profile }) {
   const setOverlay = useAppStore((s) => s.setOverlay)
   const updateReady = useAppStore((s) => s.updateReady)
   const [check, setCheck] = useState<CheckState | null>(null)
@@ -36,8 +37,11 @@ export function AppSettings({ profile }: { profile: Profile }) {
     <>
       <SettingsGroup title="Profil connecté">
         <SettingsRow>
-          <ProfileOrb profile={profile} size={28} />
-          <span className="flex-1 text-[17px] font-semibold">{profile.name}</span>
+          <ProfileOrb profile={me} size={28} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[17px] font-semibold">{me.name}</span>
+            <span className="block truncate text-[13px] text-text-2">{auth.currentUser?.email}</span>
+          </span>
           <button type="button" onClick={signOut} className="text-[15px] text-accent">
             Se déconnecter
           </button>

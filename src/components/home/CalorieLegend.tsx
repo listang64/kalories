@@ -1,12 +1,12 @@
 import { formatInt } from '../../lib/format'
 import { AnimatedNumber } from '../AnimatedNumber'
-import type { PersonEntry } from './CalorieRing'
+import type { PersonEntry } from '../../hooks/useHomeData'
 
 export function CalorieLegend({ entries }: { entries: PersonEntry[] }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={`grid gap-4 ${entries.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
       {entries.map((entry) => (
-        <LegendItem key={entry.profile.id} {...entry} />
+        <LegendItem key={entry.profile.uid} {...entry} />
       ))}
     </div>
   )

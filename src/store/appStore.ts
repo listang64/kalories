@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { probableMealType, type MealType } from '../config/meals'
-import type { Meal } from '../lib/meals'
+import type { Meal, MealRef } from '../lib/meals'
 import type { DayProgress, MealItem } from '../lib/nutrition'
 
 export type Overlay = 'settings' | 'add' | 'day' | 'history' | 'shopping' | 'loans'
@@ -27,7 +27,7 @@ export interface AddTarget {
 }
 
 export interface EditTarget {
-  mealId: string
+  meal: MealRef
   progress: DayProgress
 }
 
@@ -116,7 +116,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       draft: { type: meal.type, note: meal.note, photos: [] },
       review: withIds(items ?? meal.items),
       reviewDirty: items !== undefined,
-      editing: { mealId: meal.id, progress },
+      editing: { meal: { id: meal.id, uid: meal.uid }, progress },
     })),
   closeEdit: () => set((s) => ({ editing: null, session: s.session + 1 })),
   setAddStep: (addStep) => set({ addStep }),

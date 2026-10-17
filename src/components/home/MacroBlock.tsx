@@ -1,26 +1,24 @@
 import { MACROS, type MacroMeta } from '../../config/macros'
-import type { Profile } from '../../config/users'
-import type { PersonDay } from '../../hooks/useHomeData'
+import type { PersonEntry } from '../../hooks/useHomeData'
 import { formatInt } from '../../lib/format'
 import { AnimatedNumber } from '../AnimatedNumber'
 import { BarGauge } from '../fluid/BarGauge'
 
 interface Props {
-  profile: Profile
-  day: PersonDay
-  onToggle: () => void
+  entry: PersonEntry
+  onToggle?: () => void
 }
 
-export function MacroBlock({ profile, day, onToggle }: Props) {
-  return (
-    <button type="button" onClick={onToggle} className="block w-full text-left">
+export function MacroBlock({ entry: { profile, day }, onToggle }: Props) {
+  const content = (
+    <>
       <span className="flex items-center gap-2 text-[13px] text-text-2">
         <span
           className="size-2 rounded-full"
           style={{ background: profile.colorB, boxShadow: `0 0 8px ${profile.colorA}` }}
         />
         {profile.name}
-        <span className="sr-only">, toucher pour voir l’autre profil</span>
+        {onToggle && <span className="sr-only">, toucher pour voir l’autre profil</span>}
       </span>
       <span className="mt-2 flex flex-col gap-2.5">
         {MACROS.map((meta) => (
@@ -33,7 +31,15 @@ export function MacroBlock({ profile, day, onToggle }: Props) {
           />
         ))}
       </span>
+    </>
+  )
+
+  return onToggle ? (
+    <button type="button" onClick={onToggle} className="block w-full text-left">
+      {content}
     </button>
+  ) : (
+    <div>{content}</div>
   )
 }
 

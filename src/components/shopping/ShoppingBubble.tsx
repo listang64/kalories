@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
-import { profileByUid } from '../../config/users'
 import type { ShoppingItem } from '../../lib/shopping'
+import { usePerson } from '../../store/sessionStore'
 import { TrashIcon } from '../icons/TrashIcon'
 import { SwipeButton } from '../SwipeButton'
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function ShoppingBubble({ item, onEdit, onDelete }: Props) {
-  const author = profileByUid(item.addedBy)
+  const author = usePerson(item.addedBy)
   const label = item.quantity ? `${item.name}, ${item.quantity}` : item.name
 
   return (

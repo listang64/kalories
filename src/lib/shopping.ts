@@ -1,6 +1,6 @@
-import { deleteField, doc, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
+import { deleteField, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
 import { isAisle, type Aisle } from '../config/aisles'
-import { db } from '../config/firebase'
+import { currentSharedDoc } from './household'
 import { newId } from './shared'
 
 export interface ShoppingItem {
@@ -12,8 +12,6 @@ export interface ShoppingItem {
   aisle: Aisle | null
 }
 
-export const shoppingDoc = doc(db, 'users', 'liste-de-courses')
-
 const MAX_NAME = 80
 const MAX_QUANTITY = 40
 
@@ -24,34 +22,34 @@ export function splitNames(text: string): string[] {
     .filter(Boolean)
 }
 
-export function addShoppingItems(names: string[], uid: string): Promise<void> {
+export async function addShoppingItems(names: string[], uid: string): Promise<void> {
   const start = Date.now()
   const items = Object.fromEntries(
     names.map((name, i) => [newId(i), { name, quantity: '', addedBy: uid, order: start + i }]),
   )
-  return setDoc(shoppingDoc, { items }, { merge: true })
+  await setDoc(currentSharedDoc('courses'), { items }, { merge: true })
 }
 
-export function updateShoppingItem(item: ShoppingItem, name: string, quantity: string): Promise<void> {
+export async function updateShoppingItem(item: ShoppingItem, name: string, quantity: string): Promise<void> {
   const nextName = name.trim().slice(0, MAX_NAME)
-  return updateDoc(shoppingDoc, {
+  await updateDoc(currentSharedDoc('courses'), {
     [`items.${item.id}.name`]: nextName,
     [`items.${item.id}.quantity`]: quantity.trim().slice(0, MAX_QUANTITY),
     ...(nextName !== item.name && { [`items.${item.id}.aisle`]: deleteField() }),
   })
 }
 
-export function saveAisles(aisles: Record<string, Aisle>): Promise<void> {
+export async function saveAisles(aisles: Record<string, Aisle>): Promise<void> {
   const fields = Object.entries(aisles).map(([id, aisle]) => [`items.${id}.aisle`, aisle])
-  return fields.length > 0 ? updateDoc(shoppingDoc, Object.fromEntries(fields)) : Promise.resolve()
+  if (fields.length > 0) await updateDoc(currentSharedDoc('courses'), Object.fromEntries(fields))
 }
 
 export function deleteShoppingItem(id: string): Promise<void> {
   return clearShoppingItems([id])
 }
 
-export function clearShoppingItems(ids: string[]): Promise<void> {
-  return updateDoc(shoppingDoc, Object.fromEntries(ids.map((id) => [`items.${id}`, deleteField()])))
+export async function clearShoppingItems(ids: string[]): Promise<void> {
+  await updateDoc(currentSharedDoc('courses'), Object.fromEntries(ids.map((id) => [`items.${id}`, deleteField()])))
 }
 
 function parseItem(id: string, value: unknown): ShoppingItem | null {

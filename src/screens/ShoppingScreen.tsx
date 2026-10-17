@@ -7,7 +7,7 @@ import { PlusIcon } from '../components/icons/PlusIcon'
 import { ItemEditor } from '../components/shopping/ItemEditor'
 import { ShoppingBubble } from '../components/shopping/ShoppingBubble'
 import { AISLES } from '../config/aisles'
-import { otherProfile, type Profile } from '../config/users'
+import type { Profile } from '../lib/profiles'
 import { sharedErrorMessage } from '../lib/shared'
 import {
   addShoppingItems,
@@ -19,7 +19,8 @@ import {
 import { useAppStore } from '../store/appStore'
 
 interface Props {
-  profile: Profile
+  me: Profile
+  partner: Profile | null
   items: ShoppingItem[]
   denied: boolean
 }
@@ -39,7 +40,7 @@ function groupByAisle(items: ShoppingItem[]): Group[] {
   return [{ id: 'pending', label: sorted.length > 0 ? 'À trier' : '', items: pending }, ...sorted]
 }
 
-export function ShoppingScreen({ profile, items, denied }: Props) {
+export function ShoppingScreen({ me, partner, items, denied }: Props) {
   const [text, setText] = useState('')
   const [editing, setEditing] = useState<ShoppingItem | null>(null)
   const [clearing, setClearing] = useState(false)
@@ -50,7 +51,7 @@ export function ShoppingScreen({ profile, items, denied }: Props) {
     event.preventDefault()
     const names = splitNames(text)
     if (names.length === 0) return
-    addShoppingItems(names, profile.uid).catch(fail)
+    addShoppingItems(names, me.uid).catch(fail)
     setText('')
   }
 
@@ -94,7 +95,7 @@ export function ShoppingScreen({ profile, items, denied }: Props) {
             </span>
             <p className="text-[17px] font-semibold">La liste est vide</p>
             <p className="max-w-64 text-[15px] text-text-2">
-              Ajoute ce qu’il faut acheter, {otherProfile(profile).name} le verra aussitôt.
+              {partner ? `Ajoute ce qu’il faut acheter, ${partner.name} le verra aussitôt.` : 'Ajoute ce qu’il faut acheter.'}
             </p>
           </div>
         ) : (
@@ -124,7 +125,7 @@ export function ShoppingScreen({ profile, items, denied }: Props) {
       <ConfirmDialog
         open={clearing}
         title="Vider la liste ?"
-        message="Tous les articles seront supprimés, pour vous deux."
+        message={partner ? 'Tous les articles seront supprimés, pour vous deux.' : 'Tous les articles seront supprimés.'}
         confirmLabel="Vider"
         cancelLabel="Annuler"
         onCancel={() => setClearing(false)}

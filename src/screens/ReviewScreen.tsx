@@ -3,17 +3,16 @@ import { AddFoodRow } from '../components/review/AddFoodRow'
 import { ItemCard } from '../components/review/ItemCard'
 import { ReviewSummary } from '../components/review/ReviewSummary'
 import type { DayProgress } from '../lib/nutrition'
-import type { Profile } from '../config/users'
 import { todayKey } from '../lib/dates'
 import { saveMeal, updateMeal } from '../lib/meals'
 import { useAppStore } from '../store/appStore'
 
 interface Props {
-  profile: Profile
+  uid: string
   progress: DayProgress
 }
 
-export function ReviewScreen({ profile, progress }: Props) {
+export function ReviewScreen({ uid, progress }: Props) {
   const items = useAppStore((s) => s.review)
   const type = useAppStore((s) => s.draft.type)
   const setMealType = useAppStore((s) => s.setMealType)
@@ -28,11 +27,11 @@ export function ReviewScreen({ profile, progress }: Props) {
     const { draft, review, editing: target, addTarget } = useAppStore.getState()
     const fail = () => showToast('Enregistrement impossible')
     if (target) {
-      updateMeal(target.mealId, { type: draft.type, items: review }).catch(fail)
+      updateMeal(target.meal, { type: draft.type, items: review }).catch(fail)
       return closeEdit()
     }
     const meal = { type: draft.type, note: draft.note, items: review }
-    saveMeal(profile, meal, addTarget?.date ?? todayKey()).catch(fail)
+    saveMeal(uid, meal, addTarget?.date ?? todayKey()).catch(fail)
     setOverlay(null)
   }
 

@@ -1,29 +1,24 @@
 import { MACROS } from '../../config/macros'
-import type { Profile } from '../../config/users'
-import { goalsOf, saveSettings, type MacroMode, type UserSettings } from '../../hooks/useProfiles'
 import { formatInt } from '../../lib/format'
+import { goalsOf, saveSettings, type MacroMode, type Profile } from '../../lib/profiles'
 import { NumberField } from '../NumberField'
 import { Segmented } from '../Segmented'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
 
-interface Props {
-  profile: Profile
-  settings: UserSettings
-}
 
 const MODES: { value: MacroMode; label: string }[] = [
   { value: 'auto', label: 'Auto' },
   { value: 'manual', label: 'Manuel' },
 ]
 
-export function MacroSettings({ profile, settings }: Props) {
-  const goals = goalsOf(settings)
+export function MacroSettings({ me }: { me: Profile }) {
+  const goals = goalsOf(me)
   const macros = { carbs: goals.carbs, fat: goals.fat, protein: goals.protein }
-  const manual = settings.macroMode === 'manual'
+  const manual = me.macroMode === 'manual'
   const macroKcal = goals.carbs * 4 + goals.fat * 9 + goals.protein * 4
 
   const setMode = (mode: MacroMode) =>
-    saveSettings(profile, mode === 'manual' ? { macroMode: mode, macroGoals: macros } : { macroMode: mode })
+    saveSettings(me.uid, mode === 'manual' ? { macroMode: mode, macroGoals: macros } : { macroMode: mode })
 
   return (
     <SettingsGroup
@@ -35,7 +30,7 @@ export function MacroSettings({ profile, settings }: Props) {
       }
     >
       <SettingsRow>
-        <Segmented label="Mode des macros" value={settings.macroMode} options={MODES} onChange={setMode} />
+        <Segmented label="Mode des macros" value={me.macroMode} options={MODES} onChange={setMode} />
       </SettingsRow>
       {MACROS.map((meta) => (
         <SettingsRow key={meta.key}>
@@ -48,7 +43,7 @@ export function MacroSettings({ profile, settings }: Props) {
               min={0}
               max={1500}
               suffix="g"
-              onCommit={(grams) => saveSettings(profile, { macroGoals: { ...macros, [meta.key]: grams } })}
+              onCommit={(grams) => saveSettings(me.uid, { macroGoals: { ...macros, [meta.key]: grams } })}
             />
           ) : (
             <span className="text-[17px] font-semibold text-text-2 tabular-nums">

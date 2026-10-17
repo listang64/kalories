@@ -1,13 +1,14 @@
-import { PROFILE_LIST, type ProfileId } from '../../config/users'
 import { addDays, dayLabel } from '../../lib/dates'
 import type { Totals } from '../../lib/nutrition'
+import type { Profile } from '../../lib/profiles'
 import { AnimatedNumber } from '../AnimatedNumber'
 import { ChevronIcon } from '../icons/ChevronIcon'
 import { Segmented } from '../Segmented'
 
 interface Props {
-  viewed: ProfileId
-  onViewed: (id: ProfileId) => void
+  people: Profile[]
+  viewed: string
+  onViewed: (uid: string) => void
   date: string
   today: string
   onDate: (date: string) => void
@@ -15,15 +16,14 @@ interface Props {
   goal: number
 }
 
-const PEOPLE = PROFILE_LIST.map((profile) => ({ value: profile.id, label: profile.name }))
-
-export function DayHeader({ viewed, onViewed, date, today, onDate, totals, goal }: Props) {
+export function DayHeader({ people, viewed, onViewed, date, today, onDate, totals, goal }: Props) {
   const rest = goal - totals.kcal
+  const options = people.map((person) => ({ value: person.uid, label: person.name }))
 
   return (
     <div className="shrink-0">
-      <Segmented label="Profil affiché" value={viewed} options={PEOPLE} onChange={onViewed} />
-      <div className="mt-4 flex items-center justify-between">
+      {options.length > 1 && <Segmented label="Profil affiché" value={viewed} options={options} onChange={onViewed} />}
+      <div className={`flex items-center justify-between ${options.length > 1 ? 'mt-4' : ''}`}>
         <button
           type="button"
           aria-label="Jour précédent"

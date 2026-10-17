@@ -6,29 +6,33 @@ import { DayHeader } from '../components/day/DayHeader'
 import { MealGroup } from '../components/day/MealGroup'
 import { PlusIcon } from '../components/icons/PlusIcon'
 import { MEAL_TYPES, type MealType } from '../config/meals'
-import { PROFILES, type Profile } from '../config/users'
-import { useDayMeals } from '../hooks/useDayMeals'
-import { goalsOf, useProfiles } from '../hooks/useProfiles'
+import { useMeals } from '../hooks/useMeals'
 import { useToday } from '../hooks/useToday'
 import { deleteMeal, type Meal } from '../lib/meals'
 import { mealTotals, sumTotals } from '../lib/nutrition'
+import { goalsOf, type Profile } from '../lib/profiles'
 import { useAppStore } from '../store/appStore'
 
-export function DayDetailScreen({ profile }: { profile: Profile }) {
+interface Props {
+  me: Profile
+  people: Profile[]
+}
+
+export function DayDetailScreen({ me, people }: Props) {
   const today = useToday()
   const [date, setDate] = useState(today)
-  const [viewedId, setViewedId] = useState(profile.id)
+  const [viewedUid, setViewedUid] = useState(me.uid)
   const [selected, setSelected] = useState<Meal | null>(null)
   const [correcting, setCorrecting] = useState<Meal | null>(null)
   const [deleting, setDeleting] = useState<Meal | null>(null)
   const openAdd = useAppStore((s) => s.openAdd)
   const startEdit = useAppStore((s) => s.startEdit)
   const showToast = useAppStore((s) => s.showToast)
-  const viewed = PROFILES[viewedId]
-  const goal = goalsOf(useProfiles()[viewedId]).kcal
-  const meals = useDayMeals(date).filter((meal) => meal.uid === viewed.uid)
+  const viewed = people.find((person) => person.uid === viewedUid) ?? me
+  const goal = goalsOf(viewed).kcal
+  const meals = useMeals([viewed.uid], date)
   const totals = sumTotals(meals.map((meal) => mealTotals(meal.items)))
-  const own = viewedId === profile.id
+  const own = viewed.uid === me.uid
 
   const progressWithout = (meal?: Meal) => ({
     kcal: totals.kcal - (meal ? mealTotals(meal.items).kcal : 0),
@@ -37,14 +41,15 @@ export function DayDetailScreen({ profile }: { profile: Profile }) {
   const add = (type?: MealType) => openAdd(type, { date, progress: progressWithout() })
   const remove = (meal: Meal) => {
     setDeleting(null)
-    deleteMeal(meal.id).catch(() => showToast('Suppression impossible'))
+    deleteMeal(meal).catch(() => showToast('Suppression impossible'))
   }
 
   return (
     <div className="flex h-full flex-col">
       <DayHeader
-        viewed={viewedId}
-        onViewed={setViewedId}
+        people={people}
+        viewed={viewed.uid}
+        onViewed={setViewedUid}
         date={date}
         today={today}
         onDate={setDate}
@@ -103,7 +108,7 @@ export function DayDetailScreen({ profile }: { profile: Profile }) {
       <ConfirmDialog
         open={deleting !== null}
         title="Supprimer ce repas ?"
-        message="Il disparaîtra aussi du téléphone de l’autre."
+        message={people.length > 1 ? 'Il disparaîtra aussi du téléphone de l’autre.' : 'Il sera supprimé définitivement.'}
         confirmLabel="Supprimer"
         cancelLabel="Garder"
         onCancel={() => setDeleting(null)}

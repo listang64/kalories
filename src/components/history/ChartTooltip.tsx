@@ -1,5 +1,5 @@
 import { formatInt } from '../../lib/format'
-import { formatDayName, type DayPoint } from '../../lib/history'
+import { formatDayName, valueOf, type DayPoint } from '../../lib/history'
 import type { ChartSeries } from './HistoryChart'
 
 interface Props {
@@ -18,7 +18,7 @@ export function ChartTooltip({ point, series, left }: Props) {
     >
       <p className="text-[12px] text-text-2">{formatDayName(point.date)}</p>
       {series.map((s) => {
-        const value = point.values[s.id]
+        const value = valueOf(point, s.id)
         const over = value !== null && value > s.goal ? value - s.goal : 0
         return (
           <div key={s.id} className="mt-1 flex items-center gap-2 tabular-nums">

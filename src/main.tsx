@@ -1,13 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { watchAuth } from './hooks/useAuth'
+import { watchSession } from './lib/session'
 import { registerPwa, requestPersistentStorage } from './lib/pwa'
 import './styles/tokens.css'
 
 registerPwa()
 requestPersistentStorage()
-watchAuth()
+watchSession()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

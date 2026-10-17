@@ -1,11 +1,10 @@
-import { profileByUid, type ProfileId } from '../config/users'
 import { addDays } from './dates'
 import type { Meal } from './meals'
 import { mealTotals } from './nutrition'
 
 export interface DayPoint {
   date: string
-  values: Record<ProfileId, number | null>
+  values: Record<string, number | null>
 }
 
 export interface PersonStats {
@@ -20,24 +19,24 @@ export function lastDays(today: string, count: number): string[] {
 }
 
 export function buildHistory(meals: Meal[], days: string[]): DayPoint[] {
-  const byDate = new Map<string, Record<ProfileId, number | null>>(
-    days.map((date) => [date, { nico: null, chachou: null }]),
-  )
+  const byDate = new Map<string, Record<string, number | null>>(days.map((date) => [date, {}]))
   for (const meal of meals) {
     const entry = byDate.get(meal.date)
-    const profile = profileByUid(meal.uid)
-    if (!entry || !profile) continue
-    entry[profile.id] = (entry[profile.id] ?? 0) + mealTotals(meal.items).kcal
+    if (entry) entry[meal.uid] = (entry[meal.uid] ?? 0) + mealTotals(meal.items).kcal
   }
-  return days.map((date) => ({ date, values: byDate.get(date) ?? { nico: null, chachou: null } }))
+  return days.map((date) => ({ date, values: byDate.get(date) ?? {} }))
 }
 
-export function statsFor(points: DayPoint[], id: ProfileId, goal: number, today: string): PersonStats {
+export function valueOf(point: DayPoint, id: string): number | null {
+  return point.values[id] ?? null
+}
+
+export function statsFor(points: DayPoint[], id: string, goal: number, today: string): PersonStats {
   const finished = points.filter((point) => point.date !== today)
-  const values = finished.map((point) => point.values[id]).filter((value): value is number => value !== null)
+  const values = finished.map((point) => valueOf(point, id)).filter((value): value is number => value !== null)
   let streak = 0
   for (const point of [...finished].reverse()) {
-    const value = point.values[id]
+    const value = valueOf(point, id)
     if (value === null || value > goal) break
     streak += 1
   }

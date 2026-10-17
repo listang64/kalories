@@ -2,20 +2,19 @@ import { useState } from 'react'
 import { AddMealSheet } from '../components/AddMealSheet'
 import { BottomSheet } from '../components/BottomSheet'
 import { CalorieLegend } from '../components/home/CalorieLegend'
-import { CalorieRing, type PersonEntry } from '../components/home/CalorieRing'
+import { CalorieRing } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
 import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
 import { Rise } from '../components/Rise'
 import { SortButton } from '../components/shopping/SortButton'
-import { otherProfile, PROFILES, type Profile } from '../config/users'
-import { useDayMeals } from '../hooks/useDayMeals'
-import { useHomeData } from '../hooks/useHomeData'
-import { useProfiles } from '../hooks/useProfiles'
+import { personEntry } from '../hooks/useHomeData'
+import { useMeals } from '../hooks/useMeals'
 import { useShoppingList } from '../hooks/useShoppingList'
 import { useToday } from '../hooks/useToday'
 import { useLocalSettings } from '../lib/localSettings'
+import type { Profile } from '../lib/profiles'
 import { useAppStore } from '../store/appStore'
 import { DayDetailScreen } from './DayDetailScreen'
 import { HistoryScreen } from './HistoryScreen'
@@ -23,20 +22,28 @@ import { LoansScreen } from './LoansScreen'
 import { SettingsScreen } from './SettingsScreen'
 import { ShoppingScreen } from './ShoppingScreen'
 
-export function HomeScreen({ profile }: { profile: Profile }) {
+interface Props {
+  me: Profile
+  people: Profile[]
+}
+
+export function HomeScreen({ me, people }: Props) {
   const today = useToday()
-  const data = useHomeData(useProfiles(), useDayMeals(today))
+  const meals = useMeals(people.map((person) => person.uid), today)
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
   const shopping = useShoppingList()
-  const [viewed, setViewed] = useState(profile)
+  const [viewedUid, setViewedUid] = useState(me.uid)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
   const openAdd = useAppStore((s) => s.openAdd)
   const settingsOnTop = useAppStore((s) => s.settingsOnTop)
   const closeSettings = useAppStore((s) => s.closeSettings)
 
-  const nico: PersonEntry = { profile: PROFILES.nico, day: data.nico }
-  const chachou: PersonEntry = { profile: PROFILES.chachou, day: data.chachou }
+  const mine = personEntry(me, meals)
+  const entries = people.map((person) => personEntry(person, meals))
+  const partner = people.find((person) => person.uid !== me.uid) ?? null
+  const viewed = entries.find((entry) => entry.profile.uid === viewedUid) ?? mine
+  const next = entries[(entries.indexOf(viewed) + 1) % entries.length]
 
   return (
     <main className="safe-screen flex h-full flex-col px-5">
@@ -46,16 +53,15 @@ export function HomeScreen({ profile }: { profile: Profile }) {
       </Rise>
       <Rise index={1} className="mt-5">
         <MacroBlock
-          profile={viewed}
-          day={data[viewed.id]}
-          onToggle={() => setViewed(otherProfile(viewed))}
+          entry={viewed}
+          onToggle={next && next !== viewed ? () => setViewedUid(next.profile.uid) : undefined}
         />
       </Rise>
       <Rise index={2} className="my-3 flex min-h-0 flex-1">
-        <CalorieRing left={nico} right={chachou} onOrb={() => setOverlay('day')} />
+        <CalorieRing left={entries[0] ?? mine} right={entries[1] ?? null} onOrb={() => setOverlay('day')} />
       </Rise>
       <Rise index={3}>
-        <CalorieLegend entries={[nico, chachou]} />
+        <CalorieLegend entries={entries} />
       </Rise>
       <Rise index={4} className="pt-4 pb-3">
         <HomeActions
@@ -66,10 +72,10 @@ export function HomeScreen({ profile }: { profile: Profile }) {
         />
       </Rise>
       <BottomSheet open={overlay === 'day'} title="Journée" onClose={() => setOverlay(null)}>
-        <DayDetailScreen profile={profile} />
+        <DayDetailScreen me={me} people={people} />
       </BottomSheet>
       <BottomSheet open={overlay === 'history'} title="Historique" onClose={() => setOverlay(null)}>
-        <HistoryScreen />
+        <HistoryScreen people={people} />
       </BottomSheet>
       <BottomSheet
         open={overlay === 'shopping'}
@@ -77,17 +83,14 @@ export function HomeScreen({ profile }: { profile: Profile }) {
         onClose={() => setOverlay(null)}
         action={<SortButton items={shopping.items} />}
       >
-        <ShoppingScreen profile={profile} items={shopping.items} denied={shopping.denied} />
+        <ShoppingScreen me={me} partner={partner} items={shopping.items} denied={shopping.denied} />
       </BottomSheet>
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
-        <LoansScreen profile={profile} />
+        <LoansScreen me={me} partner={partner} />
       </BottomSheet>
-      <AddMealSheet
-        profile={profile}
-        progress={{ kcal: data[profile.id].totals.kcal, goal: data[profile.id].goals.kcal }}
-      />
+      <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
-        <SettingsScreen profile={profile} />
+        <SettingsScreen me={me} partner={partner} />
       </BottomSheet>
     </main>
   )
