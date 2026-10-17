@@ -1,18 +1,170 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
     function isCouple() {
-      return request.auth != null
-        && request.auth.uid in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2'];
+      return signedIn() && me() in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2'];
     }
+
+    function userDoc(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function householdDoc(hid) {
+      return /databases/$(database)/documents/households/$(hid);
+    }
+
+    function inviteDoc(code) {
+      return /databases/$(database)/documents/invites/$(code);
+    }
+
+    function codeDoc(code) {
+      return /databases/$(database)/documents/signupCodes/$(code);
+    }
+
+    function inHousehold(hid) {
+      return signedIn() && hid is string && exists(householdDoc(hid))
+        && me() in get(householdDoc(hid)).data.members;
+    }
+
+    function inHouseholdAfter(hid) {
+      return signedIn() && hid is string && existsAfter(householdDoc(hid))
+        && me() in getAfter(householdDoc(hid)).data.members;
+    }
+
+    function leftHousehold(hid) {
+      return hid == null || !existsAfter(householdDoc(hid))
+        || !(me() in getAfter(householdDoc(hid)).data.members);
+    }
+
+    function validProfile(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 24
+        && data.color is string && data.color.size() <= 16
+        && data.householdId is string;
+    }
+
+    function validSignup(uid, data) {
+      return data.signupCode is string && data.signupCode.matches('^[A-Z0-9-]{4,24}$')
+        && getAfter(codeDoc(data.signupCode)).data.usedBy == uid
+        && !exists(householdDoc(data.householdId))
+        && getAfter(householdDoc(data.householdId)).data.members == [uid];
+    }
+
+    function validInvite(code, hid) {
+      return code is string && code.matches('^[A-Z0-9]{6}$')
+        && get(inviteDoc(code)).data.householdId == hid
+        && request.time < get(inviteDoc(code)).data.createdAt + duration.value(48, 'h')
+        && !existsAfter(inviteDoc(code));
+    }
+
+    function joining(hid) {
+      let before = resource.data.members;
+      return signedIn()
+        && before.size() == 1
+        && !(me() in before)
+        && request.resource.data.members == before.concat([me()])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'invite'])
+        && validInvite(request.resource.data.get('invite', null), hid)
+        && getAfter(userDoc(me())).data.householdId == hid;
+    }
+
+    function leaving(hid) {
+      let before = resource.data.members;
+      return signedIn()
+        && before.size() == 2
+        && me() in before
+        && request.resource.data.members == before.removeAll([me()])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        && getAfter(userDoc(me())).data.householdId != hid;
+    }
+
     match /users/{uid} {
-      allow read, write: if isCouple();
+      allow read, write: if isCouple()
+        && uid in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2', 'liste-de-courses', 'prets'];
+      allow get: if signedIn() && (me() == uid || inHousehold(resource.data.householdId));
+      allow create: if signedIn() && me() == uid
+        && validProfile(request.resource.data)
+        && validSignup(uid, request.resource.data);
+      allow update: if signedIn() && me() == uid
+        && validProfile(request.resource.data)
+        && request.resource.data.get('signupCode', null) == resource.data.get('signupCode', null)
+        && (request.resource.data.householdId == resource.data.get('householdId', null)
+          || (inHouseholdAfter(request.resource.data.householdId)
+            && leftHousehold(resource.data.get('householdId', null))));
+
+      match /meals/{mealId} {
+        allow read, write: if isCouple()
+          && uid in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2'];
+        allow read: if signedIn() && (me() == uid || inHousehold(get(userDoc(uid)).data.householdId));
+        allow delete: if signedIn() && me() == uid;
+        allow create, update: if signedIn() && me() == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.items is list;
+      }
     }
+
     match /meals/{mealId} {
       allow read, delete: if isCouple();
       allow create, update: if isCouple()
         && request.resource.data.uid in ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2']
         && request.resource.data.items is list;
+    }
+
+    match /households/{hid} {
+      allow get: if signedIn() && me() in resource.data.members;
+      allow create: if signedIn()
+        && request.resource.data.members == [me()]
+        && request.resource.data.keys().hasOnly(['members', 'createdAt'])
+        && getAfter(userDoc(me())).data.householdId == hid;
+      allow create: if isCouple() && hid == 'foyer-nico-chachou'
+        && request.resource.data.members.toSet() == ['Ai6mNQSmQ9M4kSixvyrZORNhbxF2', 'PDR3pus71PSnyTnsaJ1CRc2BAXs2'].toSet()
+        && request.resource.data.members.size() == 2;
+      allow update: if joining(hid) || leaving(hid);
+      allow delete: if signedIn() && resource.data.members == [me()]
+        && getAfter(userDoc(me())).data.householdId != hid;
+
+      match /shared/{name} {
+        allow read, delete: if inHousehold(hid);
+        allow create, update: if name in ['courses', 'prets'] && inHouseholdAfter(hid);
+      }
+    }
+
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if signedIn() && resource.data.createdBy == me();
+      allow create: if signedIn()
+        && code.matches('^[A-Z0-9]{6}$')
+        && request.resource.data.keys().hasOnly(['householdId', 'createdBy', 'createdByName', 'createdAt'])
+        && request.resource.data.createdBy == me()
+        && request.resource.data.createdByName is string
+        && request.resource.data.createdAt == request.time
+        && inHousehold(request.resource.data.householdId)
+        && get(householdDoc(request.resource.data.householdId)).data.members.size() == 1;
+      allow delete: if signedIn()
+        && (resource.data.createdBy == me() || inHouseholdAfter(resource.data.householdId));
+    }
+
+    match /signupCodes/{code} {
+      allow get: if true;
+      allow list, delete: if isCouple();
+      allow create: if isCouple()
+        && code.matches('^[A-Z0-9-]{4,24}$')
+        && request.resource.data.usedBy == null;
+      allow update: if signedIn()
+        && resource.data.usedBy == null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'usedName', 'usedAt'])
+        && request.resource.data.usedBy == me()
+        && request.resource.data.usedAt == request.time
+        && !exists(userDoc(me()))
+        && getAfter(userDoc(me())).data.get('signupCode', null) == code
+        && request.resource.data.usedName == getAfter(userDoc(me())).data.name;
     }
   }
 }
