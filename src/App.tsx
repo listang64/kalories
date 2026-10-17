@@ -23,26 +23,26 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <ErrorBoundary>
         <AnimatePresence mode="wait" initial={false}>
-          {view !== 'loading' && (
-            <motion.div
-              key={view}
-              className="h-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              {view === 'auth' ? (
-                <AuthScreen />
-              ) : view === 'migrating' ? (
-                <SplashScreen />
-              ) : view === 'incomplete' ? (
-                <SignupScreen account={auth.currentUser} onBack={() => void signOutUser()} />
-              ) : (
-                me && <HomeScreen me={me} people={people} />
-              )}
-            </motion.div>
-          )}
+          <motion.div
+            key={view}
+            className="h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {view === 'auth' ? (
+              <AuthScreen />
+            ) : view === 'loading' ? (
+              <SplashScreen />
+            ) : view === 'migrating' ? (
+              <SplashScreen message="Préparation de votre foyer…" />
+            ) : view === 'incomplete' ? (
+              <SignupScreen account={auth.currentUser} onBack={() => void signOutUser()} />
+            ) : (
+              me && <HomeScreen me={me} people={people} />
+            )}
+          </motion.div>
         </AnimatePresence>
       </ErrorBoundary>
       <Toast />

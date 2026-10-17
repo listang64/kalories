@@ -129,9 +129,12 @@ function migrate(watch: Watch) {
 function onProfile(watch: Watch, snapshot: DocumentSnapshot) {
   const profile = snapshot.exists() ? parseProfile(watch.uid, snapshot.data()) : null
   if (!profile?.householdId) {
-    if (snapshot.metadata.fromCache) return
-    if (isCouple(watch.uid)) return migrate(watch)
-    useSession.setState({ ...SIGNED_OUT, status: 'incomplete', uid: watch.uid })
+    if (isCouple(watch.uid)) {
+      if (snapshot.metadata.fromCache) useSession.setState({ ...SIGNED_OUT, status: 'migrating', uid: watch.uid })
+      else migrate(watch)
+    } else if (!snapshot.metadata.fromCache) {
+      useSession.setState({ ...SIGNED_OUT, status: 'incomplete', uid: watch.uid })
+    }
     return
   }
   watch.profiles.set(watch.uid, profile)
@@ -142,6 +145,7 @@ function onProfile(watch: Watch, snapshot: DocumentSnapshot) {
 function watchProfile(watch: Watch) {
   const unsubscribe = onSnapshot(
     doc(db, 'users', watch.uid),
+    { includeMetadataChanges: true },
     (snapshot) => onProfile(watch, snapshot),
     () => later(watch, () => watchProfile(watch)),
   )
