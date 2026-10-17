@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { BARCODE, createDetector, type Detector } from '../lib/barcode'
+import { createDetector, PRODUCT_SCAN, type Detector, type ScanOptions } from '../lib/barcode'
 
 const INTERVAL = 200
 
@@ -7,6 +7,7 @@ export function useBarcodeScanner(
   videoRef: RefObject<HTMLVideoElement | null>,
   active: boolean,
   onCode: (code: string) => void,
+  options: ScanOptions = PRODUCT_SCAN,
 ) {
   const [failed, setFailed] = useState(false)
   const latest = useRef(onCode)
@@ -22,7 +23,7 @@ export function useBarcodeScanner(
       const video = videoRef.current
       if (detector && video && video.readyState >= 2) {
         const found = await detector.detect(video).catch(() => [])
-        const code = found.map((barcode) => barcode.rawValue).find((value) => BARCODE.test(value))
+        const code = found.map((barcode) => options.accept(barcode.rawValue)).find((value) => value !== null)
         if (stopped) return
         if (code) return latest.current(code)
       }
@@ -30,7 +31,7 @@ export function useBarcodeScanner(
     }
 
     setFailed(false)
-    createDetector()
+    createDetector(options.formats)
       .then((next) => {
         detector = next
         if (!stopped) void tick()
@@ -40,7 +41,7 @@ export function useBarcodeScanner(
       stopped = true
       window.clearTimeout(timer)
     }
-  }, [active, videoRef])
+  }, [active, videoRef, options])
 
   return { failed }
 }

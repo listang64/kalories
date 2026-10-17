@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { GeminiError, geminiErrorMessage, isTemporary, testGeminiKey } from '../../lib/gemini'
 import { cleanKey, DEFAULT_MODEL, looksLikeGeminiKey, maskKey, useLocalSettings } from '../../lib/localSettings'
+import { useAppStore } from '../../store/appStore'
+import { KeyQrRow } from './KeyQrRow'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
 
 type TestState =
@@ -13,6 +15,7 @@ const INPUT = 'min-w-0 flex-1 bg-transparent text-base outline-none placeholder:
 export function GeminiSettings() {
   const { geminiKey, geminiModel, setGeminiKey, setGeminiModel } = useLocalSettings()
   const [test, setTest] = useState<TestState>({ status: 'idle' })
+  const showToast = useAppStore((s) => s.showToast)
 
   const run = async () => {
     setTest({ status: 'running' })
@@ -29,13 +32,22 @@ export function GeminiSettings() {
   return (
     <SettingsGroup
       title="Gemini"
-      footer="La clé reste uniquement sur ce téléphone : elle n’est jamais envoyée dans la base ni sur GitHub."
+      footer="La clé reste uniquement sur ce téléphone : elle n’est jamais envoyée dans la base ni sur GitHub. Pour la donner à un proche, affiche son QR code et scanne-le avec son téléphone."
     >
       <KeyRow
+        key={geminiKey}
         geminiKey={geminiKey}
         onSave={(key) => {
           setGeminiKey(key)
           setTest({ status: 'idle' })
+        }}
+      />
+      <KeyQrRow
+        geminiKey={geminiKey}
+        onScanned={(key) => {
+          setGeminiKey(key)
+          setTest({ status: 'idle' })
+          showToast('Clé Gemini enregistrée')
         }}
       />
       <ModelRow model={geminiModel} onSave={setGeminiModel} />
