@@ -56,6 +56,6 @@ export function goalsOf(settings: Settings): DayGoals {
   return { kcal: settings.dailyKcalGoal, ...macros }
 }
 
-export function saveSettings(uid: string, patch: Partial<Settings>) {
+export function saveSettings(uid: string, patch: Partial<Settings & { color: ColorId }>) {
   updateDoc(doc(db, 'users', uid), patch).catch(() => useAppStore.getState().showToast('Enregistrement impossible'))
 }

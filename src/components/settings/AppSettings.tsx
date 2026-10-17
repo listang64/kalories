@@ -3,8 +3,10 @@ import { auth } from '../../config/firebase'
 import { signOutUser } from '../../lib/auth'
 import { formatBuildDate } from '../../lib/format'
 import type { Profile } from '../../lib/profiles'
+import { saveSettings } from '../../lib/profiles'
 import { applyUpdate, checkForUpdate, type UpdateCheck } from '../../lib/pwa'
 import { useAppStore } from '../../store/appStore'
+import { ColorPicker } from '../ColorPicker'
 import { ProfileOrb } from '../ProfileOrb'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
 
@@ -18,7 +20,12 @@ const CHECK_LABEL: Record<CheckState, string> = {
   unsupported: 'Indisponible ici',
 }
 
-export function AppSettings({ me }: { me: Profile }) {
+interface Props {
+  me: Profile
+  partner: Profile | null
+}
+
+export function AppSettings({ me, partner }: Props) {
   const setOverlay = useAppStore((s) => s.setOverlay)
   const updateReady = useAppStore((s) => s.updateReady)
   const [check, setCheck] = useState<CheckState | null>(null)
@@ -35,7 +42,10 @@ export function AppSettings({ me }: { me: Profile }) {
 
   return (
     <>
-      <SettingsGroup title="Profil connecté">
+      <SettingsGroup
+        title="Profil connecté"
+        footer={partner ? `La couleur de ${partner.name} est grisée : chacun garde la sienne.` : undefined}
+      >
         <SettingsRow>
           <ProfileOrb profile={me} size={28} />
           <span className="min-w-0 flex-1">
@@ -46,6 +56,13 @@ export function AppSettings({ me }: { me: Profile }) {
             Se déconnecter
           </button>
         </SettingsRow>
+        <div className="px-3 py-3">
+          <ColorPicker
+            value={me.color}
+            onChange={(color) => saveSettings(me.uid, { color })}
+            taken={partner ? [partner.color] : []}
+          />
+        </div>
       </SettingsGroup>
       <SettingsGroup title="Application">
         <SettingsRow>

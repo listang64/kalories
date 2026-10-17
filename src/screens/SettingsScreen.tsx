@@ -13,14 +13,16 @@ interface Props {
 }
 
 export function SettingsScreen({ me, people }: Props) {
+  const partner = people.find((person) => person.uid !== me.uid) ?? null
+
   return (
     <div className="flex flex-col gap-7 pt-1">
-      <GoalSettings me={me} partner={people.find((person) => person.uid !== me.uid) ?? null} />
+      <GoalSettings me={me} partner={partner} />
       <MacroSettings me={me} />
       <HouseholdSettings me={me} people={people} />
       <GeminiSettings />
       {isAdmin(me.uid) && <SignupCodes />}
-      <AppSettings me={me} />
+      <AppSettings me={me} partner={partner} />
     </div>
   )
 }
