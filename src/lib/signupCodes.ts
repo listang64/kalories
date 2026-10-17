@@ -1,5 +1,6 @@
 import { deleteDoc, doc, serverTimestamp, setDoc, type QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import { shareText, type ShareResult } from './share'
 
 export interface SignupCode {
   id: string
@@ -7,8 +8,6 @@ export interface SignupCode {
   usedName: string | null
   createdAt: number
 }
-
-export type ShareResult = 'shared' | 'copied' | 'cancelled'
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
@@ -54,16 +53,6 @@ function inviteText(code: string): string {
   ].join('\n')
 }
 
-export async function shareInvite(code: string): Promise<ShareResult> {
-  const text = inviteText(code)
-  if (navigator.share) {
-    try {
-      await navigator.share({ text })
-      return 'shared'
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled'
-    }
-  }
-  await navigator.clipboard.writeText(text)
-  return 'copied'
+export function shareSignupCode(code: string): Promise<ShareResult> {
+  return shareText(inviteText(code))
 }

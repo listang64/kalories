@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { createSignupCode, shareInvite } from '../../lib/signupCodes'
+import { createSignupCode, shareSignupCode } from '../../lib/signupCodes'
 import { useAppStore } from '../../store/appStore'
 import { BottomPanel } from '../BottomPanel'
 import { Field, FIELD_INPUT } from '../Field'
@@ -36,7 +36,7 @@ function CreatorForm({ onClose }: { onClose: () => void }) {
   }
 
   const share = async (id: string) => {
-    const result = await shareInvite(id).catch(() => null)
+    const result = await shareSignupCode(id).catch(() => null)
     if (result === 'copied') showToast('Invitation copiée')
     if (result !== 'cancelled' && result !== null) onClose()
   }

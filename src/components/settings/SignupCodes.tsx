@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSignupCodes } from '../../hooks/useSignupCodes'
-import { deleteSignupCode, shareInvite, type SignupCode } from '../../lib/signupCodes'
+import { deleteSignupCode, shareSignupCode, type SignupCode } from '../../lib/signupCodes'
 import { useAppStore } from '../../store/appStore'
 import { ActionSheet, type SheetAction } from '../ActionSheet'
 import { CodeCreator } from './CodeCreator'
@@ -13,7 +13,7 @@ export function SignupCodes() {
   const showToast = useAppStore((s) => s.showToast)
 
   const share = async (id: string) => {
-    if ((await shareInvite(id).catch(() => null)) === 'copied') showToast('Invitation copiée')
+    if ((await shareSignupCode(id).catch(() => null)) === 'copied') showToast('Invitation copiée')
   }
 
   const actions = (code: SignupCode): SheetAction[] => [

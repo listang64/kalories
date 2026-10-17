@@ -90,7 +90,7 @@ export function HomeScreen({ me, people }: Props) {
       </BottomSheet>
       <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
-        <SettingsScreen me={me} partner={partner} />
+        <SettingsScreen me={me} people={people} />
       </BottomSheet>
     </main>
   )

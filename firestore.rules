@@ -141,9 +141,10 @@ service cloud.firestore {
       allow list: if signedIn() && resource.data.createdBy == me();
       allow create: if signedIn()
         && code.matches('^[A-Z0-9]{6}$')
-        && request.resource.data.keys().hasOnly(['householdId', 'createdBy', 'createdByName', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['householdId', 'createdBy', 'createdByName', 'createdByColor', 'createdAt'])
         && request.resource.data.createdBy == me()
         && request.resource.data.createdByName is string
+        && request.resource.data.createdByColor is string
         && request.resource.data.createdAt == request.time
         && inHousehold(request.resource.data.householdId)
         && get(householdDoc(request.resource.data.householdId)).data.members.size() == 1;

@@ -74,7 +74,8 @@ function publish(watch: Watch) {
 }
 
 function watchMember(watch: Watch, uid: string) {
-  if (watch.stops.has(`member:${uid}`)) return
+  const key = `member:${uid}`
+  if (watch.stops.has(key)) return
   const unsubscribe = onSnapshot(
     doc(db, 'users', uid),
     (snapshot) => {
@@ -82,11 +83,13 @@ function watchMember(watch: Watch, uid: string) {
       publish(watch)
     },
     () => {
+      stop(watch, key)
       watch.profiles.set(uid, null)
       publish(watch)
+      later(watch, () => watch.members?.includes(uid) && watchMember(watch, uid))
     },
   )
-  watch.stops.set(`member:${uid}`, unsubscribe)
+  watch.stops.set(key, unsubscribe)
 }
 
 function watchHousehold(watch: Watch, householdId: string) {
@@ -96,6 +99,7 @@ function watchHousehold(watch: Watch, householdId: string) {
   const unsubscribe = onSnapshot(
     doc(db, 'households', householdId),
     (snapshot) => {
+      if (!snapshot.exists()) return
       const members: unknown = snapshot.get('members')
       watch.members = Array.isArray(members) ? members.filter((uid): uid is string => typeof uid === 'string') : []
       for (const key of [...watch.stops.keys()]) {
@@ -164,6 +168,10 @@ function onUser(user: User | null) {
     legacyMoved: false,
   }
   watchProfile(current)
+}
+
+export function refreshHousehold() {
+  if (current?.householdId) watchHousehold(current, current.householdId)
 }
 
 export function watchSession() {
