@@ -15,6 +15,7 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
+            { name: 'barcode', test: /node_modules[\\/](barcode-detector|zxing-wasm)/ },
             { name: 'firebase', test: /node_modules[\\/]@?firebase/ },
             { name: 'vendor', test: /node_modules/ },
           ],

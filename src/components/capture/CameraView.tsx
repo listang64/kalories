@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCamera } from '../../hooks/useCamera'
 import { captureVideoFrame } from '../../lib/image'
+import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { CameraIcon } from '../icons/CameraIcon'
 import { GalleryIcon } from '../icons/GalleryIcon'
 
@@ -9,9 +10,10 @@ interface Props {
   active: boolean
   onPhoto: (src: string) => void
   onFiles: (files: File[]) => void
+  onScan: () => void
 }
 
-export function CameraView({ active, onPhoto, onFiles }: Props) {
+export function CameraView({ active, onPhoto, onFiles, onScan }: Props) {
   const { videoRef, state } = useCamera(active)
   const [shots, setShots] = useState(0)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -71,6 +73,14 @@ export function CameraView({ active, onPhoto, onFiles }: Props) {
         >
           <GalleryIcon size={18} />
           Galerie
+        </button>
+        <button
+          type="button"
+          onClick={onScan}
+          className="absolute right-4 flex h-10 items-center gap-2 rounded-full bg-black/45 px-3.5 text-[14px] text-text backdrop-blur-md"
+        >
+          <BarcodeIcon size={18} />
+          Code-barres
         </button>
         {live && (
           <motion.button

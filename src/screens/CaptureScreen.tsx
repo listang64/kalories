@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { CameraView } from '../components/capture/CameraView'
 import { PhotoStrip } from '../components/capture/PhotoStrip'
+import { BarcodeScanner } from '../components/scanner/BarcodeScanner'
 import { useAnalyzeMeal } from '../hooks/useAnalyzeMeal'
 import { fileToJpeg } from '../lib/image'
+import type { MealItem } from '../lib/nutrition'
 import { useAppStore } from '../store/appStore'
 
 export function CaptureScreen() {
@@ -14,10 +17,18 @@ export function CaptureScreen() {
   const error = useAppStore((s) => s.analysisError)
   const openSettingsOnTop = useAppStore((s) => s.openSettingsOnTop)
   const analyze = useAnalyzeMeal()
+  const [scanning, setScanning] = useState(false)
   const canAnalyze = draft.note.trim() !== '' || draft.photos.length > 0
 
   const add = (src: string) => {
     if (!addPhoto(src)) showToast('6 photos maximum')
+  }
+
+  const addScanned = (item: MealItem) => {
+    const { appendItems, setAddStep } = useAppStore.getState()
+    appendItems([item])
+    setScanning(false)
+    setAddStep('review')
   }
 
   const importFiles = async (files: File[]) => {
@@ -46,7 +57,12 @@ export function CaptureScreen() {
         enterKeyHint="done"
         className="h-[24%] min-h-24 shrink-0 resize-none rounded-card border border-line bg-surface-2 p-4 text-[17px] leading-snug outline-none placeholder:text-text-2 focus:border-white/20"
       />
-      <CameraView active={active} onPhoto={add} onFiles={(files) => void importFiles(files)} />
+      <CameraView
+        active={active && !scanning}
+        onPhoto={add}
+        onFiles={(files) => void importFiles(files)}
+        onScan={() => setScanning(true)}
+      />
       {draft.photos.length > 0 && <PhotoStrip photos={draft.photos} onRemove={removePhoto} />}
       {error && (
         <div role="alert" className="flex shrink-0 items-center gap-3 rounded-card border border-accent/30 bg-accent/10 py-3 pr-3 pl-4">
@@ -74,6 +90,7 @@ export function CaptureScreen() {
         Analyser
         {draft.photos.length > 0 && ` · ${draft.photos.length} photo${draft.photos.length > 1 ? 's' : ''}`}
       </button>
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onAdd={addScanned} />
     </div>
   )
 }

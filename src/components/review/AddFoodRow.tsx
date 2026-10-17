@@ -3,11 +3,14 @@ import { analyzeFood } from '../../lib/analysis'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { useLocalSettings } from '../../lib/localSettings'
 import { useAppStore } from '../../store/appStore'
+import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { PlusIcon } from '../icons/PlusIcon'
+import { BarcodeScanner } from '../scanner/BarcodeScanner'
 
 export function AddFoodRow() {
   const [food, setFood] = useState('')
   const [busy, setBusy] = useState(false)
+  const [scanning, setScanning] = useState(false)
 
   const add = async () => {
     if (!food.trim() || busy) return
@@ -49,6 +52,22 @@ export function AddFoodRow() {
       >
         {busy ? 'Analyse…' : 'Ajouter'}
       </button>
+      <button
+        type="button"
+        aria-label="Scanner un code-barres"
+        onClick={() => setScanning(true)}
+        className="grid size-10 shrink-0 place-items-center rounded-full text-accent"
+      >
+        <BarcodeIcon size={22} />
+      </button>
+      <BarcodeScanner
+        open={scanning}
+        onClose={() => setScanning(false)}
+        onAdd={(item) => {
+          useAppStore.getState().appendItems([item])
+          setScanning(false)
+        }}
+      />
     </div>
   )
 }
