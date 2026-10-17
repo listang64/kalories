@@ -24,8 +24,17 @@ export function ReviewSummary({ items, type, onType, progress }: Props) {
             <span className="ml-1.5 text-[20px] font-medium text-text-2">kcal</span>
           </p>
           <p className="mt-2 text-[15px] text-text-2">
-            G <AnimatedNumber value={totals.carbs} /> g · L <AnimatedNumber value={totals.fat} /> g · P{' '}
-            <AnimatedNumber value={totals.protein} /> g
+            <span className="whitespace-nowrap">
+              G <AnimatedNumber value={totals.carbs} /> g
+            </span>{' '}
+            ·{' '}
+            <span className="whitespace-nowrap">
+              L <AnimatedNumber value={totals.fat} /> g
+            </span>{' '}
+            ·{' '}
+            <span className="whitespace-nowrap">
+              P <AnimatedNumber value={totals.protein} /> g
+            </span>
           </p>
         </div>
         <MealTypeChip value={type} onChange={onType} />

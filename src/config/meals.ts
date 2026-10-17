@@ -2,7 +2,7 @@ export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export const MEAL_TYPES: { value: MealType; label: string }[] = [
   { value: 'breakfast', label: 'Petit-déj' },
-  { value: 'lunch', label: 'Dîner' },
+  { value: 'lunch', label: 'Déjeuner' },
   { value: 'dinner', label: 'Souper' },
   { value: 'snack', label: 'En-cas' },
 ]
