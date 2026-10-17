@@ -4,6 +4,7 @@ import { Icon } from './Icon'
 
 const SUN = { stroke: 'var(--sun)' }
 const RAIN = { stroke: 'var(--rain)' }
+const MOON = { stroke: 'var(--moon)' }
 const CLOUD_TOP = 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24'
 
 const SHAPES: Record<WeatherKind, ReactNode> = {
@@ -52,10 +53,26 @@ const SHAPES: Record<WeatherKind, ReactNode> = {
   ),
 }
 
-export function WeatherIcon({ kind, size = 24 }: { kind: WeatherKind; size?: number }) {
+const NIGHT: Partial<Record<WeatherKind, ReactNode>> = {
+  clear: <path style={MOON} d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+  partly: (
+    <>
+      <path style={MOON} d="M10.08 9A6 6 0 0 1 16 4a4.24 4.24 0 0 0 6 6c0 2.22-1.2 4.16-3 5.2" />
+      <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z" />
+    </>
+  ),
+}
+
+interface Props {
+  kind: WeatherKind
+  size?: number
+  night?: boolean
+}
+
+export function WeatherIcon({ kind, size = 24, night = false }: Props) {
   return (
     <Icon size={size} strokeWidth={1.75}>
-      {SHAPES[kind]}
+      {(night && NIGHT[kind]) || SHAPES[kind]}
     </Icon>
   )
 }

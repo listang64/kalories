@@ -1,25 +1,30 @@
+import { useCallback, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useWeather } from '../../hooks/useWeather'
 import { WEATHER_LABELS, WEATHER_PLACE, type WeatherKind } from '../../lib/weather'
 import { ArrowUpIcon } from '../icons/ArrowUpIcon'
 import { WeatherIcon } from '../icons/WeatherIcon'
+import { HourlyWeather } from './HourlyWeather'
 
 const TICK = 'absolute bottom-0 h-[7px] w-[1.5px] rounded-full bg-white/30'
 
 export function WeatherBadge({ dateKey }: { dateKey: string }) {
   const weather = useWeather(dateKey)
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
 
   return (
     <div className="mt-2 flex h-9 justify-center">
       <AnimatePresence>
         {weather && (
-          <motion.div
-            role="img"
-            aria-label={`Météo à ${WEATHER_PLACE} : ${weather.max} °C au plus chaud, matin ${WEATHER_LABELS[weather.morning].toLowerCase()}, après-midi ${WEATHER_LABELS[weather.afternoon].toLowerCase()}`}
+          <motion.button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={`Météo à ${WEATHER_PLACE} : ${weather.max} °C au plus chaud, matin ${WEATHER_LABELS[weather.morning].toLowerCase()}, après-midi ${WEATHER_LABELS[weather.afternoon].toLowerCase()}. Toucher pour voir le détail heure par heure`}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex h-9 items-end gap-3"
+            className="press flex h-9 items-end gap-3"
           >
             <span className="flex items-center gap-0.5 pb-px text-[20px] leading-none font-semibold tabular-nums">
               <span className="text-accent">
@@ -28,16 +33,17 @@ export function WeatherBadge({ dateKey }: { dateKey: string }) {
               {weather.max}°
             </span>
             <DaySchema morning={weather.morning} afternoon={weather.afternoon} />
-          </motion.div>
+          </motion.button>
         )}
       </AnimatePresence>
+      {weather && <HourlyWeather weather={weather} open={open} onClose={close} />}
     </div>
   )
 }
 
 function DaySchema({ morning, afternoon }: { morning: WeatherKind; afternoon: WeatherKind }) {
   return (
-    <div className="relative flex pb-[5px]">
+    <span className="relative flex pb-[5px]">
       <span className="absolute inset-x-0 bottom-0 h-[1.5px] rounded-full bg-white/30" />
       <span className={`${TICK} left-0`} />
       <span className={`${TICK} left-1/2 -translate-x-1/2`} />
@@ -47,6 +53,6 @@ function DaySchema({ morning, afternoon }: { morning: WeatherKind; afternoon: We
           <WeatherIcon kind={kind} size={26} />
         </span>
       ))}
-    </div>
+    </span>
   )
 }
