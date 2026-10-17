@@ -21,6 +21,7 @@ export function registerPwa() {
       const check = () => {
         if (navigator.onLine) reg.update().catch(() => undefined)
       }
+      check()
       setInterval(check, CHECK_INTERVAL)
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') check()
