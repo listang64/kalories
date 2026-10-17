@@ -60,7 +60,7 @@ export function AddMealSheet({ me, progress }: Props) {
 
   return (
     <>
-      <BottomSheet open={open} title={title} onClose={close} onBack={back} centered>
+      <BottomSheet open={open} title={title} onClose={close} onBack={back} centered accent>
         <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
             key={step}
