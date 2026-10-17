@@ -1,3 +1,5 @@
+import type { Place } from './places'
+
 export type WeatherKind = 'clear' | 'partly' | 'cloudy' | 'fog' | 'drizzle' | 'rain' | 'snow' | 'storm'
 
 export interface HourWeather {
@@ -13,14 +15,12 @@ export interface Weather {
   morning: WeatherKind
   afternoon: WeatherKind
   hours: HourWeather[]
+  utcOffset: number
   fetchedAt: number
 }
 
-export const WEATHER_PLACE = 'Hasparren'
-
-const URL =
-  'https://api.open-meteo.com/v1/forecast?latitude=43.3842&longitude=-1.3053&daily=temperature_2m_max&hourly=weather_code,temperature_2m,is_day&timezone=Europe%2FParis&forecast_days=1'
-const CACHE_KEY = 'kalories.weather-v3'
+const FORECAST = 'https://api.open-meteo.com/v1/forecast'
+const CACHE_PREFIX = 'kalories.weather-v4.'
 const MAX_AGE = 30 * 60_000
 
 export const WEATHER_LABELS: Record<WeatherKind, string> = {
@@ -63,22 +63,35 @@ function codesIn(hours: HourWeather[], [from, to]: Hours): number[] {
   return hours.filter((h) => h.hour >= from && h.hour <= to).map((h) => h.code)
 }
 
-export function readCachedWeather(date: string): Weather | null {
+function localNow(utcOffset: number): Date {
+  return new Date(Date.now() + utcOffset * 1000)
+}
+
+export function localHour(weather: Weather): number {
+  return localNow(weather.utcOffset).getUTCHours()
+}
+
+function isToday(weather: Weather): boolean {
+  return weather.date === localNow(weather.utcOffset).toISOString().slice(0, 10)
+}
+
+export function readCachedWeather(place: Place): Weather | null {
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as Partial<Weather> | null
-    return cached?.date === date && cached.morning && cached.afternoon && Array.isArray(cached.hours)
-      ? (cached as Weather)
-      : null
+    const cached = JSON.parse(localStorage.getItem(CACHE_PREFIX + place.id) ?? 'null') as Partial<Weather> | null
+    const valid =
+      cached?.morning && cached.afternoon && Array.isArray(cached.hours) && typeof cached.utcOffset === 'number'
+    return valid && isToday(cached as Weather) ? (cached as Weather) : null
   } catch {
     return null
   }
 }
 
-export function isFresh(weather: Weather | null, date: string): boolean {
-  return weather?.date === date && Date.now() - weather.fetchedAt < MAX_AGE
+export function isFresh(weather: Weather | null): boolean {
+  return weather !== null && isToday(weather) && Date.now() - weather.fetchedAt < MAX_AGE
 }
 
 interface ForecastResponse {
+  utc_offset_seconds?: number
   daily?: { time?: string[]; temperature_2m_max?: (number | null)[] }
   hourly?: {
     time?: string[]
@@ -98,10 +111,18 @@ function parseHours(hourly: ForecastResponse['hourly'], [from, to]: Hours): Hour
   })
 }
 
-export async function fetchWeather(): Promise<Weather> {
-  const response = await fetch(URL)
+export async function fetchWeather(place: Place): Promise<Weather> {
+  const params = new URLSearchParams({
+    latitude: String(place.latitude),
+    longitude: String(place.longitude),
+    daily: 'temperature_2m_max',
+    hourly: 'weather_code,temperature_2m,is_day',
+    timezone: 'auto',
+    forecast_days: '1',
+  })
+  const response = await fetch(`${FORECAST}?${params}`)
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
-  const { daily, hourly } = (await response.json()) as ForecastResponse
+  const { daily, hourly, utc_offset_seconds: utcOffset = 0 } = (await response.json()) as ForecastResponse
   const date = daily?.time?.[0]
   const max = daily?.temperature_2m_max?.[0]
   const hours = parseHours(hourly, DAY)
@@ -116,10 +137,11 @@ export async function fetchWeather(): Promise<Weather> {
     morning: periodKind(morning),
     afternoon: periodKind(afternoon),
     hours,
+    utcOffset,
     fetchedAt: Date.now(),
   }
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(weather))
+    localStorage.setItem(CACHE_PREFIX + place.id, JSON.stringify(weather))
   } catch {
     return weather
   }

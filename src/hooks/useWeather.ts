@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react'
+import type { Place } from '../lib/places'
 import { fetchWeather, isFresh, readCachedWeather, type Weather } from '../lib/weather'
 
-export function useWeather(date: string): Weather | null {
-  const [weather, setWeather] = useState(() => readCachedWeather(date))
+export function useWeather(place: Place, dateKey: string): Weather | null {
+  const [weather, setWeather] = useState(() => readCachedWeather(place))
 
   useEffect(() => {
-    let current = readCachedWeather(date)
+    let current = readCachedWeather(place)
     let loading = false
     let active = true
     setWeather(current)
     const refresh = () => {
-      if (loading || isFresh(current, date) || document.visibilityState !== 'visible' || !navigator.onLine) return
+      if (loading || isFresh(current) || document.visibilityState !== 'visible' || !navigator.onLine) return
       loading = true
-      fetchWeather()
+      fetchWeather(place)
         .then((next) => {
           current = next
-          if (active) setWeather(next.date === date ? next : null)
+          if (active) setWeather(next)
         })
         .catch(() => {})
         .finally(() => {
@@ -30,7 +31,7 @@ export function useWeather(date: string): Weather | null {
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('online', refresh)
     }
-  }, [date])
+  }, [place, dateKey])
 
   return weather
 }
