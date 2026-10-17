@@ -7,6 +7,7 @@ import { useAppStore, type AddStep } from '../store/appStore'
 import { BottomSheet } from './BottomSheet'
 import { AnalyzingView } from './capture/AnalyzingView'
 import { ConfirmDialog } from './ConfirmDialog'
+import { PersonalChart } from './history/PersonalChart'
 import { MealTypeButtons } from './MealTypeButtons'
 import type { DayProgress } from '../lib/nutrition'
 import type { Profile } from '../lib/profiles'
@@ -72,7 +73,8 @@ export function AddMealSheet({ me, progress }: Props) {
             className="h-full"
           >
             {step === 'type' && (
-              <div className="flex h-full flex-col justify-end gap-4 pb-2">
+              <div className="flex h-full flex-col gap-4 pb-2">
+                <PersonalChart me={me} />
                 <p className="label px-1">Quel repas ?</p>
                 <MealTypeButtons selected={type} onChoose={chooseMealType} />
               </div>

@@ -25,12 +25,18 @@ export function HistoryLegend({ series, hidden, onToggle }: Props) {
             </button>
           )
         })}
-      <span className="ml-auto flex items-center gap-2 text-[12px] text-text-2">
-        <svg width="16" height="2" aria-hidden="true">
-          <line x1="0" x2="16" y1="1" y2="1" stroke="currentColor" strokeDasharray="3 3" />
-        </svg>
-        Plafond
-      </span>
+      <CeilingKey />
     </div>
+  )
+}
+
+export function CeilingKey() {
+  return (
+    <span className="ml-auto flex items-center gap-2 text-[12px] text-text-2">
+      <svg width="16" height="2" aria-hidden="true">
+        <line x1="0" x2="16" y1="1" y2="1" stroke="currentColor" strokeDasharray="3 3" />
+      </svg>
+      Plafond
+    </span>
   )
 }

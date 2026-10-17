@@ -7,6 +7,8 @@ export interface DayPoint {
   values: Record<string, number | null>
 }
 
+export const HISTORY_DAYS = 30
+
 export interface PersonStats {
   average: number | null
   logged: number

@@ -5,14 +5,12 @@ import { HistoryLegend } from '../components/history/HistoryLegend'
 import { StatsCards } from '../components/history/StatsCards'
 import { useMeals } from '../hooks/useMeals'
 import { useToday } from '../hooks/useToday'
-import { buildHistory, lastDays, statsFor } from '../lib/history'
+import { buildHistory, HISTORY_DAYS, lastDays, statsFor } from '../lib/history'
 import { goalsOf, type Profile } from '../lib/profiles'
-
-const DAYS = 30
 
 export function HistoryScreen({ people }: { people: Profile[] }) {
   const today = useToday()
-  const days = lastDays(today, DAYS)
+  const days = lastDays(today, HISTORY_DAYS)
   const meals = useMeals(people.map((person) => person.uid), days[0] ?? today, today)
   const [hidden, setHidden] = useState<string[]>([])
   const points = buildHistory(meals, days)

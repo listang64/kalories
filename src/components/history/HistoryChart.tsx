@@ -17,24 +17,27 @@ export interface ChartSeries {
 interface Props {
   points: DayPoint[]
   series: ChartSeries[]
+  height?: number
 }
 
-const HEIGHT = 270
+const DEFAULT_HEIGHT = 270
+const NARROW = 260
 const PAD = { top: 18, right: 10, bottom: 24, left: 40 }
 const SURFACE = 'var(--surface)'
 
-export function HistoryChart({ points, series }: Props) {
+export function HistoryChart({ points, series, height = DEFAULT_HEIGHT }: Props) {
   const [ref, { width }] = useElementSize<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
   const n = points.length
   const innerW = Math.max(1, width - PAD.left - PAD.right)
-  const innerH = HEIGHT - PAD.top - PAD.bottom
+  const innerH = height - PAD.top - PAD.bottom
   const values = points.flatMap((p) => series.map((s) => valueOf(p, s.id) ?? 0))
   const { max, ticks } = chartScale(Math.max(1500, ...values, ...series.map((s) => s.goal)))
   const x = (i: number) => PAD.left + (n > 1 ? (i / (n - 1)) * innerW : innerW / 2)
   const y = (v: number) => PAD.top + innerH * (1 - v / max)
   const baseline = y(0)
   const point = active === null ? undefined : points[active]
+  const marks = innerW < NARROW ? [0, 14, n - 1] : [0, 7, 14, 21, n - 1]
 
   const pick = (event: PointerEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -54,7 +57,7 @@ export function HistoryChart({ points, series }: Props) {
       {width > 0 && (
         <svg
           width={width}
-          height={HEIGHT}
+          height={height}
           role="img"
           tabIndex={0}
           aria-label="Courbe des calories des 30 derniers jours, avec les plafonds"
@@ -79,11 +82,11 @@ export function HistoryChart({ points, series }: Props) {
               </text>
             </g>
           ))}
-          {[0, 7, 14, 21, n - 1].map((i, k, all) => (
+          {marks.map((i, k, all) => (
             <text
               key={i}
               x={x(i)}
-              y={HEIGHT - 6}
+              y={height - 6}
               textAnchor={k === 0 ? 'start' : k === all.length - 1 ? 'end' : 'middle'}
               className="fill-text-2 text-[11px]"
             >
