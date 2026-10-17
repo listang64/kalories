@@ -9,13 +9,14 @@ interface Props {
   onClose: () => void
   onBack?: () => void
   action?: ReactNode
+  centered?: boolean
   children: ReactNode
 }
 
 const CLOSE_DISTANCE = 120
 const CLOSE_VELOCITY = 600
 
-export function BottomSheet({ open, title, onClose, onBack, action, children }: Props) {
+export function BottomSheet({ open, title, onClose, onBack, action, centered = false, children }: Props) {
   const controls = useDragControls()
   const panel = useRef<HTMLElement>(null)
   const closeRef = useRef(onClose)
@@ -66,17 +67,19 @@ export function BottomSheet({ open, title, onClose, onBack, action, children }: 
             <div onPointerDown={(e) => controls.start(e)} className="touch-none px-5 pt-2 pb-3">
               <div className="mx-auto h-1.5 w-10 rounded-full bg-white/20" />
               <div className="mt-3 flex items-center gap-2">
-                {onBack && (
+                {onBack ? (
                   <button
                     type="button"
                     aria-label="Retour"
                     onClick={onBack}
-                    className="-ml-2 grid size-10 place-items-center rounded-full text-text-2"
+                    className={`-ml-2 grid size-10 place-items-center rounded-full text-text-2 ${centered ? 'mr-2' : ''}`}
                   >
                     <ChevronIcon size={22} direction="left" />
                   </button>
+                ) : (
+                  centered && <span className="size-10 shrink-0" />
                 )}
-                <h2 className="flex-1 text-[20px] font-semibold">{title}</h2>
+                <h2 className={`flex-1 text-[20px] font-semibold ${centered ? 'text-center' : ''}`}>{title}</h2>
                 {action}
                 <button
                   type="button"

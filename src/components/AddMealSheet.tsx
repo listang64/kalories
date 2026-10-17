@@ -60,7 +60,7 @@ export function AddMealSheet({ me, progress }: Props) {
 
   return (
     <>
-      <BottomSheet open={open} title={title} onClose={close} onBack={back}>
+      <BottomSheet open={open} title={title} onClose={close} onBack={back} centered>
         <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
             key={step}
@@ -75,7 +75,7 @@ export function AddMealSheet({ me, progress }: Props) {
             {step === 'type' && (
               <div className="flex h-full flex-col gap-4 pb-2">
                 <PersonalChart me={me} />
-                <p className="label px-1">Quel repas ?</p>
+                <p className="label text-center text-accent">Quel repas ?</p>
                 <MealTypeButtons selected={type} onChoose={chooseMealType} />
               </div>
             )}
