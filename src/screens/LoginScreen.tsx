@@ -5,7 +5,7 @@ import { authErrorMessage, lastEmail, resetPassword, signIn } from '../lib/auth'
 const INPUT =
   'h-13 w-full rounded-card border border-line bg-surface-2 px-4 text-text outline-none placeholder:text-text-2 focus:border-white/25'
 
-export function LoginScreen() {
+export function LoginScreen({ onSignup }: { onSignup: () => void }) {
   const [email, setEmail] = useState(lastEmail)
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null)
@@ -79,6 +79,16 @@ export function LoginScreen() {
       <button type="button" onClick={() => void forgot()} className="mt-4 h-10 self-center text-[15px] text-text-2">
         Mot de passe oublié ?
       </button>
+      <div className="mt-auto flex flex-col items-center gap-3 pb-6">
+        <p className="text-[15px] text-text-2">On t’a donné un code d’invitation ?</p>
+        <button
+          type="button"
+          onClick={onSignup}
+          className="press h-13 w-full rounded-full border border-accent/60 font-semibold text-accent"
+        >
+          Créer un compte
+        </button>
+      </div>
     </main>
   )
 }

@@ -2,6 +2,8 @@ import { AppSettings } from '../components/settings/AppSettings'
 import { GeminiSettings } from '../components/settings/GeminiSettings'
 import { GoalSettings } from '../components/settings/GoalSettings'
 import { MacroSettings } from '../components/settings/MacroSettings'
+import { SignupCodes } from '../components/settings/SignupCodes'
+import { isAdmin } from '../config/admins'
 import type { Profile } from '../lib/profiles'
 
 interface Props {
@@ -15,6 +17,7 @@ export function SettingsScreen({ me, partner }: Props) {
       <GoalSettings me={me} partner={partner} />
       <MacroSettings me={me} />
       <GeminiSettings />
+      {isAdmin(me.uid) && <SignupCodes />}
       <AppSettings me={me} />
     </div>
   )

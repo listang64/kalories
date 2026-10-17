@@ -21,3 +21,5 @@ export function useMe(): Profile | null {
 export function usePerson(uid: string): Profile | undefined {
   return useSession((s) => s.people.find((person) => person.uid === uid))
 }
+
+export const useSignup = create<{ busy: boolean }>()(() => ({ busy: false }))
