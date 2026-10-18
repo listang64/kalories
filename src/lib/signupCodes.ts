@@ -47,8 +47,8 @@ function inviteText(code: string): string {
   const url = new URL(import.meta.env.BASE_URL, window.location.origin).href
   return [
     'Je t’invite sur Kalories !',
-    `1. Ouvre ${url} dans Safari`,
-    '2. Touche Partager puis « Sur l’écran d’accueil »',
+    `1. Ouvre ${url} dans Safari (iPhone) ou Chrome (Android)`,
+    '2. iPhone : touche Partager puis « Sur l’écran d’accueil ». Android : touche « Installer Kalories en plein écran »',
     `3. Ouvre Kalories, touche « Créer un compte » et entre le code ${code}`,
   ].join('\n')
 }

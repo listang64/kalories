@@ -4,6 +4,7 @@ import { BottomSheet } from '../components/BottomSheet'
 import { CalorieLegend } from '../components/home/CalorieLegend'
 import { CalorieRing } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
+import { InstallBanner } from '../components/InstallBanner'
 import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
@@ -49,6 +50,7 @@ export function HomeScreen({ me, people }: Props) {
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
         <HomeHeader dateKey={today} onLoans={() => setOverlay('loans')} onSettings={() => setOverlay('settings')} />
+        <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
       <Rise index={1} className="mt-5">

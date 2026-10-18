@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { InstallBanner } from '../components/InstallBanner'
 import { Logo } from '../components/Logo'
 import { authErrorMessage, lastEmail, resetPassword, signIn } from '../lib/auth'
 
@@ -39,6 +40,7 @@ export function LoginScreen({ onSignup }: { onSignup: () => void }) {
       <div className="pt-12">
         <Logo size={56} />
       </div>
+      <InstallBanner />
       <form onSubmit={submit} className="mt-10 flex flex-col gap-3">
         <input
           type="email"
