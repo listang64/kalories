@@ -8,6 +8,7 @@ import { PlusIcon } from '../components/icons/PlusIcon'
 import { MEAL_TYPES, type MealType } from '../config/meals'
 import { useMeals } from '../hooks/useMeals'
 import { useToday } from '../hooks/useToday'
+import { shareMeal } from '../lib/mealOffers'
 import { deleteMeal, type Meal } from '../lib/meals'
 import { mealTotals, sumTotals } from '../lib/nutrition'
 import { goalsOf, type Profile } from '../lib/profiles'
@@ -29,6 +30,7 @@ export function DayDetailScreen({ me, people }: Props) {
   const startEdit = useAppStore((s) => s.startEdit)
   const showToast = useAppStore((s) => s.showToast)
   const viewed = people.find((person) => person.uid === viewedUid) ?? me
+  const partner = people.find((person) => person.uid !== me.uid) ?? null
   const goal = goalsOf(viewed).kcal
   const meals = useMeals([viewed.uid], date)
   const totals = sumTotals(meals.map((meal) => mealTotals(meal.items)))
@@ -39,6 +41,11 @@ export function DayDetailScreen({ me, people }: Props) {
     goal,
   })
   const add = (type?: MealType) => openAdd(type, { date, progress: progressWithout() })
+  const share = (meal: Meal) => {
+    if (!partner) return
+    shareMeal(meal, me, partner).catch(() => showToast('Partage impossible pour l’instant'))
+    showToast(`Envoyé à ${partner.name}`)
+  }
   const remove = (meal: Meal) => {
     setDeleting(null)
     deleteMeal(meal).catch(() => showToast('Suppression impossible'))
@@ -92,6 +99,9 @@ export function DayDetailScreen({ me, people }: Props) {
         title={selected ? selected.items.map((item) => item.name).join(', ') : ''}
         onClose={() => setSelected(null)}
         actions={[
+          ...(own && partner
+            ? [{ label: `Partager avec ${partner.name}`, onSelect: () => selected && share(selected) }]
+            : []),
           { label: 'Modifier', onSelect: () => selected && startEdit(selected, progressWithout(selected)) },
           { label: 'Corriger avec l’IA', onSelect: () => setCorrecting(selected) },
           { label: 'Supprimer', tone: 'danger', onSelect: () => setDeleting(selected) },

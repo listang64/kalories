@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AddMealSheet } from '../components/AddMealSheet'
 import { BottomSheet } from '../components/BottomSheet'
 import { CalorieLegend } from '../components/home/CalorieLegend'
+import { MealOfferDialog } from '../components/day/MealOfferDialog'
 import { CalorieRing } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
 import { InstallBanner } from '../components/InstallBanner'
@@ -94,6 +95,7 @@ export function HomeScreen({ me, people }: Props) {
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
         <SettingsScreen me={me} people={people} />
       </BottomSheet>
+      <MealOfferDialog uid={me.uid} />
     </main>
   )
 }

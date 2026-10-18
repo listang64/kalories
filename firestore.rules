@@ -108,6 +108,16 @@ service cloud.firestore {
           && request.resource.data.uid == uid
           && request.resource.data.items is list;
       }
+
+      match /inbox/{offerId} {
+        allow read, delete: if signedIn() && me() == uid;
+        allow create: if signedIn() && me() != uid
+          && inHousehold(get(userDoc(uid)).data.householdId)
+          && request.resource.data.keys().hasOnly(['from', 'fromName', 'type', 'date', 'note', 'items', 'createdAt'])
+          && request.resource.data.from == me()
+          && request.resource.data.items is list
+          && request.resource.data.createdAt == request.time;
+      }
     }
 
     match /meals/{mealId} {

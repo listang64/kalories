@@ -48,9 +48,9 @@ function cleanItems(items: MealItem[]): MealItem[] {
   }))
 }
 
-export function saveMeal(uid: string, meal: MealInput, date: string): Promise<unknown> {
+export function mealRecord(uid: string, meal: MealInput, date: string) {
   const items = cleanItems(meal.items)
-  return addDoc(mealsOf(uid), {
+  return {
     uid,
     date,
     type: meal.type,
@@ -58,7 +58,11 @@ export function saveMeal(uid: string, meal: MealInput, date: string): Promise<un
     note: meal.note.trim(),
     items,
     totals: mealTotals(items),
-  })
+  }
+}
+
+export function saveMeal(uid: string, meal: MealInput, date: string): Promise<unknown> {
+  return addDoc(mealsOf(uid), mealRecord(uid, meal, date))
 }
 
 export function updateMeal(ref: MealRef, meal: Omit<MealInput, 'note'>): Promise<void> {
