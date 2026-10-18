@@ -93,10 +93,6 @@ export function analyzeMeal({ type, note, photos }: MealRequest, key: string, mo
   return requestItems(parts, key, model)
 }
 
-export function analyzeFood(food: string, key: string, model: string) {
-  return requestItems([{ text: `Un seul aliment à ajouter au repas : ${food.trim()}` }], key, model)
-}
-
 export function correctMeal(items: MealItem[], instruction: string, key: string, model: string) {
   const text = `Repas actuel (JSON) : ${JSON.stringify({ items })}
 Correction de l'utilisateur : ${instruction.trim()}

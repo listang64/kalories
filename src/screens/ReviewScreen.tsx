@@ -1,5 +1,4 @@
 import { AnimatePresence } from 'motion/react'
-import { AddFoodRow } from '../components/review/AddFoodRow'
 import { ItemCard } from '../components/review/ItemCard'
 import { ReviewSummary } from '../components/review/ReviewSummary'
 import type { DayProgress } from '../lib/nutrition'
@@ -50,7 +49,6 @@ export function ReviewScreen({ uid, progress }: Props) {
               />
             ))}
           </AnimatePresence>
-          <AddFoodRow />
         </div>
       </div>
       <button
