@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform } from 'motion/react'
+import { motion, useDragControls, useMotionValue, useTransform } from 'motion/react'
 import { itemTotals, type MealItem } from '../../lib/nutrition'
 import type { ReviewItem } from '../../store/appStore'
 import { AnimatedNumber } from '../AnimatedNumber'
@@ -16,6 +16,7 @@ const SWIPE_DISTANCE = 96
 export function ItemCard({ item, onChange, onRemove }: Props) {
   const x = useMotionValue(0)
   const reveal = useTransform(x, [-SWIPE_DISTANCE, -24], [1, 0])
+  const controls = useDragControls()
 
   return (
     <motion.div
@@ -34,6 +35,9 @@ export function ItemCard({ item, onChange, onRemove }: Props) {
       </motion.div>
       <motion.div
         drag="x"
+        dragControls={controls}
+        dragListener={false}
+        onPointerDown={(e) => !(e.target as Element).closest('button, [inputmode="numeric"]') && controls.start(e)}
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.9, right: 0 }}
@@ -41,7 +45,7 @@ export function ItemCard({ item, onChange, onRemove }: Props) {
         onDragEnd={(_, info) => {
           if (info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -800) onRemove()
         }}
-        className="relative rounded-card border border-line bg-surface-2 px-4 pt-3.5 pb-3"
+        className="relative touch-pan-y rounded-card border border-line bg-surface-2 px-4 pt-3.5 pb-3"
       >
         <div className="flex items-center gap-2">
           {item.confidence === 'basse' && (
@@ -62,7 +66,7 @@ export function ItemCard({ item, onChange, onRemove }: Props) {
           </span>
         </div>
         <div className="mt-2.5 flex items-center justify-between">
-          <Stepper label={`Poids de ${item.name}`} value={item.grams} onChange={(grams) => onChange({ grams })} />
+          <Stepper label={`Poids de ${item.name}`} value={item.grams} onChange={(grams) => onChange({ grams })} step={5} />
           <button
             type="button"
             aria-label={`Supprimer ${item.name}`}

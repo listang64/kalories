@@ -66,7 +66,15 @@ export function Stepper({ label, value, onChange, step = 10, min = 0, max = 5000
   return (
     <div className="flex items-center gap-1.5">
       {button(-1)}
-      <NumberField label={label} value={value} suffix="g" min={min} max={max} onCommit={onChange} inputClassName="w-12 text-right" />
+      <NumberField
+        label={label}
+        value={value}
+        suffix="g"
+        min={min}
+        max={max}
+        onCommit={onChange}
+        inputClassName="w-16 rounded-[10px] bg-white/8 py-1.5 text-center focus:bg-white/12"
+      />
       {button(1)}
     </div>
   )
