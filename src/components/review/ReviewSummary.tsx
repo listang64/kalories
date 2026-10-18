@@ -19,7 +19,7 @@ export function ReviewSummary({ items, type, onType, progress }: Props) {
     <div className="shrink-0">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[44px] leading-none font-semibold tracking-[-0.02em]">
+          <p className="text-[44px] leading-none font-semibold tracking-[-0.02em] text-accent">
             <AnimatedNumber value={totals.kcal} />
             <span className="ml-1.5 text-[20px] font-medium text-text-2">kcal</span>
           </p>
