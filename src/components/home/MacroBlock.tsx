@@ -54,7 +54,7 @@ function MacroRow({ meta, name, value, goal }: RowProps) {
   return (
     <span className="block">
       <span className="mb-1 flex items-baseline justify-between">
-        <span className="label font-bold text-accent">{meta.label}</span>
+        <span className="label font-bold" style={{ color: meta.colorB }}>{meta.label}</span>
         <span className="text-[13px] tabular-nums">
           <span className={value > goal ? 'text-accent' : 'text-text'}>
             <AnimatedNumber value={value} />
