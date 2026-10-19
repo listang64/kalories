@@ -1,41 +1,52 @@
+import { useState } from 'react'
 import { categoryLabel } from '../../config/recipes'
 import { newFavoriteId, saveFavorite } from '../../lib/favorites'
-import { formatMinutes, portionGrams, type Recipe } from '../../lib/recipes'
+import { formatMinutes, portionGrams, type Ingredient, type Recipe } from '../../lib/recipes'
 import { useAppStore } from '../../store/appStore'
 import { usePerson } from '../../store/sessionStore'
 import { ClockIcon } from '../icons/ClockIcon'
 import { FlameIcon } from '../icons/FlameIcon'
-import { UsersIcon } from '../icons/UsersIcon'
+import { FavoriteToggle } from './FavoriteToggle'
 import { NutritionCard } from './NutritionCard'
 import { CookingCard, IngredientsCard, StepsCard } from './RecipeCards'
 
 interface Props {
   recipe: Recipe
   uid: string
+  favorite: boolean
+  onFavorite: () => void
   onEdit: () => void
-  onShopping: () => void
+  onShopping: (ingredients: Ingredient[]) => void
 }
 
 const CHIP = 'flex h-8 items-center gap-1.5 rounded-full bg-white/8 px-3 text-[14px]'
 
-export function RecipeView({ recipe, uid, onEdit, onShopping }: Props) {
+export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShopping }: Props) {
   const author = usePerson(recipe.createdBy)
   const showToast = useAppStore((s) => s.showToast)
+  const [servings, setServings] = useState(recipe.servings)
 
-  const favorite = () => {
+  const addToFavorites = () => {
     const { nutrition } = recipe
     if (!nutrition) return
     const { grams: _, ...values } = nutrition
     const input = { name: recipe.name, grams: portionGrams(recipe) ?? 100, ...values }
     saveFavorite(uid, newFavoriteId(uid), input).catch(() => showToast('Enregistrement impossible'))
-    showToast('Ajoutée à tes favoris')
+    showToast('Ajoutée à tes favoris repas')
   }
 
   return (
     <article className="flex flex-col gap-4 pb-4">
       <header>
-        <p className="label text-accent">{categoryLabel(recipe.category)}</p>
-        <h3 className="mt-1 text-[26px] leading-tight font-semibold tracking-[-0.01em]">{recipe.name}</h3>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="label text-accent">{categoryLabel(recipe.category)}</p>
+            <h3 className="mt-1 text-[26px] leading-tight font-semibold tracking-[-0.01em]">{recipe.name}</h3>
+          </div>
+          <span className="-mt-1 -mr-2">
+            <FavoriteToggle name={recipe.name} favorite={favorite} onToggle={onFavorite} size={26} />
+          </span>
+        </div>
         <div className="mt-3 flex flex-wrap gap-2 tabular-nums">
           {recipe.prepMinutes && (
             <span className={CHIP}>
@@ -49,12 +60,6 @@ export function RecipeView({ recipe, uid, onEdit, onShopping }: Props) {
               {formatMinutes(recipe.cookMinutes)}
             </span>
           )}
-          {recipe.servings && (
-            <span className={CHIP}>
-              <UsersIcon size={15} />
-              {recipe.servings} pers.
-            </span>
-          )}
         </div>
         {author && (
           <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-text-2">
@@ -63,8 +68,8 @@ export function RecipeView({ recipe, uid, onEdit, onShopping }: Props) {
           </p>
         )}
       </header>
-      <NutritionCard recipe={recipe} onFavorite={favorite} onCalculate={onEdit} />
-      <IngredientsCard recipe={recipe} onShopping={onShopping} />
+      <NutritionCard recipe={recipe} onFavorite={addToFavorites} onCalculate={onEdit} />
+      <IngredientsCard recipe={recipe} servings={servings} onServings={setServings} onShopping={onShopping} />
       <StepsCard steps={recipe.steps} />
       <CookingCard recipe={recipe} />
     </article>

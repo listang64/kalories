@@ -4,6 +4,7 @@ import { formatLongDate } from '../../lib/dates'
 import { ChefHatIcon } from '../icons/ChefHatIcon'
 import { GearIcon } from '../icons/GearIcon'
 import { HandshakeIcon } from '../icons/HandshakeIcon'
+import { StatsIcon } from '../icons/StatsIcon'
 import { WeatherBadge } from './WeatherBadge'
 
 interface Props {
@@ -11,11 +12,12 @@ interface Props {
   onLoans: () => void
   onRecipes: () => void
   onSettings: () => void
+  onStats: () => void
 }
 
 const ICON_BUTTON = 'grid size-11 shrink-0 place-items-center rounded-full text-text-2 transition-colors active:bg-white/8'
 
-export function HomeHeader({ dateKey, onLoans, onRecipes, onSettings }: Props) {
+export function HomeHeader({ dateKey, onLoans, onRecipes, onSettings, onStats }: Props) {
   const online = useOnline()
 
   return (
@@ -25,16 +27,31 @@ export function HomeHeader({ dateKey, onLoans, onRecipes, onSettings }: Props) {
           <button type="button" aria-label="Prêts" onClick={onLoans} className={ICON_BUTTON}>
             <HandshakeIcon />
           </button>
-          <button type="button" aria-label="Recettes" onClick={onRecipes} className={`absolute top-full left-0 mt-1 ${ICON_BUTTON}`}>
+          <button
+            type="button"
+            aria-label="Recettes"
+            onClick={onRecipes}
+            className={`absolute top-full left-0 mt-1 ${ICON_BUTTON}`}
+          >
             <ChefHatIcon />
           </button>
         </div>
         <h1 className="flex-1 text-center text-[min(5.9vw,calc((100vw_-_120px)/12))] leading-tight font-semibold tracking-[-0.02em] whitespace-nowrap text-accent underline decoration-accent/50 decoration-2 underline-offset-[6px]">
           {formatLongDate(dateKey)}
         </h1>
-        <button type="button" aria-label="Paramètres" onClick={onSettings} className={`-mr-2 ${ICON_BUTTON}`}>
-          <GearIcon />
-        </button>
+        <div className="relative -mr-2">
+          <button type="button" aria-label="Paramètres" onClick={onSettings} className={ICON_BUTTON}>
+            <GearIcon />
+          </button>
+          <button
+            type="button"
+            aria-label="Historique des 30 derniers jours"
+            onClick={onStats}
+            className={`absolute top-full right-0 mt-1 ${ICON_BUTTON}`}
+          >
+            <StatsIcon />
+          </button>
+        </div>
       </div>
       <AnimatePresence>
         {!online && (

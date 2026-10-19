@@ -14,11 +14,13 @@ interface Props {
   loaded: boolean
   partner: string | null
   onOpen: (id: string) => void
+  uid: string
   onNew: () => void
   onPhoto: (src: string) => void
+  onFavorite: (recipe: Recipe) => void
 }
 
-type Filter = RecipeCategory | 'all'
+type Filter = RecipeCategory | 'all' | 'favorites'
 
 const CHIP = 'press flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[14px] transition-colors'
 
@@ -37,13 +39,16 @@ function matches(recipe: Recipe, search: string): boolean {
     .every((word) => haystack.includes(word))
 }
 
-export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onPhoto }: Props) {
+export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onPhoto, onFavorite }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const cameraRef = useRef<HTMLInputElement>(null)
+  const isFavorite = (recipe: Recipe) => recipe.favoriteOf.includes(uid)
   const found = recipes.filter((recipe) => matches(recipe, search))
-  const groups = RECIPE_CATEGORIES.filter((category) => filter === 'all' || category.value === filter)
-    .map((category) => ({ ...category, recipes: found.filter((recipe) => recipe.category === category.value) }))
+  const shown = filter === 'favorites' ? found.filter(isFavorite) : found
+  const grouped = filter === 'all' || filter === 'favorites'
+  const groups = RECIPE_CATEGORIES.filter((category) => grouped || category.value === filter)
+    .map((category) => ({ ...category, recipes: shown.filter((recipe) => recipe.category === category.value) }))
     .filter((group) => group.recipes.length > 0)
   const shoot = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -58,6 +63,7 @@ export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onPhoto }:
 
   const chips: { value: Filter; label: string; count: number }[] = [
     { value: 'all', label: 'Tout', count: found.length },
+    { value: 'favorites', label: '♥ Favoris', count: found.filter(isFavorite).length },
     ...RECIPE_CATEGORIES.map((category) => ({
       value: category.value,
       label: category.plural,
@@ -113,15 +119,25 @@ export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onPhoto }:
             </div>
           )
         ) : groups.length === 0 ? (
-          <p className="pt-10 text-center text-[15px] text-text-2">Aucune recette ne correspond.</p>
+          <p className="pt-10 text-center text-[15px] text-text-2">
+            {filter === 'favorites' && !search.trim()
+              ? 'Aucun favori : touche le cœur d’une recette pour l’ajouter.'
+              : 'Aucune recette ne correspond.'}
+          </p>
         ) : (
           <div className="flex flex-col gap-5">
             {groups.map((group) => (
               <section key={group.value}>
-                {filter === 'all' && <h3 className="label mb-2 px-1">{group.plural}</h3>}
+                {grouped && <h3 className="label mb-2 px-1">{group.plural}</h3>}
                 <ul className="flex flex-col gap-2">
                   {group.recipes.map((recipe) => (
-                    <RecipeRow key={recipe.id} recipe={recipe} onOpen={() => onOpen(recipe.id)} />
+                    <RecipeRow
+                      key={recipe.id}
+                      recipe={recipe}
+                      favorite={isFavorite(recipe)}
+                      onOpen={() => onOpen(recipe.id)}
+                      onFavorite={() => onFavorite(recipe)}
+                    />
                   ))}
                 </ul>
               </section>

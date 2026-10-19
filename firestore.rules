@@ -66,12 +66,19 @@ service cloud.firestore {
 
     function validRecipe(data) {
       return data.keys().hasOnly(['name', 'category', 'prepMinutes', 'servings', 'ingredients', 'steps',
-          'cookMinutes', 'cookTemp', 'cookNote', 'nutrition', 'createdBy', 'createdAt', 'updatedAt'])
+          'cookMinutes', 'cookTemp', 'cookNote', 'nutrition', 'favoriteOf', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.get('favoriteOf', []) is list
         && data.name is string && data.name.size() > 0 && data.name.size() <= 80
         && data.category in ['starter', 'main', 'dessert', 'other']
         && data.ingredients is list && data.ingredients.size() <= 80
         && data.steps is list && data.steps.size() <= 60
         && data.createdBy is string;
+    }
+
+    function onlyMyFavorite() {
+      let before = resource.data.get('favoriteOf', []).toSet();
+      let after = request.resource.data.get('favoriteOf', []).toSet();
+      return after.difference(before).hasOnly([me()]) && before.difference(after).hasOnly([me()]);
     }
 
     function joining(hid) {
@@ -172,7 +179,8 @@ service cloud.firestore {
         allow read, delete: if inHousehold(hid);
         allow create: if inHouseholdAfter(hid) && validRecipe(request.resource.data);
         allow update: if inHousehold(hid) && validRecipe(request.resource.data)
-          && request.resource.data.createdBy == resource.data.createdBy;
+          && request.resource.data.createdBy == resource.data.createdBy
+          && onlyMyFavorite();
       }
     }
 

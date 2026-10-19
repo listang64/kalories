@@ -1,11 +1,11 @@
 import { motion } from 'motion/react'
+import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { CartIcon } from '../icons/CartIcon'
-import { ChartIcon } from '../icons/ChartIcon'
 import { AddButton } from './AddButton'
 
 interface Props {
   shoppingCount: number
-  onHistory: () => void
+  onScan: () => void
   onAdd: () => void
   onShopping: () => void
 }
@@ -15,19 +15,19 @@ const SPRING = { type: 'spring', stiffness: 500, damping: 24 } as const
 const ORANGE_BUTTON =
   'relative grid size-13 place-items-center rounded-full bg-accent text-black shadow-[0_0_22px_rgba(255,122,26,0.35)]'
 
-export function HomeActions({ shoppingCount, onHistory, onAdd, onShopping }: Props) {
+export function HomeActions({ shoppingCount, onScan, onAdd, onShopping }: Props) {
   return (
     <div className="grid grid-cols-3 items-center">
       <div className="flex justify-start">
         <motion.button
           type="button"
-          aria-label="Historique des 30 derniers jours"
-          onClick={onHistory}
+          aria-label="Scanner un produit"
+          onClick={onScan}
           whileTap={TAP}
           transition={SPRING}
           className={ORANGE_BUTTON}
         >
-          <ChartIcon />
+          <BarcodeIcon />
         </motion.button>
       </div>
       <div className="flex justify-center">

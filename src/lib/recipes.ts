@@ -1,4 +1,6 @@
 import {
+  arrayRemove,
+  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -40,6 +42,7 @@ export interface RecipeInput {
 export interface Recipe extends RecipeInput {
   id: string
   createdBy: string
+  favoriteOf: string[]
 }
 
 export const RECIPE_LIMITS = { name: 80, quantity: 40, ingredient: 80, step: 600, note: 120, ingredients: 80, steps: 60 }
@@ -106,7 +109,8 @@ export function parseRecipe(data: DocumentData | undefined): RecipeInput | null 
 export function recipeFromDoc(snapshot: QueryDocumentSnapshot): Recipe | null {
   const recipe = parseRecipe(snapshot.data())
   const createdBy: unknown = snapshot.get('createdBy')
-  return recipe && { ...recipe, id: snapshot.id, createdBy: typeof createdBy === 'string' ? createdBy : '' }
+  const favoriteOf = list(snapshot.get('favoriteOf')).filter((uid): uid is string => typeof uid === 'string')
+  return recipe && { ...recipe, id: snapshot.id, createdBy: typeof createdBy === 'string' ? createdBy : '', favoriteOf }
 }
 
 function record(input: RecipeInput): RecipeInput {
@@ -130,6 +134,10 @@ export function createRecipe(householdId: string, id: string, input: RecipeInput
 
 export function updateRecipe(householdId: string, id: string, input: RecipeInput): Promise<void> {
   return updateDoc(doc(recipesOf(householdId), id), { ...record(input), updatedAt: serverTimestamp() })
+}
+
+export function setRecipeFavorite(householdId: string, id: string, uid: string, favorite: boolean): Promise<void> {
+  return updateDoc(doc(recipesOf(householdId), id), { favoriteOf: favorite ? arrayUnion(uid) : arrayRemove(uid) })
 }
 
 export function deleteRecipe(householdId: string, id: string): Promise<void> {

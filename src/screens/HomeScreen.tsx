@@ -11,12 +11,14 @@ import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
 import { RecipesSheet } from '../components/recipes/RecipesSheet'
 import { Rise } from '../components/Rise'
+import { BarcodeScanner } from '../components/scanner/BarcodeScanner'
 import { SortButton } from '../components/shopping/SortButton'
 import { personEntry } from '../hooks/useHomeData'
 import { useMeals } from '../hooks/useMeals'
 import { useShoppingList } from '../hooks/useShoppingList'
 import { useToday } from '../hooks/useToday'
 import { useLocalSettings } from '../lib/localSettings'
+import type { MealItem } from '../lib/nutrition'
 import type { Profile } from '../lib/profiles'
 import { useAppStore } from '../store/appStore'
 import { DayDetailScreen } from './DayDetailScreen'
@@ -36,6 +38,7 @@ export function HomeScreen({ me, people }: Props) {
   const hasKey = useLocalSettings((s) => s.geminiKey !== '')
   const shopping = useShoppingList()
   const [viewedUid, setViewedUid] = useState(me.uid)
+  const [scanning, setScanning] = useState(false)
   const overlay = useAppStore((s) => s.overlay)
   const setOverlay = useAppStore((s) => s.setOverlay)
   const openAdd = useAppStore((s) => s.openAdd)
@@ -48,6 +51,14 @@ export function HomeScreen({ me, people }: Props) {
   const viewed = entries.find((entry) => entry.profile.uid === viewedUid) ?? mine
   const next = entries[(entries.indexOf(viewed) + 1) % entries.length]
 
+  const addScanned = (item: MealItem) => {
+    setScanning(false)
+    openAdd()
+    const { appendItems, setAddStep } = useAppStore.getState()
+    appendItems([item])
+    setAddStep('review')
+  }
+
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
@@ -56,6 +67,7 @@ export function HomeScreen({ me, people }: Props) {
           onLoans={() => setOverlay('loans')}
           onRecipes={() => setOverlay('recipes')}
           onSettings={() => setOverlay('settings')}
+          onStats={() => setOverlay('history')}
         />
         <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
@@ -75,7 +87,7 @@ export function HomeScreen({ me, people }: Props) {
       <Rise index={4} className="pt-4 pb-3">
         <HomeActions
           shoppingCount={shopping.items.length}
-          onHistory={() => setOverlay('history')}
+          onScan={() => setScanning(true)}
           onAdd={() => openAdd()}
           onShopping={() => setOverlay('shopping')}
         />
@@ -103,6 +115,7 @@ export function HomeScreen({ me, people }: Props) {
         <SettingsScreen me={me} people={people} />
       </BottomSheet>
       <MealOfferDialog uid={me.uid} />
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onAdd={addScanned} />
     </main>
   )
 }

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Profile } from '../../lib/profiles'
-import type { Ingredient } from '../../lib/recipes'
+import { setRecipeFavorite, type Ingredient, type Recipe } from '../../lib/recipes'
+import { sharedErrorMessage } from '../../lib/shared'
 import { useAppStore } from '../../store/appStore'
 import { BottomSheet } from '../BottomSheet'
 import { ConfirmDialog } from '../ConfirmDialog'
@@ -48,6 +49,11 @@ export function RecipesSheet({ me, partner }: Props) {
     setView({ kind: 'import', code: linkCode })
     setOverlay('recipes')
   }, [linkCode, setOverlay])
+
+  const toggleFavorite = (recipe: Recipe) =>
+    setRecipeFavorite(householdId, recipe.id, me.uid, !recipe.favoriteOf.includes(me.uid)).catch((error: unknown) =>
+      useAppStore.getState().showToast(sharedErrorMessage(error)),
+    )
 
   const go = (next: View) => {
     setDirty(false)
@@ -113,15 +119,20 @@ export function RecipesSheet({ me, partner }: Props) {
             onOpen={(id) => go({ kind: 'recipe', id })}
             onNew={() => go({ kind: 'edit', id: null })}
             onPhoto={(src) => go({ kind: 'edit', id: null, photos: [src] })}
+            uid={me.uid}
+            onFavorite={toggleFavorite}
           />
         )}
         {view.kind === 'recipe' &&
           (current ? (
             <RecipeView
+              key={current.id}
               recipe={current}
               uid={me.uid}
+              favorite={current.favoriteOf.includes(me.uid)}
+              onFavorite={() => toggleFavorite(current)}
               onEdit={() => go({ kind: 'edit', id: current.id })}
-              onShopping={() => setShopping(current.ingredients)}
+              onShopping={setShopping}
             />
           ) : (
             <div className="flex justify-center pt-12">
