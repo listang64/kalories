@@ -149,7 +149,3 @@ export function formatMinutes(minutes: number): string {
   const rest = minutes % 60
   return `${Math.floor(minutes / 60)} h${rest ? ` ${String(rest).padStart(2, '0')}` : ''}`
 }
-
-export function portionGrams(recipe: RecipeInput): number | null {
-  return recipe.nutrition ? Math.round(recipe.nutrition.grams / (recipe.servings ?? 1)) : null
-}

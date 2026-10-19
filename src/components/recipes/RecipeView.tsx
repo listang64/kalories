@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { categoryLabel } from '../../config/recipes'
-import { newFavoriteId, saveFavorite } from '../../lib/favorites'
-import { formatMinutes, portionGrams, type Ingredient, type Recipe } from '../../lib/recipes'
-import { useAppStore } from '../../store/appStore'
+import { formatMinutes, type Ingredient, type Recipe } from '../../lib/recipes'
 import { usePerson } from '../../store/sessionStore'
 import { ClockIcon } from '../icons/ClockIcon'
 import { FlameIcon } from '../icons/FlameIcon'
@@ -23,17 +21,7 @@ const CHIP = 'flex h-8 items-center gap-1.5 rounded-full bg-white/8 px-3 text-[1
 
 export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShopping }: Props) {
   const author = usePerson(recipe.createdBy)
-  const showToast = useAppStore((s) => s.showToast)
   const [servings, setServings] = useState(recipe.servings)
-
-  const addToFavorites = () => {
-    const { nutrition } = recipe
-    if (!nutrition) return
-    const { grams: _, ...values } = nutrition
-    const input = { name: recipe.name, grams: portionGrams(recipe) ?? 100, ...values }
-    saveFavorite(uid, newFavoriteId(uid), input).catch(() => showToast('Enregistrement impossible'))
-    showToast('Ajoutée à tes favoris repas')
-  }
 
   return (
     <article className="flex flex-col gap-4 pb-4">
@@ -68,7 +56,7 @@ export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShoppi
           </p>
         )}
       </header>
-      <NutritionCard recipe={recipe} onFavorite={addToFavorites} onCalculate={onEdit} />
+      <NutritionCard recipe={recipe} onCalculate={onEdit} />
       <IngredientsCard recipe={recipe} servings={servings} onServings={setServings} onShopping={onShopping} />
       <StepsCard steps={recipe.steps} />
       <CookingCard recipe={recipe} />

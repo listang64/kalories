@@ -1,15 +1,13 @@
 import { MACROS } from '../../config/macros'
 import { formatInt } from '../../lib/format'
 import type { RecipeInput } from '../../lib/recipes'
-import { PlusIcon } from '../icons/PlusIcon'
 
 interface Props {
   recipe: RecipeInput
-  onFavorite: () => void
   onCalculate: () => void
 }
 
-export function NutritionCard({ recipe, onFavorite, onCalculate }: Props) {
+export function NutritionCard({ recipe, onCalculate }: Props) {
   const nutrition = recipe.nutrition
   const portion = recipe.servings && nutrition ? nutrition.grams / recipe.servings : null
 
@@ -53,14 +51,6 @@ export function NutritionCard({ recipe, onFavorite, onCalculate }: Props) {
         {portion ? `Une part ≈ ${formatInt(portion)} g · ` : `Le plat entier ≈ ${formatInt(nutrition.grams)} g · `}
         <span className="text-text">{formatInt(((portion ?? nutrition.grams) * nutrition.kcal100) / 100)} kcal</span>
       </p>
-      <button
-        type="button"
-        onClick={onFavorite}
-        className="press mt-3 flex h-10 items-center gap-1.5 rounded-full bg-white/8 px-3.5 text-[14px] font-medium text-accent"
-      >
-        <PlusIcon size={16} strokeWidth={2} />
-        Ajouter à mes favoris repas
-      </button>
     </section>
   )
 }
