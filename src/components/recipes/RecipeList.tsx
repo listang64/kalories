@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { RECIPE_CATEGORIES, type RecipeCategory } from '../../config/recipes'
+import { fileToJpeg } from '../../lib/image'
 import type { Recipe } from '../../lib/recipes'
+import { useAppStore } from '../../store/appStore'
+import { CameraIcon } from '../icons/CameraIcon'
 import { ChefHatIcon } from '../icons/ChefHatIcon'
 import { PlusIcon } from '../icons/PlusIcon'
 import { SearchIcon } from '../icons/SearchIcon'
@@ -12,7 +15,7 @@ interface Props {
   partner: string | null
   onOpen: (id: string) => void
   onNew: () => void
-  onImport: () => void
+  onPhoto: (src: string) => void
 }
 
 type Filter = RecipeCategory | 'all'
@@ -34,13 +37,25 @@ function matches(recipe: Recipe, search: string): boolean {
     .every((word) => haystack.includes(word))
 }
 
-export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onImport }: Props) {
+export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onPhoto }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
+  const cameraRef = useRef<HTMLInputElement>(null)
   const found = recipes.filter((recipe) => matches(recipe, search))
   const groups = RECIPE_CATEGORIES.filter((category) => filter === 'all' || category.value === filter)
     .map((category) => ({ ...category, recipes: found.filter((recipe) => recipe.category === category.value) }))
     .filter((group) => group.recipes.length > 0)
+  const shoot = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      onPhoto(await fileToJpeg(file))
+    } catch {
+      useAppStore.getState().showToast('Photo illisible')
+    }
+  }
+
   const chips: { value: Filter; label: string; count: number }[] = [
     { value: 'all', label: 'Tout', count: found.length },
     ...RECIPE_CATEGORIES.map((category) => ({
@@ -92,9 +107,8 @@ export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onImport }
               </span>
               <p className="text-[17px] font-semibold">Aucune recette pour l’instant</p>
               <p className="max-w-72 text-[15px] text-text-2">
-                {partner
-                  ? `Note vos recettes préférées, ${partner} les verra aussitôt. L’IA peut lire une recette en photo.`
-                  : 'Note tes recettes préférées. L’IA peut même lire une recette en photo.'}
+                {partner ? `Note vos recettes, ${partner} les verra aussitôt.` : 'Note tes recettes préférées.'} Ou
+                touche « Photo » et prends une page de livre : l’IA remplit tout.
               </p>
             </div>
           )
@@ -118,10 +132,11 @@ export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onImport }
       <div className="grid shrink-0 grid-cols-[auto_1fr] gap-2.5 pt-3">
         <button
           type="button"
-          onClick={onImport}
-          className="press h-14 rounded-full bg-white/8 px-5 text-[15px] font-medium whitespace-nowrap text-accent max-[359px]:px-4 max-[359px]:text-[14px]"
+          onClick={() => cameraRef.current?.click()}
+          className="press flex h-14 items-center gap-2 rounded-full bg-white/8 px-5 text-[15px] font-semibold whitespace-nowrap text-accent max-[359px]:px-4"
         >
-          Code reçu
+          <CameraIcon size={20} />
+          Photo
         </button>
         <button
           type="button"
@@ -132,6 +147,15 @@ export function RecipeList({ recipes, loaded, partner, onOpen, onNew, onImport }
           Nouvelle recette
         </button>
       </div>
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        aria-label="Photo d’une recette"
+        onChange={(e) => void shoot(e)}
+      />
     </div>
   )
 }

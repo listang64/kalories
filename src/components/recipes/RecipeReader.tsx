@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { fileToJpeg } from '../../lib/image'
 import { useLocalSettings } from '../../lib/localSettings'
@@ -10,10 +10,17 @@ import { SparkIcon } from '../icons/SparkIcon'
 
 const MAX_PHOTOS = 3
 
-export function RecipeReader({ startOpen, onRead }: { startOpen: boolean; onRead: (recipe: RecipeInput) => void }) {
+interface Props {
+  startOpen: boolean
+  startPhotos?: string[]
+  onRead: (recipe: RecipeInput) => void
+}
+
+export function RecipeReader({ startOpen, startPhotos = [], onRead }: Props) {
   const [open, setOpen] = useState(startOpen)
   const [text, setText] = useState('')
-  const [photos, setPhotos] = useState<string[]>([])
+  const [photos, setPhotos] = useState(startPhotos)
+  const started = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -25,16 +32,14 @@ export function RecipeReader({ startOpen, onRead }: { startOpen: boolean; onRead
     setPhotos((current) => [...current, ...added.filter((src): src is string => src !== null)].slice(0, MAX_PHOTOS))
   }
 
-  const run = async () => {
+  const run = async (pictures: string[]) => {
     const { geminiKey, geminiModel } = useLocalSettings.getState()
     setBusy(true)
     setError('')
     try {
-      const recipe = await readRecipe(text, photos, geminiKey, geminiModel)
+      const recipe = await readRecipe(text, pictures, geminiKey, geminiModel)
       if (!recipe) return setError('Aucune recette reconnue : ajoute du texte ou une photo plus nette.')
       onRead(recipe)
-      setText('')
-      setPhotos([])
       setOpen(false)
     } catch (err) {
       setError(geminiErrorMessage(err))
@@ -42,6 +47,12 @@ export function RecipeReader({ startOpen, onRead }: { startOpen: boolean; onRead
       setBusy(false)
     }
   }
+
+  useEffect(() => {
+    if (started.current || startPhotos.length === 0) return
+    started.current = true
+    void run(startPhotos)
+  }, [])
 
   if (!open) {
     return (
@@ -78,6 +89,11 @@ export function RecipeReader({ startOpen, onRead }: { startOpen: boolean; onRead
           {photos.map((src, index) => (
             <span key={index} className="relative">
               <img src={src} alt={`Photo ${index + 1}`} className="size-16 rounded-xl object-cover" />
+              {busy && (
+                <span className="absolute inset-0 grid place-items-center rounded-xl bg-black/50">
+                  <span className="size-6 animate-spin rounded-full border-[2.5px] border-white/25 border-t-accent" />
+                </span>
+              )}
               <button
                 type="button"
                 aria-label={`Retirer la photo ${index + 1}`}
@@ -104,7 +120,7 @@ export function RecipeReader({ startOpen, onRead }: { startOpen: boolean; onRead
         <button
           type="button"
           disabled={busy || (!text.trim() && photos.length === 0)}
-          onClick={() => void run()}
+          onClick={() => void run(photos)}
           className="press h-11 rounded-full bg-accent text-[15px] font-semibold text-black disabled:opacity-40"
         >
           {busy ? 'Lecture en cours…' : 'Remplir la recette'}
