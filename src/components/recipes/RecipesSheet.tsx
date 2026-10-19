@@ -23,7 +23,7 @@ interface Props {
 type View =
   | { kind: 'list' }
   | { kind: 'recipe'; id: string }
-  | { kind: 'edit'; id: string | null; photos?: string[] }
+  | { kind: 'edit'; id: string | null }
   | { kind: 'import'; code: string }
 
 const HEADER_BUTTON = 'grid size-10 place-items-center rounded-full text-text-2 active:bg-white/8'
@@ -118,7 +118,6 @@ export function RecipesSheet({ me, partner }: Props) {
             partner={partner?.name ?? null}
             onOpen={(id) => go({ kind: 'recipe', id })}
             onNew={() => go({ kind: 'edit', id: null })}
-            onPhoto={(src) => go({ kind: 'edit', id: null, photos: [src] })}
             uid={me.uid}
             onFavorite={toggleFavorite}
           />
@@ -147,7 +146,6 @@ export function RecipesSheet({ me, partner }: Props) {
           <RecipeEditor
             key={view.id ?? 'new'}
             recipe={current ?? null}
-            photos={view.photos}
             householdId={householdId}
             uid={me.uid}
             onDirty={() => setDirty(true)}

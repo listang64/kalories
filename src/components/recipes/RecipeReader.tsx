@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { fileToJpeg } from '../../lib/image'
 import { useLocalSettings } from '../../lib/localSettings'
@@ -12,15 +12,13 @@ const MAX_PHOTOS = 3
 
 interface Props {
   startOpen: boolean
-  startPhotos?: string[]
   onRead: (recipe: RecipeInput) => void
 }
 
-export function RecipeReader({ startOpen, startPhotos = [], onRead }: Props) {
+export function RecipeReader({ startOpen, onRead }: Props) {
   const [open, setOpen] = useState(startOpen)
   const [text, setText] = useState('')
-  const [photos, setPhotos] = useState(startPhotos)
-  const started = useRef(false)
+  const [photos, setPhotos] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -32,12 +30,12 @@ export function RecipeReader({ startOpen, startPhotos = [], onRead }: Props) {
     setPhotos((current) => [...current, ...added.filter((src): src is string => src !== null)].slice(0, MAX_PHOTOS))
   }
 
-  const run = async (pictures: string[]) => {
+  const run = async () => {
     const { geminiKey, geminiModel } = useLocalSettings.getState()
     setBusy(true)
     setError('')
     try {
-      const recipe = await readRecipe(text, pictures, geminiKey, geminiModel)
+      const recipe = await readRecipe(text, photos, geminiKey, geminiModel)
       if (!recipe) return setError('Aucune recette reconnue : ajoute du texte ou une photo plus nette.')
       onRead(recipe)
       setOpen(false)
@@ -47,12 +45,6 @@ export function RecipeReader({ startOpen, startPhotos = [], onRead }: Props) {
       setBusy(false)
     }
   }
-
-  useEffect(() => {
-    if (started.current || startPhotos.length === 0) return
-    started.current = true
-    void run(startPhotos)
-  }, [])
 
   if (!open) {
     return (
@@ -120,7 +112,7 @@ export function RecipeReader({ startOpen, startPhotos = [], onRead }: Props) {
         <button
           type="button"
           disabled={busy || (!text.trim() && photos.length === 0)}
-          onClick={() => void run(photos)}
+          onClick={() => void run()}
           className="press h-11 rounded-full bg-accent text-[15px] font-semibold text-black disabled:opacity-40"
         >
           {busy ? 'Lecture en cours…' : 'Remplir la recette'}

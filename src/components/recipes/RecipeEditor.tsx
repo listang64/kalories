@@ -15,7 +15,6 @@ import { StepsEditor } from './StepsEditor'
 
 interface Props {
   recipe: Recipe | null
-  photos?: string[]
   householdId: string
   uid: string
   onSaved: (id: string) => void
@@ -34,7 +33,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export function RecipeEditor({ recipe, photos, householdId, uid, onSaved, onDeleted, onDirty }: Props) {
+export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onDirty }: Props) {
   const [draft, setDraft] = useState(() => toDraft(recipe))
   const [confirming, setConfirming] = useState(false)
   const showToast = useAppStore((s) => s.showToast)
@@ -63,11 +62,7 @@ export function RecipeEditor({ recipe, photos, householdId, uid, onSaved, onDele
   return (
     <div className="flex h-full flex-col">
       <div className="-mx-5 flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-6">
-        <RecipeReader
-          startOpen={!recipe}
-          startPhotos={photos}
-          onRead={(read) => change((current) => withContent(current, read))}
-        />
+        <RecipeReader startOpen={!recipe} onRead={(read) => change((current) => withContent(current, read))} />
         <Field label="Nom de la recette">
           <input
             value={draft.name}

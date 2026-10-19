@@ -1,9 +1,6 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useState } from 'react'
 import { RECIPE_CATEGORIES, type RecipeCategory } from '../../config/recipes'
-import { fileToJpeg } from '../../lib/image'
 import type { Recipe } from '../../lib/recipes'
-import { useAppStore } from '../../store/appStore'
-import { CameraIcon } from '../icons/CameraIcon'
 import { ChefHatIcon } from '../icons/ChefHatIcon'
 import { PlusIcon } from '../icons/PlusIcon'
 import { SearchIcon } from '../icons/SearchIcon'
@@ -16,7 +13,6 @@ interface Props {
   onOpen: (id: string) => void
   uid: string
   onNew: () => void
-  onPhoto: (src: string) => void
   onFavorite: (recipe: Recipe) => void
 }
 
@@ -39,10 +35,9 @@ function matches(recipe: Recipe, search: string): boolean {
     .every((word) => haystack.includes(word))
 }
 
-export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onPhoto, onFavorite }: Props) {
+export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onFavorite }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
-  const cameraRef = useRef<HTMLInputElement>(null)
   const isFavorite = (recipe: Recipe) => recipe.favoriteOf.includes(uid)
   const found = recipes.filter((recipe) => matches(recipe, search))
   const shown = filter === 'favorites' ? found.filter(isFavorite) : found
@@ -50,17 +45,6 @@ export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onPho
   const groups = RECIPE_CATEGORIES.filter((category) => grouped || category.value === filter)
     .map((category) => ({ ...category, recipes: shown.filter((recipe) => recipe.category === category.value) }))
     .filter((group) => group.recipes.length > 0)
-  const shoot = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    try {
-      onPhoto(await fileToJpeg(file))
-    } catch {
-      useAppStore.getState().showToast('Photo illisible')
-    }
-  }
-
   const chips: { value: Filter; label: string; count: number }[] = [
     { value: 'all', label: 'Tout', count: found.length },
     { value: 'favorites', label: '♥ Favoris', count: found.filter(isFavorite).length },
@@ -113,8 +97,8 @@ export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onPho
               </span>
               <p className="text-[17px] font-semibold">Aucune recette pour l’instant</p>
               <p className="max-w-72 text-[15px] text-text-2">
-                {partner ? `Note vos recettes, ${partner} les verra aussitôt.` : 'Note tes recettes préférées.'} Ou
-                touche « Photo » et prends une page de livre : l’IA remplit tout.
+                {partner ? `Note vos recettes, ${partner} les verra aussitôt.` : 'Note tes recettes préférées.'} En
+                créant une recette, l’IA peut la remplir d’après une photo de livre.
               </p>
             </div>
           )
@@ -145,33 +129,14 @@ export function RecipeList({ recipes, loaded, partner, uid, onOpen, onNew, onPho
           </div>
         )}
       </div>
-      <div className="grid shrink-0 grid-cols-[auto_1fr] gap-2.5 pt-3">
-        <button
-          type="button"
-          onClick={() => cameraRef.current?.click()}
-          className="press flex h-14 items-center gap-2 rounded-full bg-white/8 px-5 text-[15px] font-semibold whitespace-nowrap text-accent max-[359px]:px-4"
-        >
-          <CameraIcon size={20} />
-          Photo
-        </button>
-        <button
-          type="button"
-          onClick={onNew}
-          className="press flex h-14 items-center justify-center gap-1.5 rounded-full bg-accent text-[16px] font-semibold whitespace-nowrap text-black shadow-accent max-[359px]:text-[15px]"
-        >
-          <PlusIcon size={20} strokeWidth={2} />
-          Nouvelle recette
-        </button>
-      </div>
-      <input
-        ref={cameraRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        hidden
-        aria-label="Photo d’une recette"
-        onChange={(e) => void shoot(e)}
-      />
+      <button
+        type="button"
+        onClick={onNew}
+        className="press mt-3 flex h-14 shrink-0 items-center justify-center gap-1.5 rounded-full bg-accent text-[16px] font-semibold text-black shadow-accent"
+      >
+        <PlusIcon size={20} strokeWidth={2} />
+        Nouvelle recette
+      </button>
     </div>
   )
 }
