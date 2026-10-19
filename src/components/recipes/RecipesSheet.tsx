@@ -85,7 +85,7 @@ export function RecipesSheet({ me, partner }: Props) {
     <>
       <button
         type="button"
-        aria-label="Partager hors du foyer"
+        aria-label="Partager la recette"
         onClick={() => setSharing(true)}
         className={HEADER_BUTTON}
       >

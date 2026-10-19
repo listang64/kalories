@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { Profile } from '../../lib/profiles'
+import { recipeFileName, recipePdf } from '../../lib/recipePdf'
 import { createRecipeShare, SHARE_DAYS, shareRecipeCode } from '../../lib/recipeShares'
 import type { Recipe } from '../../lib/recipes'
+import { shareFile } from '../../lib/share'
 import { useAppStore } from '../../store/appStore'
+import { usePerson } from '../../store/sessionStore'
 import { BottomPanel } from '../BottomPanel'
+import { DocumentIcon } from '../icons/DocumentIcon'
 
 interface Props {
   recipe: Recipe | null
@@ -14,8 +18,41 @@ interface Props {
 export function SharePanel({ recipe, me, onClose }: Props) {
   return (
     <BottomPanel open={recipe !== null} label="Partager la recette" onClose={onClose}>
-      {recipe && <ShareCode key={recipe.id} recipe={recipe} me={me} />}
+      {recipe && (
+        <div className="mt-4 flex flex-col items-center gap-2 text-center">
+          <h3 className="text-[17px] font-semibold">Partager « {recipe.name} »</h3>
+          <PdfButton recipe={recipe} me={me} />
+          <p className="label mt-4">Ou pour quelqu’un qui a Kalories</p>
+          <ShareCode key={recipe.id} recipe={recipe} me={me} />
+        </div>
+      )}
     </BottomPanel>
+  )
+}
+
+function PdfButton({ recipe, me }: { recipe: Recipe; me: Profile }) {
+  const author = usePerson(recipe.createdBy)
+  const showToast = useAppStore((s) => s.showToast)
+
+  const send = async () => {
+    const file = new File([recipePdf(recipe, author?.name ?? me.name)], recipeFileName(recipe.name), {
+      type: 'application/pdf',
+    })
+    if ((await shareFile(file).catch(() => null)) === 'downloaded') showToast('PDF téléchargé')
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void send()}
+        className="press mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-white/8 text-[16px] font-semibold text-accent"
+      >
+        <DocumentIcon />
+        Partager en PDF
+      </button>
+      <p className="text-[13px] text-text-2">À envoyer à n’importe qui ou à imprimer.</p>
+    </>
   )
 }
 
@@ -42,11 +79,9 @@ function ShareCode({ recipe, me }: { recipe: Recipe; me: Profile }) {
   }
 
   return (
-    <div className="mt-4 flex flex-col items-center gap-2 text-center">
-      <h3 className="text-[17px] font-semibold">Partager « {recipe.name} »</h3>
+    <>
       <p className="max-w-80 text-[14px] leading-snug text-text-2">
-        Pour quelqu’un qui a Kalories mais n’est pas dans ton foyer : il ouvre le lien, ou entre le code dans Recettes →
-        Code reçu.
+        Hors de ton foyer : il ouvre le lien, ou entre le code dans Recettes → Code reçu.
       </p>
       {state.kind === 'busy' && (
         <span className="my-6 size-9 animate-spin rounded-full border-[3px] border-white/15 border-t-accent" />
@@ -68,7 +103,7 @@ function ShareCode({ recipe, me }: { recipe: Recipe; me: Profile }) {
       )}
       {state.kind === 'ready' && (
         <>
-          <p className="my-3 font-mono text-[40px] font-semibold tracking-[0.2em] text-accent select-all">{state.code}</p>
+          <p className="my-2 font-mono text-[34px] font-semibold tracking-[0.2em] text-accent select-all">{state.code}</p>
           <p className="text-[13px] text-text-2">Valable {SHARE_DAYS} jours.</p>
           <button
             type="button"
@@ -79,6 +114,6 @@ function ShareCode({ recipe, me }: { recipe: Recipe; me: Profile }) {
           </button>
         </>
       )}
-    </div>
+    </>
   )
 }
