@@ -15,6 +15,17 @@ export interface ShoppingItem {
 const MAX_NAME = 80
 const MAX_QUANTITY = 40
 
+export function sameItem(a: string, b: string): boolean {
+  const key = (name: string) =>
+    name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/s\b/g, '')
+      .trim()
+  return key(a) === key(b)
+}
+
 export function splitNames(text: string): string[] {
   return text
     .split(/[,;\n]/)
@@ -22,10 +33,18 @@ export function splitNames(text: string): string[] {
     .filter(Boolean)
 }
 
-export async function addShoppingItems(names: string[], uid: string): Promise<void> {
+export interface ShoppingEntry {
+  name: string
+  quantity: string
+}
+
+export async function addShoppingItems(entries: ShoppingEntry[], uid: string): Promise<void> {
   const start = Date.now()
   const items = Object.fromEntries(
-    names.map((name, i) => [newId(i), { name, quantity: '', addedBy: uid, order: start + i }]),
+    entries.map(({ name, quantity }, i) => [
+      newId(i),
+      { name: name.slice(0, MAX_NAME), quantity: quantity.slice(0, MAX_QUANTITY), addedBy: uid, order: start + i },
+    ]),
   )
   await setDoc(currentSharedDoc('courses'), { items }, { merge: true })
 }

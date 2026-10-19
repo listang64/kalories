@@ -9,6 +9,7 @@ import { InstallBanner } from '../components/InstallBanner'
 import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
+import { RecipesSheet } from '../components/recipes/RecipesSheet'
 import { Rise } from '../components/Rise'
 import { SortButton } from '../components/shopping/SortButton'
 import { personEntry } from '../hooks/useHomeData'
@@ -50,7 +51,12 @@ export function HomeScreen({ me, people }: Props) {
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
-        <HomeHeader dateKey={today} onLoans={() => setOverlay('loans')} onSettings={() => setOverlay('settings')} />
+        <HomeHeader
+          dateKey={today}
+          onLoans={() => setOverlay('loans')}
+          onRecipes={() => setOverlay('recipes')}
+          onSettings={() => setOverlay('settings')}
+        />
         <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
@@ -91,6 +97,7 @@ export function HomeScreen({ me, people }: Props) {
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
         <LoansScreen me={me} partner={partner} />
       </BottomSheet>
+      <RecipesSheet me={me} partner={partner} />
       <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>
         <SettingsScreen me={me} people={people} />

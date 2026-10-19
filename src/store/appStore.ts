@@ -3,7 +3,7 @@ import { probableMealType, type MealType } from '../config/meals'
 import type { Meal, MealRef } from '../lib/meals'
 import type { DayProgress, MealItem } from '../lib/nutrition'
 
-export type Overlay = 'settings' | 'add' | 'day' | 'history' | 'shopping' | 'loans'
+export type Overlay = 'settings' | 'add' | 'day' | 'history' | 'shopping' | 'loans' | 'recipes'
 export type AddStep = 'type' | 'capture' | 'analyzing' | 'review'
 
 export interface DraftPhoto {
@@ -70,6 +70,7 @@ interface AppState {
   analysisError: AnalysisError | null
   addTarget: AddTarget | null
   editing: EditTarget | null
+  recipeCode: string | null
   setOverlay: (overlay: Overlay | null) => void
   openSettingsOnTop: () => void
   closeSettings: () => void
@@ -99,6 +100,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   updateReady: false,
   toast: null,
   session: 0,
+  recipeCode: null,
   ...resetFlow(),
   setOverlay: (overlay) => set((s) => (overlay === null ? { overlay, session: s.session + 1 } : { overlay })),
   openSettingsOnTop: () => set({ settingsOnTop: true }),

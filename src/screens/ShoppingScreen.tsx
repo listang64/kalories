@@ -51,7 +51,7 @@ export function ShoppingScreen({ me, partner, items, denied }: Props) {
     event.preventDefault()
     const names = splitNames(text)
     if (names.length === 0) return
-    addShoppingItems(names, me.uid).catch(fail)
+    addShoppingItems(names.map((name) => ({ name, quantity: '' })), me.uid).catch(fail)
     setText('')
   }
 

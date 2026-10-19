@@ -56,8 +56,8 @@ export function FoodAiHelper({ onResult }: { onResult: (result: Analysis) => voi
           {items.map((item, index) => (
             <li key={index} className="flex gap-3">
               <span className="min-w-0 flex-1 truncate">{item.name}</span>
-              <span className="text-text-2">{formatInt(item.grams)} g</span>
-              <span className="w-[68px] text-right">{formatInt(itemTotals(item).kcal)} kcal</span>
+              <span className="shrink-0 text-text-2">{formatInt(item.grams)} g</span>
+              <span className="min-w-[68px] shrink-0 text-right whitespace-nowrap">{formatInt(itemTotals(item).kcal)} kcal</span>
             </li>
           ))}
         </ul>

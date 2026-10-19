@@ -14,7 +14,7 @@ import { useAppStore } from '../../store/appStore'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { Field, FIELD_INPUT } from '../Field'
 import { Stepper } from '../Stepper'
-import { DecimalField } from './DecimalField'
+import { ValueField } from '../ValueField'
 import { FoodAiHelper } from './FoodAiHelper'
 
 type Per100 = 'kcal100' | 'carbs100' | 'fat100' | 'protein100'
@@ -122,7 +122,7 @@ export function FavoriteEditor({ uid, favorite, onDone }: Props) {
           <p className="label px-1">Valeurs pour 100 g</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {FIELDS.map(({ key, label, unit }) => (
-              <DecimalField
+              <ValueField
                 key={key}
                 label={label}
                 unit={unit}

@@ -20,8 +20,10 @@ import { colorById, type ColorId } from '../config/colors'
 import { db } from '../config/firebase'
 import { useSession } from '../store/sessionStore'
 import type { Profile } from './profiles'
+import { recipesOf } from './recipes'
 import { refreshHousehold } from './session'
 import { shareText, type ShareResult } from './share'
+import { normalizeCode, randomCode } from './shared'
 
 export type SharedName = 'courses' | 'prets'
 
@@ -51,14 +53,10 @@ export interface Invite {
 
 export type InviteLookup = { status: 'found'; invite: Invite } | { status: 'unknown' | 'expired' | 'offline' }
 
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const LIFETIME = 48 * 3600 * 1000
 
 export function normalizeInviteCode(text: string): string {
-  return text
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .slice(0, 6)
+  return normalizeCode(text)
 }
 
 function parseInvite(code: string, data: DocumentData | undefined): Invite | null {
@@ -78,8 +76,7 @@ export async function createInvite(me: Profile): Promise<void> {
   if (!me.householdId) throw new Error('Aucun foyer')
   const previous = await getDocsFromServer(query(collection(db, 'invites'), where('createdBy', '==', me.uid)))
   await Promise.all(previous.docs.map((invite) => deleteDoc(invite.ref)))
-  const code = Array.from(crypto.getRandomValues(new Uint8Array(6)), (n) => ALPHABET[n % ALPHABET.length]).join('')
-  await setDoc(doc(db, 'invites', code), {
+  await setDoc(doc(db, 'invites', randomCode()), {
     householdId: me.householdId,
     createdBy: me.uid,
     createdByName: me.name,
@@ -144,9 +141,10 @@ function field(data: DocumentData | undefined, name: string): Record<string, unk
 export async function joinHousehold(me: Profile, invite: Invite, color: ColorId): Promise<void> {
   const previous = me.householdId
   if (!previous) throw new Error('Aucun foyer')
-  const [courses, loans] = await Promise.all([
+  const [courses, loans, recipes] = await Promise.all([
     getDocFromServer(sharedDoc(previous, 'courses')),
     getDocFromServer(sharedDoc(previous, 'prets')),
+    getDocsFromServer(recipesOf(previous)),
   ])
   const items = field(courses.data(), 'items')
   const lent = field(loans.data(), 'loans')
@@ -156,6 +154,10 @@ export async function joinHousehold(me: Profile, invite: Invite, color: ColorId)
   batch.delete(doc(db, 'invites', invite.code))
   if (Object.keys(items).length > 0) batch.set(sharedDoc(invite.householdId, 'courses'), { items }, { merge: true })
   if (Object.keys(lent).length > 0) batch.set(sharedDoc(invite.householdId, 'prets'), { loans: lent }, { merge: true })
+  recipes.docs.forEach((recipe) => {
+    batch.set(doc(recipesOf(invite.householdId), recipe.id), recipe.data())
+    batch.delete(recipe.ref)
+  })
   batch.delete(sharedDoc(previous, 'courses'))
   batch.delete(sharedDoc(previous, 'prets'))
   batch.delete(doc(db, 'households', previous))

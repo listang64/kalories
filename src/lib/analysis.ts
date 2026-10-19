@@ -109,3 +109,12 @@ Liste chaque ingrédient avec le poids indiqué (sinon une portion habituelle).
 Dans title, donne un nom court et naturel pour l'ensemble (4 mots maximum).`
   return requestItems([{ text }], key, model)
 }
+
+export function analyzeRecipe(name: string, ingredients: string[], key: string, model: string) {
+  const text = `Recette : ${name.trim() || 'sans nom'}.
+Ingrédients :
+${ingredients.map((line) => `- ${line}`).join('\n')}
+Liste chaque ingrédient avec son poids en grammes tel qu'utilisé dans la recette (cru, avant cuisson),
+en convertissant les unités (pièce, cuillère, ml…). Ignore l'eau de cuisson et ce qui n'est pas mangé.`
+  return requestItems([{ text }], key, model)
+}

@@ -64,6 +64,16 @@ service cloud.firestore {
         && !existsAfter(inviteDoc(code));
     }
 
+    function validRecipe(data) {
+      return data.keys().hasOnly(['name', 'category', 'prepMinutes', 'servings', 'ingredients', 'steps',
+          'cookMinutes', 'cookTemp', 'cookNote', 'nutrition', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 80
+        && data.category in ['starter', 'main', 'dessert', 'other']
+        && data.ingredients is list && data.ingredients.size() <= 80
+        && data.steps is list && data.steps.size() <= 60
+        && data.createdBy is string;
+    }
+
     function joining(hid) {
       let before = resource.data.members;
       return signedIn()
@@ -157,6 +167,26 @@ service cloud.firestore {
         allow read, delete: if inHousehold(hid);
         allow create, update: if name in ['courses', 'prets'] && inHouseholdAfter(hid);
       }
+
+      match /recipes/{recipeId} {
+        allow read, delete: if inHousehold(hid);
+        allow create: if inHouseholdAfter(hid) && validRecipe(request.resource.data);
+        allow update: if inHousehold(hid) && validRecipe(request.resource.data)
+          && request.resource.data.createdBy == resource.data.createdBy;
+      }
+    }
+
+    match /recipeShares/{code} {
+      allow get: if signedIn()
+        && (resource == null || request.time < resource.data.createdAt + duration.value(30, 'd'));
+      allow create: if signedIn()
+        && code.matches('^[A-Z0-9]{6}$')
+        && request.resource.data.keys().hasOnly(['recipe', 'createdBy', 'createdByName', 'createdAt'])
+        && request.resource.data.recipe is map
+        && request.resource.data.createdBy == me()
+        && request.resource.data.createdByName is string
+        && request.resource.data.createdAt == request.time;
+      allow delete: if signedIn() && resource.data.createdBy == me();
     }
 
     match /invites/{code} {

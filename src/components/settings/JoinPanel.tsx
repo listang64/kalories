@@ -110,7 +110,7 @@ function JoinForm({ me, onClose }: Omit<Props, 'open'>) {
         </span>
       </div>
       <p className="text-[15px] text-text-2">
-        Ta liste de courses et tes prêts seront ajoutés aux siens, et vous verrez chacun les repas de l’autre.
+        Ta liste de courses, tes prêts et tes recettes seront ajoutés aux siens, et vous verrez chacun les repas de l’autre.
       </p>
       {clash && (
         <div className="flex flex-col gap-2">
