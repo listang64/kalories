@@ -1,3 +1,4 @@
+import type { Metric, MetricMeta } from '../config/metrics'
 import { addDays } from './dates'
 import type { Meal } from './meals'
 import { mealTotals } from './nutrition'
@@ -12,7 +13,7 @@ export const HISTORY_DAYS = 30
 export interface PersonStats {
   average: number | null
   logged: number
-  under: number
+  hits: number
   streak: number
 }
 
@@ -20,11 +21,11 @@ export function lastDays(today: string, count: number): string[] {
   return Array.from({ length: count }, (_, i) => addDays(today, i - count + 1))
 }
 
-export function buildHistory(meals: Meal[], days: string[]): DayPoint[] {
+export function buildHistory(meals: Meal[], days: string[], metric: Metric = 'kcal'): DayPoint[] {
   const byDate = new Map<string, Record<string, number | null>>(days.map((date) => [date, {}]))
   for (const meal of meals) {
     const entry = byDate.get(meal.date)
-    if (entry) entry[meal.uid] = (entry[meal.uid] ?? 0) + mealTotals(meal.items).kcal
+    if (entry) entry[meal.uid] = (entry[meal.uid] ?? 0) + mealTotals(meal.items)[metric]
   }
   return days.map((date) => ({ date, values: byDate.get(date) ?? {} }))
 }
@@ -33,19 +34,24 @@ export function valueOf(point: DayPoint, id: string): number | null {
   return point.values[id] ?? null
 }
 
-export function statsFor(points: DayPoint[], id: string, goal: number, today: string): PersonStats {
+export function gap(value: number | null, goal: number, metric: MetricMeta): number {
+  if (value === null) return 0
+  return Math.max(0, metric.reach ? goal - value : value - goal)
+}
+
+export function statsFor(points: DayPoint[], id: string, goal: number, today: string, metric: MetricMeta): PersonStats {
   const finished = points.filter((point) => point.date !== today)
   const values = finished.map((point) => valueOf(point, id)).filter((value): value is number => value !== null)
   let streak = 0
   for (const point of [...finished].reverse()) {
     const value = valueOf(point, id)
-    if (value === null || value > goal) break
+    if (value === null || gap(value, goal, metric) > 0) break
     streak += 1
   }
   return {
     average: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
     logged: values.length,
-    under: values.filter((value) => value <= goal).length,
+    hits: values.filter((value) => gap(value, goal, metric) === 0).length,
     streak,
   }
 }

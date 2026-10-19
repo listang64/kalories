@@ -1,13 +1,15 @@
+import type { MetricMeta } from '../../config/metrics'
 import { formatInt } from '../../lib/format'
-import { formatDayName, valueOf, type DayPoint } from '../../lib/history'
+import { formatDayName, gap, valueOf, type DayPoint } from '../../lib/history'
 import type { ChartSeries } from './HistoryChart'
 
 interface Props {
   points: DayPoint[]
   series: ChartSeries[]
+  metric: MetricMeta
 }
 
-export function DayList({ points, series }: Props) {
+export function DayList({ points, series, metric }: Props) {
   const days = [...points].reverse().filter((point) => series.some((s) => valueOf(point, s.id) !== null))
   if (days.length === 0) return <p className="py-6 text-center text-[15px] text-text-2">Aucun repas sur ces 30 jours.</p>
 
@@ -28,10 +30,11 @@ export function DayList({ points, series }: Props) {
             <span className="flex-1 text-text-2">{formatDayName(day.date)}</span>
             {series.map((s) => {
               const value = valueOf(day, s.id)
-              const over = value !== null && value > s.goal
+              const off = gap(value, s.goal, metric) > 0
+              const mark = off ? (metric.reach ? '▼ ' : '▲ ') : ''
               return (
-                <span key={s.id} className={`w-20 text-right ${over ? 'text-accent' : ''}`}>
-                  {value === null ? '—' : `${over ? '▲ ' : ''}${formatInt(value)}`}
+                <span key={s.id} className={`w-20 text-right ${off ? 'text-accent' : ''}`}>
+                  {value === null ? '—' : `${mark}${formatInt(value)}${metric.suffix}`}
                 </span>
               )
             })}

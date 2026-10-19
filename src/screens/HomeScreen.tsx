@@ -78,7 +78,7 @@ export function HomeScreen({ me, people }: Props) {
         <DayDetailScreen me={me} people={people} />
       </BottomSheet>
       <BottomSheet open={overlay === 'history'} title="Historique" onClose={() => setOverlay(null)}>
-        <HistoryScreen people={people} />
+        <HistoryScreen me={me} people={people} />
       </BottomSheet>
       <BottomSheet
         open={overlay === 'shopping'}

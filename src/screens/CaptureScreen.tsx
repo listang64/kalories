@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { CameraView } from '../components/capture/CameraView'
 import { PhotoStrip } from '../components/capture/PhotoStrip'
+import { FavoritesSheet } from '../components/favorites/FavoritesSheet'
 import { BarcodeScanner } from '../components/scanner/BarcodeScanner'
 import { useAnalyzeMeal } from '../hooks/useAnalyzeMeal'
 import { fileToJpeg } from '../lib/image'
 import type { MealItem } from '../lib/nutrition'
 import { useAppStore } from '../store/appStore'
 
-export function CaptureScreen() {
+export function CaptureScreen({ uid }: { uid: string }) {
   const draft = useAppStore((s) => s.draft)
   const active = useAppStore((s) => s.overlay === 'add' && s.addStep === 'capture')
   const setNote = useAppStore((s) => s.setNote)
@@ -18,16 +19,18 @@ export function CaptureScreen() {
   const openSettingsOnTop = useAppStore((s) => s.openSettingsOnTop)
   const analyze = useAnalyzeMeal()
   const [scanning, setScanning] = useState(false)
+  const [favorites, setFavorites] = useState(false)
   const canAnalyze = draft.note.trim() !== '' || draft.photos.length > 0
 
   const add = (src: string) => {
     if (!addPhoto(src)) showToast('6 photos maximum')
   }
 
-  const addScanned = (item: MealItem) => {
+  const addItems = (items: MealItem[]) => {
     const { appendItems, setAddStep } = useAppStore.getState()
-    appendItems([item])
+    appendItems(items)
     setScanning(false)
+    setFavorites(false)
     setAddStep('review')
   }
 
@@ -58,10 +61,11 @@ export function CaptureScreen() {
         className="h-[24%] min-h-24 shrink-0 resize-none rounded-card border border-line bg-surface-2 p-4 text-[17px] leading-snug outline-none placeholder:text-text-2 focus:border-white/20"
       />
       <CameraView
-        active={active && !scanning}
+        active={active && !scanning && !favorites}
         onPhoto={add}
         onFiles={(files) => void importFiles(files)}
         onScan={() => setScanning(true)}
+        onFavorites={() => setFavorites(true)}
       />
       {draft.photos.length > 0 && <PhotoStrip photos={draft.photos} onRemove={removePhoto} />}
       {error && (
@@ -90,7 +94,8 @@ export function CaptureScreen() {
         Analyser
         {draft.photos.length > 0 && ` · ${draft.photos.length} photo${draft.photos.length > 1 ? 's' : ''}`}
       </button>
-      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onAdd={addScanned} />
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onAdd={(item) => addItems([item])} />
+      <FavoritesSheet open={favorites} uid={uid} onClose={() => setFavorites(false)} onAdd={addItems} />
     </div>
   )
 }

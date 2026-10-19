@@ -35,6 +35,7 @@ const RESPONSE_SCHEMA = {
       },
     },
     comment: { type: 'string' },
+    title: { type: 'string' },
   },
   required: ['items'],
 }
@@ -44,14 +45,16 @@ type Part = { text: string } | { inlineData: { mimeType: string; data: string } 
 export interface Analysis {
   items: MealItem[]
   comment: string
+  title: string
 }
 
 function parse(text: string): Analysis | null {
   try {
-    const data = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')) as { items?: unknown; comment?: unknown }
+    const data = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, '')) as Record<string, unknown>
     if (!Array.isArray(data.items)) return null
     const items = data.items.map(parseItem).filter((item): item is MealItem => item !== null)
-    return { items, comment: typeof data.comment === 'string' ? data.comment : '' }
+    const comment = typeof data.comment === 'string' ? data.comment : ''
+    return { items, comment, title: typeof data.title === 'string' ? data.title.trim() : '' }
   } catch {
     return null
   }
@@ -97,5 +100,12 @@ export function correctMeal(items: MealItem[], instruction: string, key: string,
   const text = `Repas actuel (JSON) : ${JSON.stringify({ items })}
 Correction de l'utilisateur : ${instruction.trim()}
 Applique la correction et renvoie la liste complète mise à jour.`
+  return requestItems([{ text }], key, model)
+}
+
+export function describeFood(description: string, key: string, model: string) {
+  const text = `Aliment ou recette à enregistrer en favori : ${description.trim()}
+Liste chaque ingrédient avec le poids indiqué (sinon une portion habituelle).
+Dans title, donne un nom court et naturel pour l'ensemble (4 mots maximum).`
   return requestItems([{ text }], key, model)
 }

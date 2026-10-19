@@ -1,8 +1,11 @@
 export type Point = [number, number]
 
+const STEPS = [10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000]
+
 export function chartScale(peak: number) {
-  const step = peak > 2000 ? 1000 : 500
-  const max = Math.ceil((peak * 1.08) / step) * step
+  const top = Math.max(peak, 1) * 1.08
+  const step = STEPS.find((size) => top / size <= 5) ?? 10000
+  const max = Math.ceil(top / step) * step
   const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step)
   return { max, ticks }
 }

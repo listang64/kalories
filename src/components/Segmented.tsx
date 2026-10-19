@@ -27,7 +27,7 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`relative h-9 rounded-full text-[15px] font-medium transition-colors ${active ? 'text-text' : 'text-text-2'}`}
+            className={`relative h-9 rounded-full text-[min(15px,4.2vw)] font-medium transition-colors ${active ? 'text-text' : 'text-text-2'}`}
           >
             {active && (
               <motion.span

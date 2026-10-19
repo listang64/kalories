@@ -5,15 +5,19 @@ import { captureVideoFrame } from '../../lib/image'
 import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { CameraIcon } from '../icons/CameraIcon'
 import { GalleryIcon } from '../icons/GalleryIcon'
+import { HeartIcon } from '../icons/HeartIcon'
 
 interface Props {
   active: boolean
   onPhoto: (src: string) => void
   onFiles: (files: File[]) => void
   onScan: () => void
+  onFavorites: () => void
 }
 
-export function CameraView({ active, onPhoto, onFiles, onScan }: Props) {
+const PILL = 'flex h-10 items-center gap-2 rounded-full bg-black/45 px-3.5 text-[14px] text-text backdrop-blur-md'
+
+export function CameraView({ active, onPhoto, onFiles, onScan, onFavorites }: Props) {
   const { videoRef, state } = useCamera(active)
   const [shots, setShots] = useState(0)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -65,20 +69,18 @@ export function CameraView({ active, onPhoto, onFiles, onScan }: Props) {
           />
         )}
       </AnimatePresence>
+      <button type="button" onClick={onFavorites} className={`absolute top-3 right-3 ${PILL}`}>
+        <span className="text-accent">
+          <HeartIcon size={18} filled />
+        </span>
+        Favoris
+      </button>
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-center p-4">
-        <button
-          type="button"
-          onClick={() => galleryRef.current?.click()}
-          className="absolute left-4 flex h-10 items-center gap-2 rounded-full bg-black/45 px-3.5 text-[14px] text-text backdrop-blur-md"
-        >
+        <button type="button" onClick={() => galleryRef.current?.click()} className={`absolute left-4 ${PILL}`}>
           <GalleryIcon size={18} />
           Galerie
         </button>
-        <button
-          type="button"
-          onClick={onScan}
-          className="absolute right-4 flex h-10 items-center gap-2 rounded-full bg-black/45 px-3.5 text-[14px] text-text backdrop-blur-md"
-        >
+        <button type="button" onClick={onScan} className={`absolute right-4 ${PILL}`}>
           <BarcodeIcon size={18} />
           Code-barres
         </button>

@@ -1,9 +1,10 @@
 import { useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { motion } from 'motion/react'
+import { KCAL_METRIC, type MetricMeta } from '../../config/metrics'
 import { useElementSize } from '../../hooks/useElementSize'
 import { formatInt } from '../../lib/format'
 import { formatShortDate } from '../../lib/dates'
-import { valueOf, type DayPoint } from '../../lib/history'
+import { gap, valueOf, type DayPoint } from '../../lib/history'
 import { chartScale, monotonePath, runs, type Point } from './chartMath'
 import { ChartTooltip, TOOLTIP_WIDTH } from './ChartTooltip'
 
@@ -17,6 +18,7 @@ export interface ChartSeries {
 interface Props {
   points: DayPoint[]
   series: ChartSeries[]
+  metric?: MetricMeta
   height?: number
 }
 
@@ -25,14 +27,14 @@ const NARROW = 260
 const PAD = { top: 18, right: 10, bottom: 24, left: 40 }
 const SURFACE = 'var(--surface)'
 
-export function HistoryChart({ points, series, height = DEFAULT_HEIGHT }: Props) {
+export function HistoryChart({ points, series, metric = KCAL_METRIC, height = DEFAULT_HEIGHT }: Props) {
   const [ref, { width }] = useElementSize<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
   const n = points.length
   const innerW = Math.max(1, width - PAD.left - PAD.right)
   const innerH = height - PAD.top - PAD.bottom
   const values = points.flatMap((p) => series.map((s) => valueOf(p, s.id) ?? 0))
-  const { max, ticks } = chartScale(Math.max(1500, ...values, ...series.map((s) => s.goal)))
+  const { max, ticks } = chartScale(Math.max(metric.floor, ...values, ...series.map((s) => s.goal)))
   const x = (i: number) => PAD.left + (n > 1 ? (i / (n - 1)) * innerW : innerW / 2)
   const y = (v: number) => PAD.top + innerH * (1 - v / max)
   const baseline = y(0)
@@ -60,7 +62,7 @@ export function HistoryChart({ points, series, height = DEFAULT_HEIGHT }: Props)
           height={height}
           role="img"
           tabIndex={0}
-          aria-label="Courbe des calories des 30 derniers jours, avec les plafonds"
+          aria-label={`Courbe des ${metric.label.toLowerCase()} des 30 derniers jours, avec ${metric.key === 'kcal' ? 'les plafonds' : 'l’objectif'}`}
           onPointerDown={pick}
           onPointerMove={(e) => (e.pointerType === 'mouse' || e.buttons > 0 ? pick(e) : undefined)}
           onKeyDown={step}
@@ -156,7 +158,7 @@ export function HistoryChart({ points, series, height = DEFAULT_HEIGHT }: Props)
                 cx={x(index)}
                 cy={y(value)}
                 r="4.5"
-                fill={value > s.goal ? 'var(--accent)' : s.color}
+                fill={gap(value, s.goal, metric) > 0 ? 'var(--accent)' : s.color}
                 stroke={SURFACE}
                 strokeWidth="2"
               />
@@ -168,6 +170,7 @@ export function HistoryChart({ points, series, height = DEFAULT_HEIGHT }: Props)
         <ChartTooltip
           point={point}
           series={series}
+          metric={metric}
           left={Math.min(Math.max(x(active ?? 0) - TOOLTIP_WIDTH / 2, 0), width - TOOLTIP_WIDTH)}
         />
       )}

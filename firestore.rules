@@ -109,6 +109,19 @@ service cloud.firestore {
           && request.resource.data.items is list;
       }
 
+      match /favorites/{favoriteId} {
+        allow read, delete: if signedIn() && me() == uid;
+        allow create, update: if signedIn() && me() == uid
+          && request.resource.data.keys().hasOnly(['name', 'grams', 'kcal100', 'carbs100', 'fat100', 'protein100'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
+          && request.resource.data.grams is number
+          && request.resource.data.kcal100 is number
+          && request.resource.data.carbs100 is number
+          && request.resource.data.fat100 is number
+          && request.resource.data.protein100 is number;
+      }
+
       match /inbox/{offerId} {
         allow read, delete: if signedIn() && me() == uid;
         allow create: if signedIn() && me() != uid

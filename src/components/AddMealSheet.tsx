@@ -79,7 +79,7 @@ export function AddMealSheet({ me, progress }: Props) {
                 <MealTypeButtons selected={type} onChoose={chooseMealType} />
               </div>
             )}
-            {step === 'capture' && <CaptureScreen />}
+            {step === 'capture' && <CaptureScreen uid={me.uid} />}
             {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
             {step === 'review' && <ReviewScreen uid={me.uid} progress={base} />}
           </motion.div>
