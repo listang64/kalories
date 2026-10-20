@@ -150,6 +150,28 @@ export function GroupedEditor<Item extends DraftItem>(props: Props<Item>) {
   )
 }
 
+const ARROW = 'grid size-6 place-items-center text-text-2 active:bg-white/12 disabled:opacity-25'
+
+interface MoveProps {
+  label: string
+  first: boolean
+  last: boolean
+  onMove: (offset: number) => void
+}
+
+export function MoveArrows({ label, first, last, onMove }: MoveProps) {
+  return (
+    <span className="flex shrink-0 overflow-hidden rounded-full bg-white/6">
+      <button type="button" aria-label={`Monter ${label}`} disabled={first} onClick={() => onMove(-1)} className={ARROW}>
+        <ChevronIcon size={14} direction="up" />
+      </button>
+      <button type="button" aria-label={`Descendre ${label}`} disabled={last} onClick={() => onMove(1)} className={ARROW}>
+        <ChevronIcon size={14} direction="down" />
+      </button>
+    </span>
+  )
+}
+
 export const onEnter = (action: (field: HTMLInputElement) => void) => (event: KeyboardEvent<HTMLInputElement>) => {
   if (event.key !== 'Enter') return
   event.preventDefault()
@@ -170,7 +192,7 @@ interface GroupProps {
 
 function GroupRow({ row, label, focus, first, last, onChange, onMove, onRemove, onNext }: GroupProps) {
   return (
-    <li className="mt-2 flex items-center gap-0.5 first:mt-0">
+    <li className="mt-2 flex items-center gap-1.5 first:mt-0">
       <input
         aria-label={`Nom du ${label}`}
         value={row.name}
@@ -184,14 +206,9 @@ function GroupRow({ row, label, focus, first, last, onChange, onMove, onRemove, 
         autoFocus={focus}
         enterKeyHint="next"
         autoCapitalize="sentences"
-        className="mr-1.5 h-11 min-w-0 flex-1 rounded-xl border border-accent/30 bg-accent/8 px-3 text-base font-semibold text-accent outline-none placeholder:font-normal placeholder:text-accent/45 focus:border-accent/60"
+        className="h-11 min-w-0 flex-1 rounded-xl border border-accent/30 bg-accent/8 px-3 text-base font-semibold text-accent outline-none placeholder:font-normal placeholder:text-accent/45 focus:border-accent/60"
       />
-      <button type="button" aria-label={`Monter le ${label}`} disabled={first} onClick={() => onMove(-1)} className={ICON_BUTTON}>
-        <ChevronIcon size={18} direction="up" />
-      </button>
-      <button type="button" aria-label={`Descendre le ${label}`} disabled={last} onClick={() => onMove(1)} className={ICON_BUTTON}>
-        <ChevronIcon size={18} direction="down" />
-      </button>
+      <MoveArrows label={`le ${label}`} first={first} last={last} onMove={onMove} />
       <button type="button" aria-label={`Retirer le ${label}`} onClick={onRemove} className={ICON_BUTTON}>
         <CloseIcon size={18} />
       </button>

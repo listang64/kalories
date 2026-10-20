@@ -62,13 +62,7 @@ export function HomeScreen({ me, people }: Props) {
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
-        <HomeHeader
-          dateKey={today}
-          onLoans={() => setOverlay('loans')}
-          onRecipes={() => setOverlay('recipes')}
-          onSettings={() => setOverlay('settings')}
-          onStats={() => setOverlay('history')}
-        />
+        <HomeHeader dateKey={today} onOpen={setOverlay} />
         <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>

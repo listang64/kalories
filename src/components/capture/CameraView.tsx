@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCamera } from '../../hooks/useCamera'
 import { captureVideoFrame } from '../../lib/image'
+import { useAppStore } from '../../store/appStore'
 import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { CameraIcon } from '../icons/CameraIcon'
 import { GalleryIcon } from '../icons/GalleryIcon'
@@ -49,6 +50,15 @@ export function CameraView({ active, onPhoto, onFiles, onScan, onFavorites }: Pr
           <p className="text-[15px] text-text-2">
             {state === 'denied' ? 'Accès à la caméra refusé' : 'Caméra indisponible'}
           </p>
+          {state === 'denied' && (
+            <button
+              type="button"
+              onClick={() => useAppStore.getState().openSettingsOnTop('camera')}
+              className="h-9 text-[15px] font-medium text-accent underline underline-offset-4"
+            >
+              Réautoriser l’appareil photo
+            </button>
+          )}
           <button
             type="button"
             onClick={() => captureRef.current?.click()}

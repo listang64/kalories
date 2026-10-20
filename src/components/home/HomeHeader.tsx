@@ -1,58 +1,37 @@
+import { useCallback, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useOnline } from '../../hooks/useOnline'
 import { formatLongDate } from '../../lib/dates'
-import { ChefHatIcon } from '../icons/ChefHatIcon'
-import { GearIcon } from '../icons/GearIcon'
-import { HandshakeIcon } from '../icons/HandshakeIcon'
-import { StatsIcon } from '../icons/StatsIcon'
+import { MenuButton, RadialMenu, type MenuTarget } from './HomeMenu'
 import { WeatherBadge } from './WeatherBadge'
 
 interface Props {
   dateKey: string
-  onLoans: () => void
-  onRecipes: () => void
-  onSettings: () => void
-  onStats: () => void
+  onOpen: (target: MenuTarget) => void
 }
 
-const ICON_BUTTON = 'grid size-11 shrink-0 place-items-center rounded-full text-text-2 transition-colors active:bg-white/8'
-
-export function HomeHeader({ dateKey, onLoans, onRecipes, onSettings, onStats }: Props) {
+export function HomeHeader({ dateKey, onOpen }: Props) {
   const online = useOnline()
+  const [menu, setMenu] = useState(false)
+  const close = useCallback(() => setMenu(false), [])
 
   return (
     <header className="pt-3">
       <div className="flex items-center gap-1">
-        <div className="relative -ml-2">
-          <button type="button" aria-label="Prêts" onClick={onLoans} className={ICON_BUTTON}>
-            <HandshakeIcon />
-          </button>
-          <button
-            type="button"
-            aria-label="Recettes"
-            onClick={onRecipes}
-            className={`absolute top-full left-0 mt-1 ${ICON_BUTTON}`}
-          >
-            <ChefHatIcon />
-          </button>
-        </div>
+        <MenuButton open={menu} onToggle={() => setMenu(!menu)} />
         <h1 className="flex-1 text-center text-[min(5.9vw,calc((100vw_-_120px)/12))] leading-tight font-semibold tracking-[-0.02em] whitespace-nowrap text-accent underline decoration-accent/50 decoration-2 underline-offset-[6px]">
           {formatLongDate(dateKey)}
         </h1>
-        <div className="relative -mr-2">
-          <button type="button" aria-label="Paramètres" onClick={onSettings} className={ICON_BUTTON}>
-            <GearIcon />
-          </button>
-          <button
-            type="button"
-            aria-label="Historique des 30 derniers jours"
-            onClick={onStats}
-            className={`absolute top-full right-0 mt-1 ${ICON_BUTTON}`}
-          >
-            <StatsIcon />
-          </button>
-        </div>
+        <span aria-hidden="true" className="size-11 shrink-0" />
       </div>
+      <RadialMenu
+        open={menu}
+        onClose={close}
+        onSelect={(target) => {
+          setMenu(false)
+          onOpen(target)
+        }}
+      />
       <AnimatePresence>
         {!online && (
           <motion.div

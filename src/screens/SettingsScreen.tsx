@@ -1,4 +1,5 @@
 import { AppSettings } from '../components/settings/AppSettings'
+import { CameraSettings } from '../components/settings/CameraSettings'
 import { GeminiSettings } from '../components/settings/GeminiSettings'
 import { GoalSettings } from '../components/settings/GoalSettings'
 import { HouseholdSettings } from '../components/settings/HouseholdSettings'
@@ -21,6 +22,7 @@ export function SettingsScreen({ me, people }: Props) {
       <MacroSettings me={me} />
       <HouseholdSettings me={me} people={people} />
       <GeminiSettings />
+      <CameraSettings />
       {isAdmin(me.uid) && <SignupCodes />}
       <AppSettings me={me} partner={partner} />
     </div>

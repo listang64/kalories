@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { isCameraDenied } from '../lib/camera'
 
 export type CameraState = 'starting' | 'ready' | 'denied' | 'unavailable'
 
 const CONSTRAINTS: MediaStreamConstraints = {
   video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } },
   audio: false,
-}
-
-function isDenied(error: unknown): boolean {
-  return error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'SecurityError')
 }
 
 export function useCamera(active: boolean) {
@@ -43,7 +40,7 @@ export function useCamera(active: boolean) {
         }
         setState('ready')
       } catch (error) {
-        if (id === generation) setState(isDenied(error) ? 'denied' : 'unavailable')
+        if (id === generation) setState(isCameraDenied(error) ? 'denied' : 'unavailable')
       }
     }
 

@@ -60,6 +60,7 @@ const withIds = (items: MealItem[]): ReviewItem[] => items.map((item) => ({ ...i
 interface AppState {
   overlay: Overlay | null
   settingsOnTop: boolean
+  settingsSection: 'camera' | null
   updateReady: boolean
   toast: string | null
   session: number
@@ -72,7 +73,7 @@ interface AppState {
   editing: EditTarget | null
   recipeCode: string | null
   setOverlay: (overlay: Overlay | null) => void
-  openSettingsOnTop: () => void
+  openSettingsOnTop: (section?: 'camera') => void
   closeSettings: () => void
   setUpdateReady: (ready: boolean) => void
   showToast: (message: string) => void
@@ -97,13 +98,14 @@ interface AppState {
 export const useAppStore = create<AppState>()((set, get) => ({
   overlay: null,
   settingsOnTop: false,
+  settingsSection: null,
   updateReady: false,
   toast: null,
   session: 0,
   recipeCode: null,
   ...resetFlow(),
   setOverlay: (overlay) => set((s) => (overlay === null ? { overlay, session: s.session + 1 } : { overlay })),
-  openSettingsOnTop: () => set({ settingsOnTop: true }),
+  openSettingsOnTop: (section) => set({ settingsOnTop: true, settingsSection: section ?? null }),
   closeSettings: () => (get().settingsOnTop ? set({ settingsOnTop: false, analysisError: null }) : get().setOverlay(null)),
   setUpdateReady: (updateReady) => set({ updateReady }),
   showToast: (toast) => set({ toast }),

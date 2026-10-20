@@ -1,10 +1,12 @@
 import { AnimatePresence } from 'motion/react'
 import { ItemCard } from '../components/review/ItemCard'
 import { ReviewSummary } from '../components/review/ReviewSummary'
-import type { DayProgress } from '../lib/nutrition'
+import { useFavorites } from '../hooks/useFavorites'
 import { todayKey } from '../lib/dates'
+import { deleteFavorite, newFavoriteId, saveFavorite } from '../lib/favorites'
 import { saveMeal, updateMeal } from '../lib/meals'
-import { useAppStore } from '../store/appStore'
+import type { DayProgress } from '../lib/nutrition'
+import { useAppStore, type ReviewItem } from '../store/appStore'
 
 interface Props {
   uid: string
@@ -21,6 +23,17 @@ export function ReviewScreen({ uid, progress }: Props) {
   const setOverlay = useAppStore((s) => s.setOverlay)
   const closeEdit = useAppStore((s) => s.closeEdit)
   const editing = useAppStore((s) => s.editing !== null)
+  const { favorites } = useFavorites(uid)
+  const favoriteOf = (item: ReviewItem) =>
+    favorites.find((favorite) => favorite.name.localeCompare(item.name.trim(), 'fr', { sensitivity: 'base' }) === 0)
+
+  const toggleFavorite = (item: ReviewItem) => {
+    const match = favoriteOf(item)
+    const fail = () => showToast('Favoris : enregistrement impossible')
+    if (match) deleteFavorite(uid, match.id).catch(fail)
+    else saveFavorite(uid, newFavoriteId(uid), item).catch(fail)
+    showToast(match ? `${match.name} retiré des favoris` : `${item.name.trim()} ajouté aux favoris`)
+  }
 
   const validate = () => {
     const { draft, review, editing: target, addTarget } = useAppStore.getState()
@@ -44,7 +57,9 @@ export function ReviewScreen({ uid, progress }: Props) {
               <ItemCard
                 key={item.id}
                 item={item}
+                favorite={favoriteOf(item) !== undefined}
                 onChange={(patch) => updateItem(item.id, patch)}
+                onFavorite={() => toggleFavorite(item)}
                 onRemove={() => removeItem(item.id)}
               />
             ))}

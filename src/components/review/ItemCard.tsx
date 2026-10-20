@@ -2,18 +2,21 @@ import { motion, useDragControls, useMotionValue, useTransform } from 'motion/re
 import { itemTotals, type MealItem } from '../../lib/nutrition'
 import type { ReviewItem } from '../../store/appStore'
 import { AnimatedNumber } from '../AnimatedNumber'
+import { HeartIcon } from '../icons/HeartIcon'
 import { TrashIcon } from '../icons/TrashIcon'
 import { Stepper } from '../Stepper'
 
 interface Props {
   item: ReviewItem
+  favorite: boolean
   onChange: (patch: Partial<MealItem>) => void
+  onFavorite: () => void
   onRemove: () => void
 }
 
 const SWIPE_DISTANCE = 96
 
-export function ItemCard({ item, onChange, onRemove }: Props) {
+export function ItemCard({ item, favorite, onChange, onFavorite, onRemove }: Props) {
   const x = useMotionValue(0)
   const reveal = useTransform(x, [-SWIPE_DISTANCE, -24], [1, 0])
   const controls = useDragControls()
@@ -67,14 +70,27 @@ export function ItemCard({ item, onChange, onRemove }: Props) {
         </div>
         <div className="mt-2.5 flex items-center justify-between">
           <Stepper label={`Poids de ${item.name}`} value={item.grams} onChange={(grams) => onChange({ grams })} step={5} />
-          <button
-            type="button"
-            aria-label={`Supprimer ${item.name}`}
-            onClick={onRemove}
-            className="grid size-10 place-items-center rounded-full text-text-2"
-          >
-            <TrashIcon size={20} />
-          </button>
+          <span className="flex">
+            <button
+              type="button"
+              aria-label={favorite ? `Retirer ${item.name} des favoris` : `Ajouter ${item.name} aux favoris`}
+              aria-pressed={favorite}
+              onClick={onFavorite}
+              className={`grid size-10 place-items-center rounded-full active:bg-white/8 ${favorite ? 'text-accent' : 'text-text-2'}`}
+            >
+              <motion.span key={String(favorite)} initial={{ scale: 0.6 }} animate={{ scale: 1 }} className="grid">
+                <HeartIcon size={21} filled={favorite} />
+              </motion.span>
+            </button>
+            <button
+              type="button"
+              aria-label={`Supprimer ${item.name}`}
+              onClick={onRemove}
+              className="grid size-10 place-items-center rounded-full text-text-2"
+            >
+              <TrashIcon size={20} />
+            </button>
+          </span>
         </div>
       </motion.div>
     </motion.div>

@@ -15,6 +15,7 @@ import {
   type Per100Key,
   type RecipeDraft,
 } from '../../lib/recipeDraft'
+import { LoadingDots } from '../LoadingDots'
 import { SparkIcon } from '../icons/SparkIcon'
 import { ValueField } from '../ValueField'
 
@@ -70,11 +71,21 @@ export function NutritionEditor({ draft, onChange }: Props) {
       <button
         type="button"
         disabled={busy || lines.length === 0}
+        aria-busy={busy}
         onClick={() => void calculate()}
-        className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white/8 text-[15px] font-semibold text-accent disabled:opacity-40"
+        className={`press flex h-12 items-center justify-center gap-2 rounded-full bg-white/8 text-[15px] font-semibold text-accent ${busy ? '' : 'disabled:opacity-40'}`}
       >
-        <SparkIcon />
-        {busy ? 'Calcul en cours…' : lines.length === 0 ? 'Ajoute des ingrédients pour calculer' : 'Calculer avec l’IA'}
+        {busy ? (
+          <>
+            Veuillez patienter
+            <LoadingDots />
+          </>
+        ) : (
+          <>
+            <SparkIcon />
+            {lines.length === 0 ? 'Ajoute des ingrédients pour calculer' : 'Calculer avec l’IA'}
+          </>
+        )}
       </button>
       {error && <p className="px-1 text-[14px] text-accent">{error}</p>}
       {items.length > 0 && (

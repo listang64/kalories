@@ -77,7 +77,7 @@ export function CaptureScreen({ uid }: { uid: string }) {
           {error.action && (
             <button
               type="button"
-              onClick={error.action === 'retry' ? () => void analyze() : openSettingsOnTop}
+              onClick={error.action === 'retry' ? () => void analyze() : () => openSettingsOnTop()}
               className="h-9 shrink-0 rounded-full px-3 text-[15px] font-semibold text-accent"
             >
               {error.action === 'retry' ? 'Réessayer' : 'Paramètres'}

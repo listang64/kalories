@@ -4,6 +4,7 @@ import { formatInt } from '../../lib/format'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { useLocalSettings } from '../../lib/localSettings'
 import { itemTotals, type MealItem } from '../../lib/nutrition'
+import { LoadingDots } from '../LoadingDots'
 
 export function FoodAiHelper({ onResult }: { onResult: (result: Analysis) => void }) {
   const [text, setText] = useState('')
@@ -47,9 +48,17 @@ export function FoodAiHelper({ onResult }: { onResult: (result: Analysis) => voi
         type="button"
         onClick={() => void run()}
         disabled={!text.trim() || busy}
-        className="press mt-3 h-11 w-full rounded-full bg-white/8 text-[15px] font-semibold text-accent disabled:opacity-40"
+        aria-busy={busy}
+        className={`press mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white/8 text-[15px] font-semibold text-accent ${busy ? '' : 'disabled:opacity-40'}`}
       >
-        {busy ? 'Calcul en cours…' : 'Calculer avec l’IA'}
+        {busy ? (
+          <>
+            Veuillez patienter
+            <LoadingDots />
+          </>
+        ) : (
+          'Calculer avec l’IA'
+        )}
       </button>
       {items.length > 0 && (
         <ul className="mt-3 space-y-1.5 text-[14px] tabular-nums">
