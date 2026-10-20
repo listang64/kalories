@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { mealLabel } from '../config/meals'
+import { useToday } from '../hooks/useToday'
+import { dayPhrase } from '../lib/dates'
 import { CaptureScreen } from '../screens/CaptureScreen'
 import { ReviewScreen } from '../screens/ReviewScreen'
 import { useAppStore, type AddStep } from '../store/appStore'
@@ -57,33 +59,44 @@ export function AddMealSheet({ me, progress }: Props) {
     ? 'Modifier le repas'
     : { type: 'Ajouter un repas', capture: mealLabel(type), analyzing: 'Analyse', review: 'Ton repas' }[step]
   const base = editing?.progress ?? addTarget?.progress ?? progress
+  const today = useToday()
+  const otherDay = !editing && addTarget && addTarget.date !== today ? addTarget.date : null
 
   return (
     <>
       <BottomSheet open={open} title={title} onClose={close} onBack={back} centered accent>
-        <AnimatePresence mode="wait" initial={false} custom={direction}>
-          <motion.div
-            key={step}
-            custom={direction}
-            variants={slide}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-            className="h-full"
-          >
-            {step === 'type' && (
-              <div className="flex h-full flex-col gap-4 pb-2">
-                <PersonalChart me={me} />
-                <p className="label text-center text-accent">Quel repas ?</p>
-                <MealTypeButtons selected={type} onChoose={chooseMealType} />
-              </div>
-            )}
-            {step === 'capture' && <CaptureScreen uid={me.uid} />}
-            {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
-            {step === 'review' && <ReviewScreen uid={me.uid} progress={base} />}
-          </motion.div>
-        </AnimatePresence>
+        <div className="flex h-full flex-col">
+          {otherDay && (
+            <p role="note" className="mb-3 shrink-0 rounded-full bg-accent/12 px-4 py-2 text-center text-[14px] font-medium text-accent">
+              Ce repas sera enregistré pour {dayPhrase(otherDay, today)}
+            </p>
+          )}
+          <div className="min-h-0 flex-1">
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                className="h-full"
+              >
+                {step === 'type' && (
+                  <div className="flex h-full flex-col gap-4 pb-2">
+                    <PersonalChart me={me} />
+                    <p className="label text-center text-accent">Quel repas ?</p>
+                    <MealTypeButtons selected={type} onChoose={chooseMealType} />
+                  </div>
+                )}
+                {step === 'capture' && <CaptureScreen uid={me.uid} />}
+                {step === 'analyzing' && <AnalyzingView onCancel={cancelAnalysis} />}
+                {step === 'review' && <ReviewScreen uid={me.uid} progress={base} />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </BottomSheet>
       <ConfirmDialog
         open={confirming}

@@ -1,11 +1,13 @@
 import { AnimatePresence } from 'motion/react'
 import { ItemCard } from '../components/review/ItemCard'
 import { ReviewSummary } from '../components/review/ReviewSummary'
+import { mealLabel } from '../config/meals'
 import { useFavorites } from '../hooks/useFavorites'
-import { todayKey } from '../lib/dates'
+import { dayPhrase, todayKey } from '../lib/dates'
 import { deleteFavorite, newFavoriteId, saveFavorite } from '../lib/favorites'
+import { formatInt } from '../lib/format'
 import { saveMeal, updateMeal } from '../lib/meals'
-import type { DayProgress } from '../lib/nutrition'
+import { mealTotals, type DayProgress } from '../lib/nutrition'
 import { useAppStore, type ReviewItem } from '../store/appStore'
 
 interface Props {
@@ -43,7 +45,11 @@ export function ReviewScreen({ uid, progress }: Props) {
       return closeEdit()
     }
     const meal = { type: draft.type, note: draft.note, items: review }
-    saveMeal(uid, meal, addTarget?.date ?? todayKey()).catch(fail)
+    const today = todayKey()
+    const date = addTarget?.date ?? today
+    saveMeal(uid, meal, date).catch(fail)
+    const when = date === today ? '' : ` pour ${dayPhrase(date, today)}`
+    showToast(`${mealLabel(draft.type)} enregistré${when} · ${formatInt(mealTotals(review).kcal)} kcal`)
     setOverlay(null)
   }
 

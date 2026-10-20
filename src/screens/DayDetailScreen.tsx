@@ -8,6 +8,7 @@ import { PlusIcon } from '../components/icons/PlusIcon'
 import { MEAL_TYPES, type MealType } from '../config/meals'
 import { useMeals } from '../hooks/useMeals'
 import { useToday } from '../hooks/useToday'
+import { addDays, formatShortDate } from '../lib/dates'
 import { shareMeal } from '../lib/mealOffers'
 import { deleteMeal, type Meal } from '../lib/meals'
 import { mealTotals, sumTotals } from '../lib/nutrition'
@@ -91,7 +92,9 @@ export function DayDetailScreen({ me, people }: Props) {
           className="press mt-3 flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-accent text-[17px] font-semibold text-black shadow-accent"
         >
           <PlusIcon size={22} strokeWidth={2} />
-          Ajouter
+          {date === today
+            ? 'Ajouter'
+            : `Ajouter pour ${date === addDays(today, -1) ? 'hier' : `le ${formatShortDate(date)}`}`}
         </button>
       )}
       <ActionSheet

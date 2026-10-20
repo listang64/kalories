@@ -36,6 +36,12 @@ export function dayLabel(key: string, today: string): string {
   return formatLongDate(key)
 }
 
+export function dayPhrase(key: string, today: string): string {
+  if (key === today) return 'aujourd’hui'
+  if (key === addDays(today, -1)) return 'hier'
+  return `le ${formatLongDate(key).toLowerCase()}`
+}
+
 export function formatShortDate(key: string): string {
   return dateFromKey(key).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
