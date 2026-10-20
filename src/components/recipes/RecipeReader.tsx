@@ -2,8 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { fileToJpeg } from '../../lib/image'
 import { useLocalSettings } from '../../lib/localSettings'
-import { readRecipe } from '../../lib/recipeReader'
-import type { RecipeInput } from '../../lib/recipes'
+import { readRecipe, type ReadRecipe } from '../../lib/recipeReader'
 import { CameraIcon } from '../icons/CameraIcon'
 import { CloseIcon } from '../icons/CloseIcon'
 import { SparkIcon } from '../icons/SparkIcon'
@@ -12,7 +11,7 @@ const MAX_PHOTOS = 3
 
 interface Props {
   startOpen: boolean
-  onRead: (recipe: RecipeInput) => void
+  onRead: (read: ReadRecipe) => void
 }
 
 export function RecipeReader({ startOpen, onRead }: Props) {
@@ -35,9 +34,9 @@ export function RecipeReader({ startOpen, onRead }: Props) {
     setBusy(true)
     setError('')
     try {
-      const recipe = await readRecipe(text, photos, geminiKey, geminiModel)
-      if (!recipe) return setError('Aucune recette reconnue : ajoute du texte ou une photo plus nette.')
-      onRead(recipe)
+      const read = await readRecipe(text, photos, geminiKey, geminiModel)
+      if (!read) return setError('Aucune recette reconnue : ajoute du texte ou une photo plus nette.')
+      onRead(read)
       setOpen(false)
     } catch (err) {
       setError(geminiErrorMessage(err))

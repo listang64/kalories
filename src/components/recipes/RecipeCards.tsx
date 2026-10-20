@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatInt } from '../../lib/format'
-import { formatMinutes, groupIngredients, type Ingredient, type RecipeInput } from '../../lib/recipes'
+import { formatMinutes, groupItems, type Ingredient, type RecipeInput, type Step } from '../../lib/recipes'
 import { scaleQuantity } from '../../lib/recipeScale'
 import { mergeEntries, type ShoppingEntry } from '../../lib/shopping'
 import { CartIcon } from '../icons/CartIcon'
@@ -94,10 +94,10 @@ export function IngredientsCard({ recipe, servings, onServings, onShopping }: In
               </button>
             </p>
           )}
-          {groupIngredients(ingredients).map((group, index) => (
+          {groupItems(ingredients).map((group, index) => (
             <div key={index} className={group.title ? undefined : 'pt-1'}>
-              {group.title && <h5 className="mt-4 text-[16px] font-semibold">{group.title}</h5>}
-              <IngredientList ingredients={group.ingredients} scaled={factor !== 1} />
+              <GroupTitle title={group.title} />
+              <IngredientList ingredients={group.items} scaled={factor !== 1} />
             </div>
           ))}
           <button
@@ -112,6 +112,10 @@ export function IngredientsCard({ recipe, servings, onServings, onShopping }: In
       )}
     </Card>
   )
+}
+
+function GroupTitle({ title }: { title: string }) {
+  return title ? <h5 className="mt-4 text-[16px] font-semibold">{title}</h5> : null
 }
 
 function IngredientList({ ingredients, scaled }: { ingredients: Ingredient[]; scaled: boolean }) {
@@ -132,22 +136,30 @@ function IngredientList({ ingredients, scaled }: { ingredients: Ingredient[]; sc
   )
 }
 
-export function StepsCard({ steps }: { steps: string[] }) {
+export function StepsCard({ steps }: { steps: Step[] }) {
+  const groups = groupItems(steps)
+  const starts = groups.map((_, index) => groups.slice(0, index).reduce((total, group) => total + group.items.length, 0))
+
   return (
     <Card title="Préparation" aside={steps.length > 0 ? `${steps.length} étape${steps.length > 1 ? 's' : ''}` : undefined}>
       {steps.length === 0 ? (
         <p className="mt-3 text-[15px] text-text-2">Aucune étape notée.</p>
       ) : (
-        <ol className="mt-3 flex flex-col gap-3.5">
-          {steps.map((step, index) => (
-            <li key={index} className="flex gap-3">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
-                {index + 1}
-              </span>
-              <p className="min-w-0 flex-1 pt-0.5 text-[16px] leading-relaxed whitespace-pre-line">{step}</p>
-            </li>
-          ))}
-        </ol>
+        groups.map((group, index) => (
+          <div key={index}>
+            <GroupTitle title={group.title} />
+            <ol className="mt-3 flex flex-col gap-3.5">
+              {group.items.map((step, position) => (
+                <li key={position} className="flex gap-3">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
+                    {(starts[index] ?? 0) + position + 1}
+                  </span>
+                  <p className="min-w-0 flex-1 pt-0.5 text-[16px] leading-relaxed whitespace-pre-line">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
       )}
     </Card>
   )

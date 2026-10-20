@@ -7,6 +7,7 @@ import { useAppStore } from '../../store/appStore'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { Field, FIELD_INPUT } from '../Field'
 import { Segmented } from '../Segmented'
+import { SparkIcon } from '../icons/SparkIcon'
 import { ValueField } from '../ValueField'
 import { IngredientsEditor } from './IngredientsEditor'
 import { NutritionEditor } from './NutritionEditor'
@@ -36,6 +37,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onDirty }: Props) {
   const [draft, setDraft] = useState(() => toDraft(recipe))
   const [confirming, setConfirming] = useState(false)
+  const [wroteSteps, setWroteSteps] = useState(false)
   const showToast = useAppStore((s) => s.showToast)
   const fail = (error: unknown) => showToast(sharedErrorMessage(error))
 
@@ -62,7 +64,13 @@ export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onD
   return (
     <div className="flex h-full flex-col">
       <div className="-mx-5 flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-6">
-        <RecipeReader startOpen={!recipe} onRead={(read) => change((current) => withContent(current, read))} />
+        <RecipeReader
+          startOpen={!recipe}
+          onRead={({ recipe: read, wroteSteps: wrote }) => {
+            setWroteSteps(wrote)
+            change((current) => withContent(current, read))
+          }}
+        />
         <Field label="Nom de la recette">
           <input
             value={draft.name}
@@ -105,6 +113,14 @@ export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onD
           <IngredientsEditor ingredients={draft.ingredients} onChange={(ingredients) => patch({ ingredients })} />
         </Section>
         <Section title="Préparation détaillée">
+          {wroteSteps && (
+            <p className="mb-2 flex items-start gap-1.5 px-1 text-[14px] leading-snug text-accent">
+              <span className="mt-px shrink-0">
+                <SparkIcon size={15} />
+              </span>
+              La recette ne donnait pas la préparation : l’IA a rédigé les étapes, relis-les.
+            </p>
+          )}
           <StepsEditor steps={draft.steps} onChange={(steps) => patch({ steps })} />
         </Section>
         <Section title="Cuisson">

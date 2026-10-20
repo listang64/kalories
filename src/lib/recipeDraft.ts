@@ -1,13 +1,20 @@
 import type { RecipeCategory } from '../config/recipes'
-import type { Ingredient, Nutrition, RecipeInput } from './recipes'
+import type { Nutrition, RecipeInput } from './recipes'
 
 export type Per100Key = 'kcal100' | 'carbs100' | 'fat100' | 'protein100'
 
-export interface DraftIngredient {
-  kind: 'ingredient'
+export interface DraftItem {
+  kind: 'item'
   key: string
+}
+
+export interface DraftIngredient extends DraftItem {
   name: string
   quantity: string
+}
+
+export interface DraftStep extends DraftItem {
+  text: string
 }
 
 export interface DraftGroup {
@@ -16,20 +23,15 @@ export interface DraftGroup {
   name: string
 }
 
-export type DraftIngredientRow = DraftIngredient | DraftGroup
-
-export interface DraftStep {
-  key: string
-  text: string
-}
+export type DraftRow<Item extends DraftItem> = Item | DraftGroup
 
 export interface RecipeDraft {
   name: string
   category: RecipeCategory
   prep: string
   servings: string
-  ingredients: DraftIngredientRow[]
-  steps: DraftStep[]
+  ingredients: DraftRow<DraftIngredient>[]
+  steps: DraftRow<DraftStep>[]
   cookMinutes: string
   cookTemp: string
   cookNote: string
@@ -42,8 +44,10 @@ export const PER100_KEYS: Per100Key[] = ['kcal100', 'carbs100', 'fat100', 'prote
 
 let counter = 0
 export const draftKey = () => `k${(counter += 1)}`
-export const emptyIngredient = (): DraftIngredient => ({ kind: 'ingredient', key: draftKey(), name: '', quantity: '' })
+export const emptyIngredient = (): DraftIngredient => ({ kind: 'item', key: draftKey(), name: '', quantity: '' })
+export const emptyStep = (): DraftStep => ({ kind: 'item', key: draftKey(), text: '' })
 export const emptyGroup = (): DraftGroup => ({ kind: 'group', key: draftKey(), name: '' })
+export const isGroup = <Item extends DraftItem>(row: DraftRow<Item>): row is DraftGroup => row.kind === 'group'
 
 export const decimal = (value: number) => String(value).replace('.', ',')
 const whole = (value: number | null) => (value ? String(value) : '')
@@ -74,19 +78,24 @@ export function draftNutrition(weight: string, values: Record<Per100Key, string>
   return { grams: Math.round(grams), kcal100, carbs100, fat100, protein100 }
 }
 
-function ingredientRows(ingredients: Ingredient[]): DraftIngredientRow[] {
-  const rows = ingredients.flatMap(({ name, quantity, group }, index): DraftIngredientRow[] => [
-    ...(group !== (ingredients[index - 1]?.group ?? '') ? [{ ...emptyGroup(), name: group }] : []),
-    { ...emptyIngredient(), name, quantity },
+function toRows<T extends { group: string }, Item extends DraftItem>(
+  items: T[],
+  row: (item: T) => Item,
+  empty: () => Item,
+): DraftRow<Item>[] {
+  const rows = items.flatMap((item, index): DraftRow<Item>[] => [
+    ...(item.group !== (items[index - 1]?.group ?? '') ? [{ ...emptyGroup(), name: item.group }] : []),
+    row(item),
   ])
-  return rows.length ? rows : [emptyIngredient()]
+  return rows.length ? rows : [empty()]
 }
 
-function draftIngredients(rows: DraftIngredientRow[]): Ingredient[] {
+function fromRows<Item extends DraftItem, T>(rows: DraftRow<Item>[], item: (row: Item, group: string) => T): T[] {
   let group = ''
   return rows.flatMap((row) => {
-    if (row.kind === 'group') group = row.name.trim()
-    return row.kind === 'ingredient' ? [{ name: row.name, quantity: row.quantity, group }] : []
+    if (!isGroup(row)) return [item(row, group)]
+    group = row.name.trim()
+    return []
   })
 }
 
@@ -96,8 +105,8 @@ export function toDraft(recipe: RecipeInput | null): RecipeDraft {
     category: recipe?.category ?? 'main',
     prep: whole(recipe?.prepMinutes ?? null),
     servings: whole(recipe?.servings ?? null),
-    ingredients: ingredientRows(recipe?.ingredients ?? []),
-    steps: (recipe?.steps.length ? recipe.steps : ['']).map((text) => ({ key: draftKey(), text })),
+    ingredients: toRows(recipe?.ingredients ?? [], ({ name, quantity }) => ({ ...emptyIngredient(), name, quantity }), emptyIngredient),
+    steps: toRows(recipe?.steps ?? [], ({ text }) => ({ ...emptyStep(), text }), emptyStep),
     cookMinutes: whole(recipe?.cookMinutes ?? null),
     cookTemp: whole(recipe?.cookTemp ?? null),
     cookNote: recipe?.cookNote ?? '',
@@ -118,8 +127,8 @@ export function fromDraft(draft: RecipeDraft): RecipeInput {
     category: draft.category,
     prepMinutes: parseDecimal(draft.prep),
     servings: parseDecimal(draft.servings),
-    ingredients: draftIngredients(draft.ingredients),
-    steps: draft.steps.map((step) => step.text),
+    ingredients: fromRows(draft.ingredients, ({ name, quantity }, group) => ({ name, quantity, group })),
+    steps: fromRows(draft.steps, ({ text }, group) => ({ text, group })),
     cookMinutes: parseDecimal(draft.cookMinutes),
     cookTemp: parseDecimal(draft.cookTemp),
     cookNote: draft.cookNote,
@@ -129,6 +138,6 @@ export function fromDraft(draft: RecipeDraft): RecipeInput {
 
 export function ingredientLines(draft: RecipeDraft): string[] {
   return draft.ingredients
-    .filter((row): row is DraftIngredient => row.kind === 'ingredient' && row.name.trim() !== '')
+    .filter((row): row is DraftIngredient => !isGroup(row) && row.name.trim() !== '')
     .map((ingredient) => `${ingredient.quantity.trim()} ${ingredient.name.trim()}`.trim())
 }

@@ -1,7 +1,7 @@
 import { categoryLabel } from '../config/recipes'
 import { formatInt } from './format'
 import { A4, PdfDocument, textWidth, wrapText, type PdfFont, type Rgb } from './pdf'
-import { formatMinutes, groupIngredients, type Ingredient, type RecipeInput } from './recipes'
+import { formatMinutes, groupItems, type Ingredient, type RecipeInput } from './recipes'
 
 const MARGIN = 56
 const BOTTOM = 64
@@ -45,6 +45,14 @@ class Layout {
     this.y -= 8
     this.doc.line(MARGIN, this.y, MARGIN + WIDTH, this.y, ACCENT, 1)
     this.y -= 4
+  }
+
+  subheading(title: string) {
+    if (!title) return
+    this.room(48)
+    this.y -= 22
+    this.doc.text(MARGIN, this.y, title, 'bold', 12.5, INK)
+    this.y -= 2
   }
 }
 
@@ -95,27 +103,26 @@ function ingredientRow(layout: Layout, { name, quantity }: Ingredient) {
 function ingredients(layout: Layout, recipe: RecipeInput) {
   if (recipe.ingredients.length === 0) return
   layout.heading('Ingrédients', recipe.servings ? `pour ${recipe.servings} pers.` : '')
-  for (const group of groupIngredients(recipe.ingredients)) {
-    if (group.title) {
-      layout.room(48)
-      layout.y -= 22
-      layout.doc.text(MARGIN, layout.y, group.title, 'bold', 12.5, INK)
-      layout.y -= 2
-    }
-    group.ingredients.forEach((ingredient) => ingredientRow(layout, ingredient))
+  for (const group of groupItems(recipe.ingredients)) {
+    layout.subheading(group.title)
+    group.items.forEach((ingredient) => ingredientRow(layout, ingredient))
   }
 }
 
 function steps(layout: Layout, recipe: RecipeInput) {
   if (recipe.steps.length === 0) return
   layout.heading('Préparation', `${recipe.steps.length} étape${recipe.steps.length > 1 ? 's' : ''}`)
-  recipe.steps.forEach((step, index) => {
-    layout.room(26)
-    layout.y -= 7
-    const number = `${index + 1}.`
-    layout.doc.text(MARGIN, layout.y - 11.5, number, 'bold', 12, ACCENT)
-    layout.lines(step, MARGIN + 24, WIDTH - 24, 'regular', 11.5, INK, 16)
-  })
+  let number = 0
+  for (const group of groupItems(recipe.steps)) {
+    layout.subheading(group.title)
+    for (const step of group.items) {
+      number += 1
+      layout.room(26)
+      layout.y -= 7
+      layout.doc.text(MARGIN, layout.y - 11.5, `${number}.`, 'bold', 12, ACCENT)
+      layout.lines(step.text, MARGIN + 24, WIDTH - 24, 'regular', 11.5, INK, 16)
+    }
+  }
 }
 
 function cooking(layout: Layout, recipe: RecipeInput) {

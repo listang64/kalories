@@ -2,7 +2,7 @@ import { FirebaseError } from 'firebase/app'
 import { doc, getDocFromServer, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import type { Profile } from './profiles'
-import { parseRecipe, type RecipeInput } from './recipes'
+import { parseRecipe, recipeRecord, type RecipeInput } from './recipes'
 import { shareText, type ShareResult } from './share'
 import { normalizeCode, randomCode } from './shared'
 
@@ -23,7 +23,7 @@ export async function createRecipeShare(recipe: RecipeInput, me: Profile): Promi
     const code = randomCode()
     try {
       await setDoc(doc(db, 'recipeShares', code), {
-        recipe: parseRecipe(recipe),
+        recipe: recipeRecord(recipe),
         createdBy: me.uid,
         createdByName: me.name,
         createdAt: serverTimestamp(),

@@ -1,58 +1,46 @@
-import { useLayoutEffect, useRef, useState } from 'react'
-import { draftKey, type DraftStep } from '../../lib/recipeDraft'
+import { useLayoutEffect, useRef } from 'react'
+import { emptyStep, type DraftRow, type DraftStep } from '../../lib/recipeDraft'
 import { RECIPE_LIMITS } from '../../lib/recipes'
 import { CloseIcon } from '../icons/CloseIcon'
-import { PlusIcon } from '../icons/PlusIcon'
+import { GroupedEditor, ICON_BUTTON, type ItemControls } from './GroupedEditor'
 
 interface Props {
-  steps: DraftStep[]
-  onChange: (steps: DraftStep[]) => void
+  steps: DraftRow<DraftStep>[]
+  onChange: (steps: DraftRow<DraftStep>[]) => void
 }
 
 export function StepsEditor({ steps, onChange }: Props) {
-  const [added, setAdded] = useState<string | null>(null)
-
-  const add = () => {
-    if (steps.length >= RECIPE_LIMITS.steps) return
-    const step = { key: draftKey(), text: '' }
-    setAdded(step.key)
-    onChange([...steps, step])
-  }
-
   return (
-    <div className="flex flex-col gap-2">
-      <ol className="flex flex-col gap-2">
-        {steps.map((step, index) => (
-          <li key={step.key} className="flex items-start gap-2">
-            <span className="mt-2.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
-              {index + 1}
-            </span>
-            <StepInput
-              label={`Étape ${index + 1}`}
-              value={step.text}
-              focus={step.key === added}
-              onChange={(text) => onChange(steps.map((item) => (item.key === step.key ? { ...item, text } : item)))}
-            />
-            <button
-              type="button"
-              aria-label={`Retirer l’étape ${index + 1}`}
-              onClick={() => onChange(steps.filter((item) => item.key !== step.key))}
-              className="mt-1 grid size-9 shrink-0 place-items-center rounded-full text-text-2 active:bg-white/8"
-            >
-              <CloseIcon size={18} />
-            </button>
-          </li>
-        ))}
-      </ol>
-      <button
-        type="button"
-        onClick={add}
-        className="press flex h-11 items-center justify-center gap-1.5 rounded-full border border-dashed border-white/15 text-[15px] font-medium text-accent"
-      >
-        <PlusIcon size={18} strokeWidth={2} />
-        Ajouter une étape
+    <GroupedEditor
+      rows={steps}
+      onChange={onChange}
+      empty={emptyStep}
+      isBlank={(row) => !row.text.trim()}
+      limit={RECIPE_LIMITS.steps}
+      noun="une étape"
+      addLabel="Étape"
+      groupNoun="groupe d’étapes"
+      renderItem={(row, controls) => <StepRow row={row} {...controls} />}
+    />
+  )
+}
+
+function StepRow({ row, number, focus, onChange, onRemove }: ItemControls<DraftStep> & { row: DraftStep }) {
+  return (
+    <>
+      <span className="mt-2.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
+        {number}
+      </span>
+      <StepInput
+        label={`Étape ${number}`}
+        value={row.text}
+        focus={focus}
+        onChange={(text) => onChange({ ...row, text })}
+      />
+      <button type="button" aria-label={`Retirer l’étape ${number}`} onClick={onRemove} className={`${ICON_BUTTON} mt-1`}>
+        <CloseIcon size={18} />
       </button>
-    </div>
+    </>
   )
 }
 

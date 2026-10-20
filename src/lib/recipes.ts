@@ -19,9 +19,14 @@ export interface Ingredient {
   group: string
 }
 
-export interface IngredientGroup {
+export interface Step {
+  text: string
+  group: string
+}
+
+export interface Grouped<T> {
   title: string
-  ingredients: Ingredient[]
+  items: T[]
 }
 
 export interface Nutrition {
@@ -38,7 +43,7 @@ export interface RecipeInput {
   prepMinutes: number | null
   servings: number | null
   ingredients: Ingredient[]
-  steps: string[]
+  steps: Step[]
   cookMinutes: number | null
   cookTemp: number | null
   cookNote: string
@@ -98,12 +103,18 @@ function parseIngredient(value: unknown): Ingredient | null {
   return { name, quantity: text(data.quantity, RECIPE_LIMITS.quantity), group: text(data.group, RECIPE_LIMITS.group) }
 }
 
-export function groupIngredients(ingredients: Ingredient[]): IngredientGroup[] {
-  const groups: IngredientGroup[] = []
-  ingredients.forEach((ingredient, index) => {
+function parseStep(value: unknown, group: unknown): Step | null {
+  const data = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : { text: value, group }
+  const content = text(data.text, RECIPE_LIMITS.step)
+  return content ? { text: content, group: text(data.group, RECIPE_LIMITS.group) } : null
+}
+
+export function groupItems<T extends { group: string }>(items: T[]): Grouped<T>[] {
+  const groups: Grouped<T>[] = []
+  items.forEach((item, index) => {
     const last = groups.at(-1)
-    if (last && ingredients[index - 1]?.group === ingredient.group) last.ingredients.push(ingredient)
-    else groups.push({ title: ingredient.group || (last ? 'Autres' : ''), ingredients: [ingredient] })
+    if (last && items[index - 1]?.group === item.group) last.items.push(item)
+    else groups.push({ title: item.group || (last ? 'Autres' : ''), items: [item] })
   })
   return groups
 }
@@ -123,8 +134,8 @@ export function parseRecipe(data: DocumentData | undefined): RecipeInput | null 
       .filter((ingredient): ingredient is Ingredient => ingredient !== null)
       .slice(0, RECIPE_LIMITS.ingredients),
     steps: list(data.steps)
-      .map((step) => text(step, RECIPE_LIMITS.step))
-      .filter(Boolean)
+      .map((step, index) => parseStep(step, list(data.stepGroups)[index]))
+      .filter((step): step is Step => step !== null)
       .slice(0, RECIPE_LIMITS.steps),
     cookMinutes: count(data.cookMinutes, 1440),
     cookTemp: count(data.cookTemp, 300),
@@ -140,10 +151,11 @@ export function recipeFromDoc(snapshot: QueryDocumentSnapshot): Recipe | null {
   return recipe && { ...recipe, id: snapshot.id, createdBy: typeof createdBy === 'string' ? createdBy : '', favoriteOf }
 }
 
-function record(input: RecipeInput): RecipeInput {
+export function recipeRecord(input: RecipeInput) {
   const recipe = parseRecipe(input)
   if (!recipe) throw new Error('Recette sans nom')
-  return recipe
+  const { steps, ...rest } = recipe
+  return { ...rest, steps: steps.map((step) => step.text), stepGroups: steps.map((step) => step.group) }
 }
 
 export function newRecipeId(householdId: string): string {
@@ -152,7 +164,7 @@ export function newRecipeId(householdId: string): string {
 
 export function createRecipe(householdId: string, id: string, input: RecipeInput, uid: string): Promise<void> {
   return setDoc(doc(recipesOf(householdId), id), {
-    ...record(input),
+    ...recipeRecord(input),
     createdBy: uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -160,7 +172,7 @@ export function createRecipe(householdId: string, id: string, input: RecipeInput
 }
 
 export function updateRecipe(householdId: string, id: string, input: RecipeInput): Promise<void> {
-  return updateDoc(doc(recipesOf(householdId), id), { ...record(input), updatedAt: serverTimestamp() })
+  return updateDoc(doc(recipesOf(householdId), id), { ...recipeRecord(input), updatedAt: serverTimestamp() })
 }
 
 export function setRecipeFavorite(householdId: string, id: string, uid: string, favorite: boolean): Promise<void> {
