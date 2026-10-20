@@ -12,23 +12,23 @@ interface Props {
 
 export function HomeHeader({ dateKey, onOpen }: Props) {
   const online = useOnline()
-  const [menu, setMenu] = useState(false)
-  const close = useCallback(() => setMenu(false), [])
+  const [anchor, setAnchor] = useState<DOMRect | null>(null)
+  const close = useCallback(() => setAnchor(null), [])
 
   return (
     <header className="pt-3">
       <div className="flex items-center gap-1">
-        <MenuButton open={menu} onToggle={() => setMenu(!menu)} />
+        <span aria-hidden="true" className="size-11 shrink-0" />
         <h1 className="flex-1 text-center text-[min(5.9vw,calc((100vw_-_120px)/12))] leading-tight font-semibold tracking-[-0.02em] whitespace-nowrap text-accent underline decoration-accent/50 decoration-2 underline-offset-[6px]">
           {formatLongDate(dateKey)}
         </h1>
-        <span aria-hidden="true" className="size-11 shrink-0" />
+        <MenuButton open={anchor !== null} onOpen={setAnchor} />
       </div>
       <RadialMenu
-        open={menu}
+        anchor={anchor}
         onClose={close}
         onSelect={(target) => {
-          setMenu(false)
+          setAnchor(null)
           onOpen(target)
         }}
       />

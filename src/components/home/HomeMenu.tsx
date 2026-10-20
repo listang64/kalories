@@ -12,43 +12,57 @@ const ITEMS: { target: MenuTarget; label: string }[] = [
   { target: 'settings', label: 'Paramètres' },
 ]
 
-const FIRST_ANGLE = 13
-const STEP_ANGLE = 17
-const INNER = 82
-const TRACK = 68
+const FIRST_ANGLE = 10
+const STEP_ANGLE = 18
+const INNER = 64
+const TRACK = 42
 const HALO = 300
 const SPRING = { type: 'spring', stiffness: 240, damping: 24 } as const
+const HUB = 'grid size-11 shrink-0 place-items-center rounded-full bg-accent text-black shadow-accent'
 
 const angleOf = (index: number) => FIRST_ANGLE + index * STEP_ANGLE
 const LINE = 'absolute left-0 h-[2px] w-full rounded-full bg-current'
+const FLAT = { y: 0, rotate: 0 }
 
-export function MenuButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+function MenuLines({ cross }: { cross: boolean }) {
+  return (
+    <span className="relative block h-3.5 w-[18px]">
+      <motion.span className={`${LINE} top-0`} initial={FLAT} animate={cross ? { y: 6, rotate: 45 } : FLAT} exit={FLAT} />
+      <motion.span
+        className={`${LINE} top-[6px]`}
+        initial={{ opacity: 1, scaleX: 1 }}
+        animate={cross ? { opacity: 0, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }}
+        exit={{ opacity: 1, scaleX: 1 }}
+      />
+      <motion.span className={`${LINE} top-[12px]`} initial={FLAT} animate={cross ? { y: -6, rotate: -45 } : FLAT} exit={FLAT} />
+    </span>
+  )
+}
+
+export function MenuButton({ open, onOpen }: { open: boolean; onOpen: (anchor: DOMRect) => void }) {
   return (
     <button
       type="button"
-      aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+      aria-label="Ouvrir le menu"
       aria-expanded={open}
-      onClick={onToggle}
-      className="press grid size-11 shrink-0 place-items-center rounded-full bg-accent text-black shadow-accent"
+      onClick={(event) => onOpen(event.currentTarget.getBoundingClientRect())}
+      className={`press ${HUB}`}
     >
-      <span className="relative block h-3.5 w-[18px]">
-        <motion.span className={`${LINE} top-0`} animate={open ? { y: 6, rotate: 45 } : { y: 0, rotate: 0 }} />
-        <motion.span className={`${LINE} top-[6px]`} animate={{ opacity: open ? 0 : 1, scaleX: open ? 0.2 : 1 }} />
-        <motion.span className={`${LINE} top-[12px]`} animate={open ? { y: -6, rotate: -45 } : { y: 0, rotate: 0 }} />
-      </span>
+      <MenuLines cross={false} />
     </button>
   )
 }
 
 interface MenuProps {
-  open: boolean
+  anchor: DOMRect | null
   onClose: () => void
   onSelect: (target: MenuTarget) => void
 }
 
-export function RadialMenu({ open, onClose, onSelect }: MenuProps) {
+export function RadialMenu({ anchor, onClose, onSelect }: MenuProps) {
   const reduce = useReducedMotion() === true
   const swing = reduce ? 0 : 100
+  const open = anchor !== null
 
   useEffect(() => {
     if (!open) return
@@ -59,18 +73,18 @@ export function RadialMenu({ open, onClose, onSelect }: MenuProps) {
 
   return createPortal(
     <AnimatePresence>
-      {open && (
+      {anchor && (
         <div className="fixed inset-0 z-30">
           <button type="button" aria-label="Fermer le menu" onClick={onClose} className="absolute inset-0 cursor-default" />
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute rounded-full bg-[radial-gradient(closest-side,rgba(0,0,0,0.8),rgba(0,0,0,0.72)_48%,rgba(0,0,0,0.38)_74%,transparent)] backdrop-blur-[3px] [mask-image:radial-gradient(closest-side,#000_62%,transparent)]"
-            style={{ width: HALO * 2, height: HALO * 2, right: -HALO, top: `calc(var(--safe-top) - ${HALO}px)` }}
+            style={{ width: HALO * 2, height: HALO * 2, left: center(anchor).x - HALO, top: center(anchor).y - HALO }}
             initial={{ scale: reduce ? 1 : 0.2, opacity: 0 }}
             animate={{ scale: 1, opacity: 1, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } }}
             exit={{ scale: reduce ? 1 : 0.3, opacity: 0, transition: { duration: 0.28, delay: 0.08 } }}
           />
-          <nav aria-label="Menu" className="absolute top-[var(--safe-top)] right-0 size-0">
+          <nav aria-label="Menu" className="absolute size-0" style={{ left: center(anchor).x, top: center(anchor).y }}>
             <Track reduce={reduce} />
             {ITEMS.map((item, index) => {
               const rotate = -angleOf(index)
@@ -87,7 +101,7 @@ export function RadialMenu({ open, onClose, onSelect }: MenuProps) {
                     type="button"
                     autoFocus={index === 0}
                     onClick={() => onSelect(item.target)}
-                    className="press rounded-full px-2.5 py-1.5 text-[22px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
+                    className="press rounded-full px-2.5 py-1.5 text-[21px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
                     style={{ marginRight: INNER - 10 }}
                   >
                     {item.label}
@@ -96,6 +110,15 @@ export function RadialMenu({ open, onClose, onSelect }: MenuProps) {
               )
             })}
           </nav>
+          <button
+            type="button"
+            aria-label="Fermer le menu"
+            onClick={onClose}
+            className={`absolute ${HUB}`}
+            style={{ left: anchor.left, top: anchor.top }}
+          >
+            <MenuLines cross />
+          </button>
         </div>
       )}
     </AnimatePresence>,
@@ -103,17 +126,27 @@ export function RadialMenu({ open, onClose, onSelect }: MenuProps) {
   )
 }
 
+const center = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+
 function Track({ reduce }: { reduce: boolean }) {
-  const size = TRACK + 8
+  const size = (TRACK + 8) * 2
   const point = (angle: number) => {
     const radians = (angle * Math.PI) / 180
-    return { x: size - TRACK * Math.cos(radians), y: TRACK * Math.sin(radians) }
+    return { x: size / 2 - TRACK * Math.cos(radians), y: size / 2 + TRACK * Math.sin(radians) }
   }
+  const start = point(-30)
+  const end = point(105)
 
   return (
-    <svg aria-hidden="true" width={size} height={size} className="absolute top-0 right-0 overflow-visible text-accent">
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      className="absolute overflow-visible text-accent"
+      style={{ left: -size / 2, top: -size / 2 }}
+    >
       <motion.path
-        d={`M ${size - TRACK} 0 A ${TRACK} ${TRACK} 0 0 0 ${size} ${TRACK}`}
+        d={`M ${start.x} ${start.y} A ${TRACK} ${TRACK} 0 0 0 ${end.x} ${end.y}`}
         fill="none"
         stroke="currentColor"
         strokeOpacity={0.35}
