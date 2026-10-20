@@ -8,7 +8,10 @@ import { PlusIcon } from '../icons/PlusIcon'
 export interface ItemControls<Item> {
   number: number
   focus: boolean
+  first: boolean
+  last: boolean
   onChange: (item: Item) => void
+  onMove: (offset: number) => void
   onRemove: () => void
   onNext: () => void
 }
@@ -28,7 +31,7 @@ interface Props<Item extends DraftItem> {
 export const ICON_BUTTON =
   'grid size-9 shrink-0 place-items-center rounded-full text-text-2 active:bg-white/8 disabled:opacity-30'
 const ADD_BUTTON =
-  'press flex h-11 items-center justify-center gap-1.5 rounded-full border border-dashed border-white/15 text-[15px] font-medium text-accent disabled:opacity-40'
+  'press flex items-center justify-center gap-1.5 rounded-full border border-dashed border-white/15 font-medium text-accent disabled:opacity-40'
 
 export function GroupedEditor<Item extends DraftItem>(props: Props<Item>) {
   const { rows, onChange, empty, isBlank, limit, noun, addLabel, groupNoun, renderItem } = props
@@ -52,16 +55,43 @@ export function GroupedEditor<Item extends DraftItem>(props: Props<Item>) {
     const blank = last !== undefined && !isGroup(last) && isBlank(last)
     insert(blank ? rows.length - 1 : rows.length, [emptyGroup(), ...(blank || items >= limit ? [] : [empty()])])
   }
-  const move = (row: DraftGroup, index: number, offset: number) => {
+  const move = (row: DraftRow<Item>, index: number, offset: number) => {
     const next = rows.filter((item) => item.key !== row.key)
     next.splice(index + offset, 0, row)
     onChange(next)
+  }
+  const sectionName = (index: number) =>
+    rows
+      .slice(0, index + 1)
+      .reverse()
+      .find((row): row is DraftGroup => isGroup(row))
+      ?.name.trim() ?? ''
+  const endsSection = (index: number) => {
+    const next = rows[index + 1]
+    return groups > 0 && (next === undefined || isGroup(next))
+  }
+  const sectionAdd = (index: number) => {
+    const name = sectionName(index)
+    return (
+      <li key={`${rows[index]?.key ?? index}-add`}>
+        <button
+          type="button"
+          aria-label={`Ajouter ${noun} ${name ? `au groupe « ${name} »` : 'à cette partie'}`}
+          disabled={items >= limit}
+          onClick={() => addItem(index + 1)}
+          className={`${ADD_BUTTON} h-9 px-3.5 text-[14px]`}
+        >
+          <PlusIcon size={16} strokeWidth={2} />
+          {addLabel}
+        </button>
+      </li>
+    )
   }
 
   return (
     <div className="flex flex-col gap-2">
       <ul className="flex flex-col gap-2">
-        {rows.map((row, index) =>
+        {rows.flatMap((row, index) => [
           isGroup(row) ? (
             <GroupRow
               key={row.key}
@@ -80,31 +110,37 @@ export function GroupedEditor<Item extends DraftItem>(props: Props<Item>) {
               {renderItem(row, {
                 number: ordinal(index, false),
                 focus: row.key === added,
+                first: index === 0,
+                last: index === rows.length - 1,
                 onChange: replace,
+                onMove: (offset) => move(row, index, offset),
                 onRemove: () => remove(row.key),
                 onNext: () => addItem(index + 1),
               })}
             </li>
           ),
-        )}
+          ...(endsSection(index) ? [sectionAdd(index)] : []),
+        ])}
       </ul>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          aria-label={`Ajouter ${noun}`}
-          disabled={items >= limit}
-          onClick={() => addItem(rows.length)}
-          className={ADD_BUTTON}
-        >
-          <PlusIcon size={18} strokeWidth={2} />
-          {addLabel}
-        </button>
+      <div className={`grid gap-2 ${groups > 0 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+        {groups === 0 && (
+          <button
+            type="button"
+            aria-label={`Ajouter ${noun}`}
+            disabled={items >= limit}
+            onClick={() => addItem(rows.length)}
+            className={`${ADD_BUTTON} h-11 text-[15px]`}
+          >
+            <PlusIcon size={18} strokeWidth={2} />
+            {addLabel}
+          </button>
+        )}
         <button
           type="button"
           aria-label={`Ajouter un ${groupNoun}`}
           disabled={groups >= RECIPE_LIMITS.groups}
           onClick={addGroup}
-          className={ADD_BUTTON}
+          className={`${ADD_BUTTON} h-11 text-[15px]`}
         >
           <PlusIcon size={18} strokeWidth={2} />
           Groupe

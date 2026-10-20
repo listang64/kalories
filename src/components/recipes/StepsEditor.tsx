@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { emptyStep, type DraftRow, type DraftStep } from '../../lib/recipeDraft'
 import { RECIPE_LIMITS } from '../../lib/recipes'
+import { ChevronIcon } from '../icons/ChevronIcon'
 import { CloseIcon } from '../icons/CloseIcon'
 import { GroupedEditor, ICON_BUTTON, type ItemControls } from './GroupedEditor'
 
@@ -25,11 +26,24 @@ export function StepsEditor({ steps, onChange }: Props) {
   )
 }
 
-function StepRow({ row, number, focus, onChange, onRemove }: ItemControls<DraftStep> & { row: DraftStep }) {
+const ARROW = 'grid h-6 w-7 place-items-center text-text-2 active:bg-white/10 disabled:opacity-25'
+
+function StepRow(props: ItemControls<DraftStep> & { row: DraftStep }) {
+  const { row, number, focus, first, last, onChange, onMove, onRemove } = props
   return (
     <>
-      <span className="mt-2.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
-        {number}
+      <span className="mt-2 flex shrink-0 flex-col items-center gap-1.5">
+        <span className="grid size-7 place-items-center rounded-full bg-accent/15 text-[14px] font-semibold text-accent tabular-nums">
+          {number}
+        </span>
+        <span className="flex flex-col overflow-hidden rounded-full bg-white/6">
+          <button type="button" aria-label={`Monter l’étape ${number}`} disabled={first} onClick={() => onMove(-1)} className={ARROW}>
+            <ChevronIcon size={15} direction="up" />
+          </button>
+          <button type="button" aria-label={`Descendre l’étape ${number}`} disabled={last} onClick={() => onMove(1)} className={ARROW}>
+            <ChevronIcon size={15} direction="down" />
+          </button>
+        </span>
       </span>
       <StepInput
         label={`Étape ${number}`}
