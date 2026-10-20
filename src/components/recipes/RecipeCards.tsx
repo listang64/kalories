@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { formatInt } from '../../lib/format'
-import { formatMinutes, type Ingredient, type RecipeInput } from '../../lib/recipes'
+import { formatMinutes, groupIngredients, type Ingredient, type RecipeInput } from '../../lib/recipes'
 import { scaleQuantity } from '../../lib/recipeScale'
+import { mergeEntries, type ShoppingEntry } from '../../lib/shopping'
 import { CartIcon } from '../icons/CartIcon'
 import { ChevronIcon } from '../icons/ChevronIcon'
 import { FlameIcon } from '../icons/FlameIcon'
@@ -66,7 +67,7 @@ interface IngredientsProps {
   recipe: RecipeInput
   servings: number | null
   onServings: (servings: number) => void
-  onShopping: (ingredients: Ingredient[]) => void
+  onShopping: (entries: ShoppingEntry[]) => void
 }
 
 export function IngredientsCard({ recipe, servings, onServings, onShopping }: IngredientsProps) {
@@ -93,22 +94,15 @@ export function IngredientsCard({ recipe, servings, onServings, onShopping }: In
               </button>
             </p>
           )}
-          <ul className="mt-2 divide-y divide-white/6">
-            {ingredients.map((ingredient, index) => (
-              <li key={index} className="flex items-baseline gap-3 py-2 text-[16px]">
-                <span className="size-1.5 shrink-0 translate-y-[-3px] rounded-full bg-accent" />
-                <span className="min-w-0 flex-1">{ingredient.name}</span>
-                {ingredient.quantity && (
-                  <span className={`shrink-0 tabular-nums ${factor === 1 ? 'text-text-2' : 'font-semibold text-text'}`}>
-                    {ingredient.quantity}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          {groupIngredients(ingredients).map((group, index) => (
+            <div key={index} className={group.title ? undefined : 'pt-1'}>
+              {group.title && <h5 className="mt-4 text-[16px] font-semibold">{group.title}</h5>}
+              <IngredientList ingredients={group.ingredients} scaled={factor !== 1} />
+            </div>
+          ))}
           <button
             type="button"
-            onClick={() => onShopping(ingredients)}
+            onClick={() => onShopping(mergeEntries(ingredients))}
             className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white/8 text-[15px] font-semibold text-accent"
           >
             <CartIcon size={19} />
@@ -117,6 +111,24 @@ export function IngredientsCard({ recipe, servings, onServings, onShopping }: In
         </>
       )}
     </Card>
+  )
+}
+
+function IngredientList({ ingredients, scaled }: { ingredients: Ingredient[]; scaled: boolean }) {
+  return (
+    <ul className="mt-1 divide-y divide-white/6">
+      {ingredients.map((ingredient, index) => (
+        <li key={index} className="flex items-baseline gap-3 py-2 text-[16px]">
+          <span className="size-1.5 shrink-0 translate-y-[-3px] rounded-full bg-accent" />
+          <span className="min-w-0 flex-1">{ingredient.name}</span>
+          {ingredient.quantity && (
+            <span className={`shrink-0 tabular-nums ${scaled ? 'font-semibold text-text' : 'text-text-2'}`}>
+              {ingredient.quantity}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }
 

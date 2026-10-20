@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Profile } from '../../lib/profiles'
-import { setRecipeFavorite, type Ingredient, type Recipe } from '../../lib/recipes'
+import { setRecipeFavorite, type Recipe } from '../../lib/recipes'
 import { sharedErrorMessage } from '../../lib/shared'
+import type { ShoppingEntry } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
 import { BottomSheet } from '../BottomSheet'
 import { ConfirmDialog } from '../ConfirmDialog'
@@ -38,7 +39,7 @@ export function RecipesSheet({ me, partner }: Props) {
   const [view, setView] = useState<View>({ kind: 'list' })
   const [dirty, setDirty] = useState(false)
   const [leaving, setLeaving] = useState<(() => void) | null>(null)
-  const [shopping, setShopping] = useState<Ingredient[] | null>(null)
+  const [shopping, setShopping] = useState<ShoppingEntry[] | null>(null)
   const [sharing, setSharing] = useState(false)
   const [adding, setAdding] = useState<Recipe | null>(null)
   const seen = useRef(new Set<string>())
@@ -166,7 +167,7 @@ export function RecipesSheet({ me, partner }: Props) {
           />
         )}
       </BottomSheet>
-      <ShoppingPicker ingredients={shopping} uid={me.uid} onClose={() => setShopping(null)} />
+      <ShoppingPicker entries={shopping} uid={me.uid} onClose={() => setShopping(null)} />
       <AddToDayPanel recipe={adding} uid={me.uid} onClose={() => setAdding(null)} />
       <SharePanel recipe={sharing ? (current ?? null) : null} me={me} onClose={() => setSharing(false)} />
       <ConfirmDialog

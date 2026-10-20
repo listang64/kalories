@@ -16,6 +16,12 @@ import { isRecipeCategory, type RecipeCategory } from '../config/recipes'
 export interface Ingredient {
   name: string
   quantity: string
+  group: string
+}
+
+export interface IngredientGroup {
+  title: string
+  ingredients: Ingredient[]
 }
 
 export interface Nutrition {
@@ -45,7 +51,17 @@ export interface Recipe extends RecipeInput {
   favoriteOf: string[]
 }
 
-export const RECIPE_LIMITS = { name: 80, quantity: 40, ingredient: 80, step: 600, note: 120, ingredients: 80, steps: 60 }
+export const RECIPE_LIMITS = {
+  name: 80,
+  quantity: 40,
+  ingredient: 80,
+  group: 40,
+  step: 600,
+  note: 120,
+  ingredients: 80,
+  groups: 12,
+  steps: 60,
+}
 
 export function recipesOf(householdId: string) {
   return collection(db, 'households', householdId, 'recipes')
@@ -78,7 +94,18 @@ function parseIngredient(value: unknown): Ingredient | null {
   if (typeof value !== 'object' || value === null) return null
   const data = value as Record<string, unknown>
   const name = text(data.name, RECIPE_LIMITS.ingredient)
-  return name ? { name, quantity: text(data.quantity, RECIPE_LIMITS.quantity) } : null
+  if (!name) return null
+  return { name, quantity: text(data.quantity, RECIPE_LIMITS.quantity), group: text(data.group, RECIPE_LIMITS.group) }
+}
+
+export function groupIngredients(ingredients: Ingredient[]): IngredientGroup[] {
+  const groups: IngredientGroup[] = []
+  ingredients.forEach((ingredient, index) => {
+    const last = groups.at(-1)
+    if (last && ingredients[index - 1]?.group === ingredient.group) last.ingredients.push(ingredient)
+    else groups.push({ title: ingredient.group || (last ? 'Autres' : ''), ingredients: [ingredient] })
+  })
+  return groups
 }
 
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])

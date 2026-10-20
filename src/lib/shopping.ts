@@ -1,6 +1,7 @@
 import { deleteField, setDoc, updateDoc, type DocumentSnapshot } from 'firebase/firestore'
 import { isAisle, type Aisle } from '../config/aisles'
 import { currentSharedDoc } from './household'
+import { sumQuantities } from './recipeScale'
 import { newId } from './shared'
 
 export interface ShoppingItem {
@@ -36,6 +37,16 @@ export function splitNames(text: string): string[] {
 export interface ShoppingEntry {
   name: string
   quantity: string
+}
+
+export function mergeEntries(entries: ShoppingEntry[]): ShoppingEntry[] {
+  const merged: { name: string; quantities: string[] }[] = []
+  for (const { name, quantity } of entries) {
+    const entry = merged.find((item) => sameItem(item.name, name))
+    if (entry) entry.quantities.push(quantity)
+    else merged.push({ name, quantities: [quantity] })
+  }
+  return merged.map(({ name, quantities }) => ({ name, quantity: sumQuantities(quantities) }))
 }
 
 export async function addShoppingItems(entries: ShoppingEntry[], uid: string): Promise<void> {

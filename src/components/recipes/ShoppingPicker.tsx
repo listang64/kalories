@@ -1,29 +1,28 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useShoppingList } from '../../hooks/useShoppingList'
-import type { Ingredient } from '../../lib/recipes'
 import { sharedErrorMessage } from '../../lib/shared'
-import { addShoppingItems, sameItem } from '../../lib/shopping'
+import { addShoppingItems, sameItem, type ShoppingEntry } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
 import { BottomPanel } from '../BottomPanel'
 import { TrashIcon } from '../icons/TrashIcon'
 import { SwipeButton } from '../SwipeButton'
 
 interface Props {
-  ingredients: Ingredient[] | null
+  entries: ShoppingEntry[] | null
   uid: string
   onClose: () => void
 }
 
-export function ShoppingPicker({ ingredients, uid, onClose }: Props) {
+export function ShoppingPicker({ entries, uid, onClose }: Props) {
   return (
-    <BottomPanel open={ingredients !== null} label="Ajouter à la liste de courses" onClose={onClose}>
-      {ingredients && <Picker ingredients={ingredients} uid={uid} onClose={onClose} />}
+    <BottomPanel open={entries !== null} label="Ajouter à la liste de courses" onClose={onClose}>
+      {entries && <Picker ingredients={entries} uid={uid} onClose={onClose} />}
     </BottomPanel>
   )
 }
 
-function Picker({ ingredients, uid, onClose }: { ingredients: Ingredient[]; uid: string; onClose: () => void }) {
+function Picker({ ingredients, uid, onClose }: { ingredients: ShoppingEntry[]; uid: string; onClose: () => void }) {
   const { items } = useShoppingList()
   const already = ingredients.flatMap((ingredient, index) =>
     items.some((item) => sameItem(item.name, ingredient.name)) ? [index] : [],

@@ -1,7 +1,7 @@
 import { categoryLabel } from '../config/recipes'
 import { formatInt } from './format'
 import { A4, PdfDocument, textWidth, wrapText, type PdfFont, type Rgb } from './pdf'
-import { formatMinutes, type RecipeInput } from './recipes'
+import { formatMinutes, groupIngredients, type Ingredient, type RecipeInput } from './recipes'
 
 const MARGIN = 56
 const BOTTOM = 64
@@ -79,20 +79,30 @@ function nutrition(layout: Layout, recipe: RecipeInput) {
   layout.y -= 66
 }
 
+function ingredientRow(layout: Layout, { name, quantity }: Ingredient) {
+  const quantityWidth = quantity ? textWidth(quantity, 'bold', 11.5) : 0
+  const rows = wrapText(name, 'regular', 11.5, WIDTH - 24 - quantityWidth)
+  layout.room(rows.length * 15 + 7)
+  layout.y -= 4
+  const top = layout.y
+  layout.doc.text(MARGIN + 2, top - 12, '•', 'bold', 12, ACCENT)
+  rows.forEach((row, i) => layout.doc.text(MARGIN + 16, top - 12 - i * 15, row, 'regular', 11.5, INK))
+  if (quantity) layout.doc.text(MARGIN + WIDTH - quantityWidth, top - 12, quantity, 'bold', 11.5, INK)
+  layout.y = top - rows.length * 15 - 3
+  layout.doc.line(MARGIN + 16, layout.y, MARGIN + WIDTH, layout.y, RULE, 0.6)
+}
+
 function ingredients(layout: Layout, recipe: RecipeInput) {
   if (recipe.ingredients.length === 0) return
   layout.heading('Ingrédients', recipe.servings ? `pour ${recipe.servings} pers.` : '')
-  for (const { name, quantity } of recipe.ingredients) {
-    const quantityWidth = quantity ? textWidth(quantity, 'bold', 11.5) : 0
-    const rows = wrapText(name, 'regular', 11.5, WIDTH - 24 - quantityWidth)
-    layout.room(rows.length * 15 + 7)
-    layout.y -= 4
-    const top = layout.y
-    layout.doc.text(MARGIN + 2, top - 12, '•', 'bold', 12, ACCENT)
-    rows.forEach((row, i) => layout.doc.text(MARGIN + 16, top - 12 - i * 15, row, 'regular', 11.5, INK))
-    if (quantity) layout.doc.text(MARGIN + WIDTH - quantityWidth, top - 12, quantity, 'bold', 11.5, INK)
-    layout.y = top - rows.length * 15 - 3
-    layout.doc.line(MARGIN + 16, layout.y, MARGIN + WIDTH, layout.y, RULE, 0.6)
+  for (const group of groupIngredients(recipe.ingredients)) {
+    if (group.title) {
+      layout.room(48)
+      layout.y -= 22
+      layout.doc.text(MARGIN, layout.y, group.title, 'bold', 12.5, INK)
+      layout.y -= 2
+    }
+    group.ingredients.forEach((ingredient) => ingredientRow(layout, ingredient))
   }
 }
 

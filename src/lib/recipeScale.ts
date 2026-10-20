@@ -40,3 +40,15 @@ export function scaleQuantity(text: string, factor: number): string {
   const range = amount.to === null ? from : `${from}-${show(amount.to * factor, metric)}`
   return `${range}${amount.rest}`
 }
+
+export function sumQuantities(quantities: string[]): string {
+  const filled = quantities.map((quantity) => quantity.trim()).filter(Boolean)
+  const amounts = filled.map(leading)
+  const unit = (amount: Amount | null) => amount?.rest.trim().toLowerCase()
+  const [first] = amounts
+  const summable =
+    first && amounts.every((amount) => amount && amount.to === null && Number.isFinite(amount.from) && unit(amount) === unit(first))
+  if (!first || !summable || filled.length < 2) return filled.join(' + ')
+  const total = amounts.reduce((sum, amount) => sum + (amount?.from ?? 0), 0)
+  return `${show(total, METRIC.test(first.rest))}${first.rest}`
+}

@@ -12,7 +12,10 @@ d'une fiche ou d'un écran, ou simplement le nom d'un plat.
 Renvoie la recette structurée, en français :
 - name : nom court du plat. category : starter (entrée), main (plat), dessert, ou other.
 - ingredients : un par ligne, quantity avec son unité tel qu'écrit (ex. "200 g", "3", "1 c. à soupe"),
-  name sans la quantité.
+  name sans la quantité. group : quand la recette sépare ses ingrédients par préparation (« Pour la pâte »,
+  « Crème », « Glaçage »…), le nom court de cette partie avec une majuscule (ex. "Pâte", "Crème") ; sinon
+  vide. Garde l'ordre de la recette, les ingrédients d'une même partie à la suite. Pour un simple nom de
+  plat à plusieurs préparations (gâteau, tarte, entremets…), groupe aussi les ingrédients par préparation.
 - steps : la préparation détaillée, une action par étape, phrases courtes, sans numéro.
 - prepMinutes : temps de préparation, cookMinutes : temps de cuisson, en minutes (0 si aucun).
 - cookTemp : température du four en °C (0 si pas de four). cookNote : mode de cuisson court
@@ -34,7 +37,7 @@ const SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { name: { type: 'string' }, quantity: { type: 'string' } },
+        properties: { name: { type: 'string' }, quantity: { type: 'string' }, group: { type: 'string' } },
         required: ['name', 'quantity'],
       },
     },

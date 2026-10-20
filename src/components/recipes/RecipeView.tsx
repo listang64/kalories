@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { categoryLabel } from '../../config/recipes'
-import { formatMinutes, type Ingredient, type Recipe } from '../../lib/recipes'
+import { formatMinutes, type Recipe } from '../../lib/recipes'
+import type { ShoppingEntry } from '../../lib/shopping'
 import { usePerson } from '../../store/sessionStore'
 import { ClockIcon } from '../icons/ClockIcon'
 import { FlameIcon } from '../icons/FlameIcon'
@@ -14,7 +15,7 @@ interface Props {
   favorite: boolean
   onFavorite: () => void
   onEdit: () => void
-  onShopping: (ingredients: Ingredient[]) => void
+  onShopping: (entries: ShoppingEntry[]) => void
   onAddToDay: () => void
 }
 
