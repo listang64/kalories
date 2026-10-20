@@ -140,7 +140,23 @@
   animation: bar-flow 5s ease-in-out infinite alternate;
 }
 
+@keyframes dot-hop {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-5px);
+  }
+}
+
+@utility dot-hop {
+  animation: dot-hop 1s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .dot-hop,
   .orb-breathe,
   .orb-swirl,
   .bar-flow,

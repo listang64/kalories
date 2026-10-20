@@ -65,7 +65,6 @@ export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onD
     <div className="flex h-full flex-col">
       <div className="-mx-5 flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-6">
         <RecipeReader
-          startOpen={!recipe}
           onRead={({ recipe: read, wroteSteps: wrote }) => {
             setWroteSteps(wrote)
             change((current) => withContent(current, read))

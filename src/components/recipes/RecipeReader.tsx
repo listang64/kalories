@@ -3,6 +3,7 @@ import { geminiErrorMessage } from '../../lib/gemini'
 import { fileToJpeg } from '../../lib/image'
 import { useLocalSettings } from '../../lib/localSettings'
 import { readRecipe, type ReadRecipe } from '../../lib/recipeReader'
+import { LoadingDots } from '../LoadingDots'
 import { CameraIcon } from '../icons/CameraIcon'
 import { CloseIcon } from '../icons/CloseIcon'
 import { SparkIcon } from '../icons/SparkIcon'
@@ -10,12 +11,11 @@ import { SparkIcon } from '../icons/SparkIcon'
 const MAX_PHOTOS = 3
 
 interface Props {
-  startOpen: boolean
   onRead: (read: ReadRecipe) => void
 }
 
-export function RecipeReader({ startOpen, onRead }: Props) {
-  const [open, setOpen] = useState(startOpen)
+export function RecipeReader({ onRead }: Props) {
+  const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
@@ -50,7 +50,7 @@ export function RecipeReader({ startOpen, onRead }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="press flex h-12 items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/8 text-[15px] font-semibold text-accent"
+        className="press flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-accent/30 bg-accent/8 text-[15px] font-semibold text-accent"
       >
         <SparkIcon />
         Remplir avec l’IA
@@ -98,23 +98,33 @@ export function RecipeReader({ startOpen, onRead }: Props) {
         </div>
       )}
       {error && <p className="mt-2 text-[14px] text-accent">{error}</p>}
-      <div className="mt-3 grid grid-cols-[auto_1fr] gap-2">
-        <button
-          type="button"
-          disabled={photos.length >= MAX_PHOTOS}
-          onClick={() => fileRef.current?.click()}
-          className="press flex h-11 items-center gap-2 rounded-full bg-white/8 px-4 text-[15px] font-medium disabled:opacity-40"
-        >
-          <CameraIcon size={18} />
-          Photo
-        </button>
+      <div className="mt-3 flex gap-2">
+        {!busy && (
+          <button
+            type="button"
+            disabled={photos.length >= MAX_PHOTOS}
+            onClick={() => fileRef.current?.click()}
+            className="press flex h-11 shrink-0 items-center gap-2 rounded-full bg-white/8 px-4 text-[15px] font-medium disabled:opacity-40"
+          >
+            <CameraIcon size={18} />
+            Photo
+          </button>
+        )}
         <button
           type="button"
           disabled={busy || (!text.trim() && photos.length === 0)}
+          aria-busy={busy}
           onClick={() => void run()}
-          className="press h-11 rounded-full bg-accent text-[15px] font-semibold text-black disabled:opacity-40"
+          className={`press flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-semibold text-black ${busy ? '' : 'disabled:opacity-40'}`}
         >
-          {busy ? 'Lecture en cours…' : 'Remplir la recette'}
+          {busy ? (
+            <>
+              Veuillez patienter
+              <LoadingDots />
+            </>
+          ) : (
+            'Remplir la recette'
+          )}
         </button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void pick(e)} />
