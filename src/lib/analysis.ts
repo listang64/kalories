@@ -7,13 +7,17 @@ const SYSTEM_PROMPT = `Tu es un nutritionniste expert. On te donne une descripti
 - Identifie chaque aliment séparément (riz, poulet, sauce, pain, boisson…).
 - Estime le poids réellement mangé en grammes d'après la taille des portions
   (repères : assiette standard ≈ 26 cm, couverts, main).
+- Une description seule, sans photo, suffit : liste les aliments décrits avec des portions
+  habituelles quand la quantité n'est pas donnée. Ne la refuse jamais.
 - Le texte de l'utilisateur est prioritaire sur la photo : s'il donne une quantité
-  ou un aliment, utilise-le tel quel.
+  ou un aliment, utilise-le tel quel, même si la photo ne correspond pas.
+- Le type de repas indique seulement le moment de la journée : ne le compare jamais aux aliments.
 - Donne les valeurs pour 100 g de l'aliment tel que consommé (cuit, avec sa matière
   grasse de cuisson), en t'appuyant sur la table française Ciqual quand c'est possible.
 - Boissons : 1 ml = 1 g. Ignore ce qui ne se mange pas (os, emballage).
 - Noms courts en français. confidence = ta certitude sur le poids.
-- Si aucun aliment n'est visible, renvoie items vide et explique pourquoi dans comment.`
+- Renvoie items vide seulement si ni la description ni les photos ne contiennent d'aliment ou de
+  boisson, et explique pourquoi dans comment.`
 
 const RESPONSE_SCHEMA = {
   type: 'object',
@@ -83,17 +87,24 @@ export interface MealRequest {
   photos: string[]
 }
 
-export function analyzeMeal({ type, note, photos }: MealRequest, key: string, model: string) {
+export async function analyzeMeal({ type, note, photos }: MealRequest, key: string, model: string) {
   const description = note.trim() || 'aucune, analyse uniquement les photos'
   const several =
     photos.length > 1
       ? ` ${photos.length} photos jointes : elles peuvent montrer le même plat sous plusieurs angles ou des plats différents du même repas, ne compte jamais deux fois le même aliment.`
       : ''
+  const alone = photos.length === 0 ? ' Pas de photo : base-toi uniquement sur la description.' : ''
   const parts: Part[] = [
-    { text: `Repas : ${mealLabel(type)}. Description : ${description}.${several}` },
+    { text: `Repas : ${mealLabel(type)}. Description : ${description}.${several}${alone}` },
     ...photos.map((src) => ({ inlineData: { mimeType: 'image/jpeg', data: base64Of(src) } })),
   ]
-  return requestItems(parts, key, model)
+  const result = await requestItems(parts, key, model)
+  if (result.items.length > 0 || !note.trim()) return result
+  const text = `Voici ce que l'utilisateur a mangé : ${note.trim()}
+Il n'y a rien d'autre à vérifier : liste ces aliments et boissons avec leur poids
+(portion habituelle si la quantité n'est pas donnée).`
+  const retry = await requestItems([{ text }], key, model)
+  return retry.items.length > 0 ? retry : result
 }
 
 export function correctMeal(items: MealItem[], instruction: string, key: string, model: string) {
