@@ -12,11 +12,11 @@ const ITEMS: { target: MenuTarget; label: string }[] = [
   { target: 'settings', label: 'Paramètres' },
 ]
 
-const FIRST_ANGLE = 10
-const STEP_ANGLE = 18
-const INNER = 64
-const TRACK = 42
-const HALO = 300
+const FIRST_ANGLE = 6
+const STEP_ANGLE = 19
+const INNER = 100
+const TRACK = 74
+const HALO = 360
 const SPRING = { type: 'spring', stiffness: 240, damping: 24 } as const
 const HUB = 'grid size-11 shrink-0 place-items-center rounded-full bg-accent text-black shadow-accent'
 
@@ -101,7 +101,7 @@ export function RadialMenu({ anchor, onClose, onSelect }: MenuProps) {
                     type="button"
                     autoFocus={index === 0}
                     onClick={() => onSelect(item.target)}
-                    className="press rounded-full px-2.5 py-1.5 text-[21px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
+                    className="press rounded-full px-2.5 py-1.5 text-[22px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
                     style={{ marginRight: INNER - 10 }}
                   >
                     {item.label}
