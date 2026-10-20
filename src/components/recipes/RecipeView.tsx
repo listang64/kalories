@@ -15,11 +15,12 @@ interface Props {
   onFavorite: () => void
   onEdit: () => void
   onShopping: (ingredients: Ingredient[]) => void
+  onAddToDay: () => void
 }
 
 const CHIP = 'flex h-8 items-center gap-1.5 rounded-full bg-white/8 px-3 text-[14px]'
 
-export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShopping }: Props) {
+export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShopping, onAddToDay }: Props) {
   const author = usePerson(recipe.createdBy)
   const [servings, setServings] = useState(recipe.servings)
 
@@ -56,7 +57,7 @@ export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShoppi
           </p>
         )}
       </header>
-      <NutritionCard recipe={recipe} onCalculate={onEdit} />
+      <NutritionCard recipe={recipe} onCalculate={onEdit} onAddToDay={onAddToDay} />
       <IngredientsCard recipe={recipe} servings={servings} onServings={setServings} onShopping={onShopping} />
       <StepsCard steps={recipe.steps} />
       <CookingCard recipe={recipe} />

@@ -8,6 +8,7 @@ import { BottomSheet } from '../BottomSheet'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { PencilIcon } from '../icons/PencilIcon'
 import { ShareIcon } from '../icons/ShareIcon'
+import { AddToDayPanel } from './AddToDayPanel'
 import { RecipeEditor } from './RecipeEditor'
 import { RecipeImport } from './RecipeImport'
 import { RecipeList } from './RecipeList'
@@ -39,6 +40,7 @@ export function RecipesSheet({ me, partner }: Props) {
   const [leaving, setLeaving] = useState<(() => void) | null>(null)
   const [shopping, setShopping] = useState<Ingredient[] | null>(null)
   const [sharing, setSharing] = useState(false)
+  const [adding, setAdding] = useState<Recipe | null>(null)
   const seen = useRef(new Set<string>())
   const current = view.kind === 'recipe' || view.kind === 'edit' ? recipes.find((r) => r.id === view.id) : undefined
   if (current) seen.current.add(current.id)
@@ -132,6 +134,7 @@ export function RecipesSheet({ me, partner }: Props) {
               onFavorite={() => toggleFavorite(current)}
               onEdit={() => go({ kind: 'edit', id: current.id })}
               onShopping={setShopping}
+              onAddToDay={() => setAdding(current)}
             />
           ) : (
             <div className="flex justify-center pt-12">
@@ -164,6 +167,7 @@ export function RecipesSheet({ me, partner }: Props) {
         )}
       </BottomSheet>
       <ShoppingPicker ingredients={shopping} uid={me.uid} onClose={() => setShopping(null)} />
+      <AddToDayPanel recipe={adding} uid={me.uid} onClose={() => setAdding(null)} />
       <SharePanel recipe={sharing ? (current ?? null) : null} me={me} onClose={() => setSharing(false)} />
       <ConfirmDialog
         open={leaving !== null}

@@ -1,13 +1,15 @@
 import { MACROS } from '../../config/macros'
 import { formatInt } from '../../lib/format'
 import type { RecipeInput } from '../../lib/recipes'
+import { PlusIcon } from '../icons/PlusIcon'
 
 interface Props {
   recipe: RecipeInput
   onCalculate: () => void
+  onAddToDay: () => void
 }
 
-export function NutritionCard({ recipe, onCalculate }: Props) {
+export function NutritionCard({ recipe, onCalculate, onAddToDay }: Props) {
   const nutrition = recipe.nutrition
   const portion = recipe.servings && nutrition ? nutrition.grams / recipe.servings : null
 
@@ -51,6 +53,14 @@ export function NutritionCard({ recipe, onCalculate }: Props) {
         {portion ? `Une part ≈ ${formatInt(portion)} g · ` : `Le plat entier ≈ ${formatInt(nutrition.grams)} g · `}
         <span className="text-text">{formatInt(((portion ?? nutrition.grams) * nutrition.kcal100) / 100)} kcal</span>
       </p>
+      <button
+        type="button"
+        onClick={onAddToDay}
+        className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-semibold text-black"
+      >
+        <PlusIcon size={19} strokeWidth={2} />
+        Ajouter à ma journée
+      </button>
     </section>
   )
 }
