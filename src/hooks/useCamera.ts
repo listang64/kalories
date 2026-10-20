@@ -8,6 +8,15 @@ const CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
 }
 
+async function openCamera(): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia(CONSTRAINTS)
+  } catch (error) {
+    if (isCameraDenied(error)) throw error
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+  }
+}
+
 export function useCamera(active: boolean) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [state, setState] = useState<CameraState>('starting')
@@ -30,7 +39,7 @@ export function useCamera(active: boolean) {
       if (!navigator.mediaDevices?.getUserMedia) return setState('unavailable')
       setState('starting')
       try {
-        const next = await navigator.mediaDevices.getUserMedia(CONSTRAINTS)
+        const next = await openCamera()
         if (id !== generation) return next.getTracks().forEach((track) => track.stop())
         stream = next
         const video = videoRef.current

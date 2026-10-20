@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner'
 import { useCamera } from '../../hooks/useCamera'
-import { BARCODE } from '../../lib/barcode'
+import { BARCODE, readBarcodePhoto } from '../../lib/barcode'
+import { CameraIcon } from '../icons/CameraIcon'
+import { LoadingDots } from '../LoadingDots'
 import { ScanFrame } from './ScanFrame'
 
 interface Props {
@@ -14,7 +16,22 @@ export function ScanView({ active, onCode }: Props) {
   const { failed } = useBarcodeScanner(videoRef, active && state === 'ready', onCode)
   const [typing, setTyping] = useState(false)
   const [digits, setDigits] = useState('')
+  const [reading, setReading] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const photoRef = useRef<HTMLInputElement>(null)
   const live = (state === 'ready' || state === 'starting') && !failed
+
+  const readPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setReading(true)
+    setPhotoError('')
+    const code = await readBarcodePhoto(file).catch(() => null)
+    setReading(false)
+    if (code) onCode(code)
+    else setPhotoError('Aucun code-barres lu : reprends la photo de plus près, bien à plat, ou saisis les chiffres.')
+  }
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -27,13 +44,35 @@ export function ScanView({ active, onCode }: Props) {
         {live ? (
           <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 size-full object-cover" />
         ) : (
-          <p className="absolute inset-x-6 top-1/3 text-center text-[15px] text-text-2">
-            {state === 'denied' ? 'Accès à la caméra refusé.' : 'Lecture impossible avec la caméra.'} Saisis les
-            chiffres du code-barres.
-          </p>
+          <div className="absolute inset-x-6 top-1/2 flex -translate-y-1/2 flex-col items-center gap-4 text-center">
+            <p className="text-[15px] text-text-2">
+              {state === 'denied' ? 'Accès à la caméra refusé.' : 'Lecture impossible avec la caméra.'} Prends le
+              code-barres en photo ou saisis ses chiffres.
+            </p>
+            <button
+              type="button"
+              disabled={reading}
+              onClick={() => photoRef.current?.click()}
+              className="press flex h-12 items-center gap-2 rounded-full bg-accent px-5 text-[16px] font-semibold text-black"
+            >
+              {reading ? (
+                <>
+                  Lecture de la photo
+                  <LoadingDots />
+                </>
+              ) : (
+                <>
+                  <CameraIcon size={20} />
+                  Photo du code-barres
+                </>
+              )}
+            </button>
+            {photoError && <p className="text-[14px] text-accent">{photoError}</p>}
+          </div>
         )}
         {live && <ScanFrame hint="Vise le code-barres du paquet" />}
       </div>
+      <input ref={photoRef} type="file" accept="image/*" hidden onChange={(e) => void readPhoto(e)} />
       {typing || !live ? (
         <form onSubmit={submit} className="mt-3 flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface-2 py-1.5 pr-1.5 pl-4">
           <input

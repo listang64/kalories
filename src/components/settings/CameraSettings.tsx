@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { cameraStatus, platform, requestCamera, type CameraAccess, type Platform } from '../../lib/camera'
+import { browserInfo, cameraStatus, platform, requestCamera, type CameraAccess, type CameraProbe, type Platform } from '../../lib/camera'
 import { useAppStore } from '../../store/appStore'
 import { LoadingDots } from '../LoadingDots'
 import { SettingsGroup, SettingsRow } from './SettingsGroup'
@@ -19,9 +19,12 @@ const STEPS: Record<Platform, string[]> = {
     'Ferme complètement Kalories (glisse-la vers le haut dans le multitâche), rouvre-la puis touche « Autoriser l’appareil photo ».',
   ],
   android: [
-    'Appui long sur l’icône Kalories → ⓘ Infos sur l’appli → Autorisations → Appareil photo → Autoriser.',
-    'Dans Chrome : touche l’icône à gauche de l’adresse → Autorisations → Appareil photo → Autoriser (ou « Réinitialiser les autorisations »).',
-    'Rouvre Kalories puis touche « Autoriser l’appareil photo ».',
+    'Chrome : menu ⋮ → Paramètres → Paramètres des sites → Appareil photo. L’interrupteur du haut doit être activé ; dans « Bloqué », touche listang64.github.io → Autoriser.',
+    'Android : Paramètres → Applications → Chrome → Autorisations → Appareil photo → « Autoriser seulement si l’appli est en cours d’utilisation ».',
+    'Android 12 et plus : Paramètres → Sécurité et confidentialité → Confidentialité → « Accès à l’appareil photo » activé (aussi dans les réglages rapides en haut de l’écran).',
+    'Si Kalories a une icône sur l’écran d’accueil : Paramètres → Applications → Kalories → Autorisations → Appareil photo → Autoriser.',
+    'Samsung Internet : menu ≡ → Paramètres → Sites et téléchargements → Autorisations des sites → Appareil photo.',
+    'Ferme complètement Kalories, rouvre-la puis touche « Autoriser l’appareil photo » : le diagnostic dit ce qui bloque encore.',
   ],
   other: [
     'Clique sur l’icône à gauche de l’adresse → Appareil photo → Autoriser.',
@@ -61,6 +64,7 @@ export function CameraSettings() {
   const [access, setAccess] = useCameraAccess()
   const [help, setHelp] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [probe, setProbe] = useState<CameraProbe | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -75,9 +79,10 @@ export function CameraSettings() {
     setBusy(true)
     const result = await requestCamera()
     setBusy(false)
-    setAccess(result)
-    if (result === 'granted') useAppStore.getState().showToast('Appareil photo autorisé')
-    if (result === 'denied') setHelp(true)
+    setProbe(result)
+    setAccess(result.access)
+    if (result.access === 'granted') useAppStore.getState().showToast('Appareil photo autorisé')
+    else setHelp(true)
   }
 
   return (
@@ -111,6 +116,7 @@ export function CameraSettings() {
             )}
           </button>
         </SettingsRow>
+        {probe && probe.access !== 'granted' && <Diagnostic probe={probe} />}
         <SettingsRow>
           <button
             type="button"
@@ -129,6 +135,19 @@ export function CameraSettings() {
           </ol>
         )}
       </SettingsGroup>
+    </div>
+  )
+}
+
+function Diagnostic({ probe }: { probe: CameraProbe }) {
+  const browser = browserInfo()
+  return (
+    <div role="status" className="space-y-1.5 px-4 py-3 text-[14px] leading-snug">
+      <p className="font-semibold text-accent">{probe.advice}</p>
+      <p className="text-text-2">
+        {browser.name} · {browser.installed ? 'app installée' : 'dans le navigateur'}
+      </p>
+      <p className="font-mono text-[12px] break-words text-text-2">{probe.error}</p>
     </div>
   )
 }
