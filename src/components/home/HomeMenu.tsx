@@ -12,15 +12,13 @@ const ITEMS: { target: MenuTarget; label: string }[] = [
   { target: 'settings', label: 'Paramètres' },
 ]
 
-const FIRST_ANGLE = 6
-const STEP_ANGLE = 19
-const INNER = 100
-const TRACK = 74
-const HALO = 360
-const SPRING = { type: 'spring', stiffness: 240, damping: 24 } as const
+const FIRST = 34
+const STEP = 58
+const BRANCH = 22
+const TAIL = 30
+const SLIDE = { type: 'spring', stiffness: 420, damping: 34 } as const
 const HUB = 'grid size-11 shrink-0 place-items-center rounded-full bg-accent text-black shadow-accent'
 
-const angleOf = (index: number) => FIRST_ANGLE + index * STEP_ANGLE
 const LINE = 'absolute left-0 h-[2px] w-full rounded-full bg-current'
 const FLAT = { y: 0, rotate: 0 }
 
@@ -59,9 +57,8 @@ interface MenuProps {
   onSelect: (target: MenuTarget) => void
 }
 
-export function RadialMenu({ anchor, onClose, onSelect }: MenuProps) {
+export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
   const reduce = useReducedMotion() === true
-  const swing = reduce ? 0 : 100
   const open = anchor !== null
 
   useEffect(() => {
@@ -78,37 +75,32 @@ export function RadialMenu({ anchor, onClose, onSelect }: MenuProps) {
           <button type="button" aria-label="Fermer le menu" onClick={onClose} className="absolute inset-0 cursor-default" />
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute rounded-full bg-[radial-gradient(closest-side,rgba(0,0,0,0.8),rgba(0,0,0,0.72)_48%,rgba(0,0,0,0.38)_74%,transparent)] backdrop-blur-[3px] [mask-image:radial-gradient(closest-side,#000_62%,transparent)]"
-            style={{ width: HALO * 2, height: HALO * 2, left: center(anchor).x - HALO, top: center(anchor).y - HALO }}
-            initial={{ scale: reduce ? 1 : 0.2, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } }}
-            exit={{ scale: reduce ? 1 : 0.3, opacity: 0, transition: { duration: 0.28, delay: 0.08 } }}
+            className="pointer-events-none absolute inset-y-0 right-0 w-[min(92vw,440px)] bg-[linear-gradient(to_left,rgba(0,0,0,0.86),rgba(0,0,0,0.72)_42%,rgba(0,0,0,0.34)_72%,transparent)] backdrop-blur-[3px] [mask-image:linear-gradient(to_left,#000_55%,transparent)]"
+            initial={{ opacity: 0, x: reduce ? 0 : 60 }}
+            animate={{ opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } }}
+            exit={{ opacity: 0, x: reduce ? 0 : 60, transition: { duration: 0.26, delay: 0.1 } }}
           />
-          <nav aria-label="Menu" className="absolute size-0" style={{ left: center(anchor).x, top: center(anchor).y }}>
-            <Track reduce={reduce} />
-            {ITEMS.map((item, index) => {
-              const rotate = -angleOf(index)
-              return (
-                <motion.div
-                  key={item.target}
-                  className="absolute top-0 right-0 flex h-0 items-center"
-                  style={{ originX: 1, originY: 0.5 }}
-                  initial={{ rotate: rotate + swing, opacity: 0 }}
-                  animate={{ rotate, opacity: 1, transition: { ...SPRING, delay: 0.06 + index * 0.06 } }}
-                  exit={{ rotate: rotate + swing, opacity: 0, transition: { duration: 0.24, delay: (ITEMS.length - 1 - index) * 0.03 } }}
+          <nav aria-label="Menu">
+            <Rail anchor={anchor} reduce={reduce} />
+            {ITEMS.map((item, index) => (
+              <motion.div
+                key={item.target}
+                className="absolute flex -translate-y-1/2 items-center"
+                style={{ right: railRight(anchor) + BRANCH - 4, top: itemTop(anchor, index) }}
+                initial={{ x: reduce ? 0 : '110vw', opacity: 0 }}
+                animate={{ x: 0, opacity: 1, transition: { ...SLIDE, delay: 0.08 + index * 0.06 } }}
+                exit={{ x: reduce ? 0 : '110vw', opacity: 0, transition: { duration: 0.22, delay: (ITEMS.length - 1 - index) * 0.03 } }}
+              >
+                <button
+                  type="button"
+                  autoFocus={index === 0}
+                  onClick={() => onSelect(item.target)}
+                  className="press rounded-full px-3 py-2 text-[24px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
                 >
-                  <button
-                    type="button"
-                    autoFocus={index === 0}
-                    onClick={() => onSelect(item.target)}
-                    className="press rounded-full px-2.5 py-1.5 text-[22px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
-                    style={{ marginRight: INNER - 10 }}
-                  >
-                    {item.label}
-                  </button>
-                </motion.div>
-              )
-            })}
+                  {item.label}
+                </button>
+              </motion.div>
+            ))}
           </nav>
           <button
             type="button"
@@ -126,51 +118,54 @@ export function RadialMenu({ anchor, onClose, onSelect }: MenuProps) {
   )
 }
 
-const center = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+const railRight = (rect: DOMRect) => window.innerWidth - (rect.left + rect.width / 2)
+const itemTop = (rect: DOMRect, index: number) => rect.bottom + FIRST + index * STEP
 
-function Track({ reduce }: { reduce: boolean }) {
-  const size = (TRACK + 8) * 2
-  const point = (angle: number) => {
-    const radians = (angle * Math.PI) / 180
-    return { x: size / 2 - TRACK * Math.cos(radians), y: size / 2 + TRACK * Math.sin(radians) }
-  }
-  const start = point(-30)
-  const end = point(105)
+function Rail({ anchor, reduce }: { anchor: DOMRect; reduce: boolean }) {
+  const top = anchor.bottom + 4
+  const height = itemTop(anchor, ITEMS.length - 1) + TAIL - top
+  const right = railRight(anchor)
 
   return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      className="absolute overflow-visible text-accent"
-      style={{ left: -size / 2, top: -size / 2 }}
-    >
-      <motion.path
-        d={`M ${start.x} ${start.y} A ${TRACK} ${TRACK} 0 0 0 ${end.x} ${end.y}`}
-        fill="none"
-        stroke="currentColor"
-        strokeOpacity={0.35}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        initial={{ pathLength: reduce ? 1 : 0 }}
-        animate={{ pathLength: 1, transition: { duration: 0.5, ease: 'easeOut' } }}
-        exit={{ pathLength: 0, transition: { duration: 0.2 } }}
+    <div aria-hidden="true" className="pointer-events-none absolute" style={{ right, top, height, width: 0 }}>
+      <motion.div
+        className="absolute inset-y-0 -left-px w-[2px] origin-top rounded-full bg-[linear-gradient(to_bottom,rgba(255,122,26,0.7),rgba(255,122,26,0.35)_70%,transparent)]"
+        initial={{ scaleY: 0 }}
+        animate={{ scaleY: 1, transition: { duration: reduce ? 0 : 0.4, ease: 'easeOut' } }}
+        exit={{ scaleY: 0, transition: { duration: 0.2, delay: 0.1 } }}
       />
+      {!reduce && (
+        <motion.div
+          className="absolute -left-[1.5px] h-16 w-[3px] rounded-full bg-[linear-gradient(to_bottom,transparent,#ffb27a,transparent)] blur-[0.5px]"
+          initial={{ y: -64, opacity: 0 }}
+          animate={{ y: [-64, height], opacity: [0, 1, 1, 0], transition: { duration: 2.6, ease: 'easeInOut', repeat: Infinity, delay: 0.5 } }}
+          exit={{ opacity: 0 }}
+        />
+      )}
       {ITEMS.map((item, index) => {
-        const { x, y } = point(angleOf(index))
+        const y = itemTop(anchor, index) - top
         return (
-          <motion.circle
-            key={item.target}
-            cx={x}
-            cy={y}
-            r={3}
-            fill="currentColor"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, transition: { ...SPRING, delay: 0.18 + index * 0.06 } }}
-            exit={{ scale: 0, transition: { duration: 0.15 } }}
-          />
+          <div key={item.target} className="absolute" style={{ top: y }}>
+            <motion.span
+              className="absolute top-0 right-0 h-[1.5px] origin-right -translate-y-1/2 rounded-full bg-accent/50"
+              style={{ width: BRANCH }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1, transition: { duration: 0.25, delay: 0.16 + index * 0.06 } }}
+              exit={{ scaleX: 0, transition: { duration: 0.12 } }}
+            />
+            <motion.span
+              className="absolute top-0 left-0 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_10px_rgba(255,122,26,0.8)]"
+              initial={{ scale: 0 }}
+              animate={
+                reduce
+                  ? { scale: 1 }
+                  : { scale: [0, 1.3, 1, 1.25, 1], transition: { duration: 2.4, times: [0, 0.12, 0.2, 0.6, 1], repeat: Infinity, repeatDelay: 0.4, delay: 0.16 + index * 0.06 } }
+              }
+              exit={{ scale: 0, transition: { duration: 0.12 } }}
+            />
+          </div>
         )
       })}
-    </svg>
+    </div>
   )
 }

@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useOnline } from '../../hooks/useOnline'
 import { formatLongDate } from '../../lib/dates'
-import { MenuButton, RadialMenu, type MenuTarget } from './HomeMenu'
+import { MenuButton, MenuPanel, type MenuTarget } from './HomeMenu'
 import { WeatherBadge } from './WeatherBadge'
 
 interface Props {
@@ -24,7 +24,7 @@ export function HomeHeader({ dateKey, onOpen }: Props) {
         </h1>
         <MenuButton open={anchor !== null} onOpen={setAnchor} />
       </div>
-      <RadialMenu
+      <MenuPanel
         anchor={anchor}
         onClose={close}
         onSelect={(target) => {
