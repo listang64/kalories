@@ -1,15 +1,19 @@
-import { useEffect } from 'react'
+import { useEffect, type ComponentType } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Overlay } from '../../store/appStore'
+import { ChefHatIcon } from '../icons/ChefHatIcon'
+import { GearIcon } from '../icons/GearIcon'
+import { HandshakeIcon } from '../icons/HandshakeIcon'
+import { StatsIcon } from '../icons/StatsIcon'
 
 export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'history' | 'settings'>
 
-const ITEMS: { target: MenuTarget; label: string }[] = [
-  { target: 'loans', label: 'Prêts' },
-  { target: 'recipes', label: 'Recettes' },
-  { target: 'history', label: 'Statistiques' },
-  { target: 'settings', label: 'Paramètres' },
+const ITEMS: { target: MenuTarget; label: string; Icon: ComponentType<{ size?: number }> }[] = [
+  { target: 'loans', label: 'Prêts', Icon: HandshakeIcon },
+  { target: 'recipes', label: 'Recettes', Icon: ChefHatIcon },
+  { target: 'history', label: 'Statistiques', Icon: StatsIcon },
+  { target: 'settings', label: 'Paramètres', Icon: GearIcon },
 ]
 
 const FIRST = 34
@@ -75,7 +79,7 @@ export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
           <button type="button" aria-label="Fermer le menu" onClick={onClose} className="absolute inset-0 cursor-default" />
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 w-[min(92vw,440px)] bg-[linear-gradient(to_left,rgba(0,0,0,0.86),rgba(0,0,0,0.72)_42%,rgba(0,0,0,0.34)_72%,transparent)] backdrop-blur-[3px] [mask-image:linear-gradient(to_left,#000_55%,transparent)]"
+            className="pointer-events-none absolute inset-y-0 right-0 w-[min(100vw,460px)] bg-[linear-gradient(to_left,rgba(0,0,0,0.88),rgba(0,0,0,0.76)_50%,rgba(0,0,0,0.42)_78%,transparent)] backdrop-blur-[3px] [mask-image:linear-gradient(to_left,#000_62%,transparent)]"
             initial={{ opacity: 0, x: reduce ? 0 : 60 }}
             animate={{ opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } }}
             exit={{ opacity: 0, x: reduce ? 0 : 60, transition: { duration: 0.26, delay: 0.1 } }}
@@ -95,8 +99,11 @@ export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
                   type="button"
                   autoFocus={index === 0}
                   onClick={() => onSelect(item.target)}
-                  className="press rounded-full px-3 py-2 text-[24px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
+                  className="press flex items-center gap-2.5 rounded-full px-3 py-2 text-[24px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
                 >
+                  <span className="text-accent/75 drop-shadow-[0_0_6px_rgba(255,122,26,0.45)]">
+                    <item.Icon size={21} />
+                  </span>
                   {item.label}
                 </button>
               </motion.div>
