@@ -12,7 +12,7 @@ const STATUS: Record<CameraAccess, string> = {
   unavailable: 'Indisponible',
 }
 
-const STEPS: Record<Platform, string[]> = {
+const STEPS: Record<Platform | 'samsung', string[]> = {
   ios: [
     'Ouvre Réglages sur l’iPhone → Apps → Safari → Appareil photo (sur un iOS plus ancien : Réglages → Safari → Appareil photo) et choisis « Demander » ou « Autoriser ».',
     'Si Kalories est ouverte dans Safari : touche « aA » à gauche de l’adresse → Réglages du site web → Appareil photo → Autoriser.',
@@ -25,6 +25,14 @@ const STEPS: Record<Platform, string[]> = {
     'Si Kalories a une icône sur l’écran d’accueil : Paramètres → Applications → Kalories → Autorisations → Appareil photo → Autoriser.',
     'Samsung Internet : menu ≡ → Paramètres → Sites et téléchargements → Autorisations des sites → Appareil photo.',
     'Ferme complètement Kalories, rouvre-la puis touche « Autoriser l’appareil photo » : le diagnostic dit ce qui bloque encore.',
+  ],
+  samsung: [
+    'Ouvre Samsung Internet (le navigateur lui-même) → menu ≡ en bas à droite → Paramètres → Sites et téléchargements → Autorisations des sites → Appareil photo.',
+    'Touche listang64.github.io (dans « Bloqué ») puis choisis « Autoriser », ou supprime-le de la liste pour que la question revienne.',
+    'Android : Paramètres → Applications → Samsung Internet → Autorisations → Appareil photo → « Autoriser seulement si l’appli est en cours d’utilisation ».',
+    'Paramètres → Sécurité et confidentialité → Confidentialité → « Accès à l’appareil photo » activé (aussi dans les réglages rapides).',
+    'Ferme complètement Kalories (multitâche), rouvre-la puis touche « Autoriser l’appareil photo ».',
+    'Si ça bloque encore : ouvre listang64.github.io/kalories dans Chrome, connecte-toi, puis menu ⋮ → Installer l’application. Chrome redemandera l’accès à la caméra.',
   ],
   other: [
     'Clique sur l’icône à gauche de l’adresse → Appareil photo → Autoriser.',
@@ -129,7 +137,7 @@ export function CameraSettings() {
         </SettingsRow>
         {help && (
           <ol className="list-decimal space-y-2 py-3 pr-4 pl-9 text-[15px] leading-snug text-text-2 marker:text-accent">
-            {STEPS[platform()].map((step) => (
+            {STEPS[browserInfo().samsung ? 'samsung' : platform()].map((step) => (
               <li key={step}>{step}</li>
             ))}
           </ol>

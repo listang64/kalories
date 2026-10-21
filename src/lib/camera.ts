@@ -10,6 +10,7 @@ export interface CameraProbe {
 
 export interface BrowserInfo {
   name: string
+  samsung: boolean
   inApp: boolean
   installed: boolean
 }
@@ -48,13 +49,20 @@ export function browserInfo(): BrowserInfo {
   const version = match?.found?.slice(1).find(Boolean)?.split('.')[0]
   const name = inApp ? 'Navigateur intégré d’une autre app' : match ? `${match.label}${version ? ` ${version}` : ''}` : 'Navigateur inconnu'
   const standalone = (navigator as { standalone?: boolean }).standalone === true
-  return { name, inApp, installed: standalone || window.matchMedia('(display-mode: standalone)').matches }
+  return {
+    name,
+    samsung: /SamsungBrowser/.test(agent),
+    inApp,
+    installed: standalone || window.matchMedia('(display-mode: standalone)').matches,
+  }
 }
 
 function adviceFor(error: unknown, browser: BrowserInfo): string {
   const name = error instanceof DOMException ? error.name : ''
   const message = error instanceof Error ? error.message : ''
   if (browser.inApp) return 'Kalories est ouverte dans le navigateur d’une autre app, qui bloque la caméra : ouvre le lien dans Chrome.'
+  if (browser.samsung && (name === 'NotAllowedError' || name === 'SecurityError'))
+    return 'Kalories passe par Samsung Internet : c’est dans les réglages de Samsung Internet, pas de Chrome, qu’il faut débloquer la caméra (étapes ci-dessous).'
   if (/system/i.test(message))
     return 'C’est Android qui bloque le navigateur : Paramètres → Applications → Chrome → Autorisations → Appareil photo → Autoriser, et vérifie « Accès à l’appareil photo » dans Confidentialité.'
   if (name === 'NotAllowedError' || name === 'SecurityError')
