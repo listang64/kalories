@@ -20,6 +20,7 @@ export interface Profile extends Settings {
   colorB: string
   chartColor: string
   householdId: string | null
+  needsSet: boolean
 }
 
 export const DEFAULT_KCAL = 2000
@@ -41,6 +42,7 @@ export function parseProfile(uid: string, data: DocumentData | undefined): Profi
     colorB,
     chartColor,
     householdId: typeof data?.householdId === 'string' && data.householdId ? data.householdId : null,
+    needsSet: data?.needsSet === true,
     dailyKcalGoal: kcal,
     macroMode: data?.macroMode === 'manual' ? 'manual' : 'auto',
     macroGoals: {
@@ -56,6 +58,6 @@ export function goalsOf(settings: Settings): DayGoals {
   return { kcal: settings.dailyKcalGoal, ...macros }
 }
 
-export function saveSettings(uid: string, patch: Partial<Settings & { color: ColorId }>) {
+export function saveSettings(uid: string, patch: Partial<Settings & { color: ColorId; needsSet: boolean }>) {
   updateDoc(doc(db, 'users', uid), patch).catch(() => useAppStore.getState().showToast('Enregistrement impossible'))
 }

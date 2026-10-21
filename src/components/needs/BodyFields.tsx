@@ -1,6 +1,5 @@
 import type { NeedsForm } from '../../hooks/useNeedsForm'
 import type { Sex } from '../../lib/needs'
-import { Segmented } from '../Segmented'
 import { ValueField } from '../ValueField'
 import { NeedsSection } from './NeedsSection'
 
@@ -20,7 +19,25 @@ export function BodyFields({ form, onChange }: Props) {
       title="Toi"
       footer="Masse grasse : seulement si elle a été mesurée sérieusement (DEXA, pince à plis, diététicien). Les balances grand public se trompent souvent : dans le doute, laisse vide."
     >
-      <Segmented label="Sexe" value={form.sex} options={SEXES} onChange={(sex) => onChange({ sex })} />
+      <div role="radiogroup" aria-label="Sexe" className="grid grid-cols-2 gap-2">
+        {SEXES.map((option) => {
+          const active = form.sex === option.value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange({ sex: option.value })}
+              className={`press h-11 rounded-full border-2 text-[16px] font-semibold transition-colors ${
+                active ? 'border-accent bg-accent text-black shadow-accent' : 'border-accent/80 text-accent'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+      </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <ValueField label="Âge" unit="ans" value={form.age} decimals={false} onChange={(age) => onChange({ age })} />
         <ValueField

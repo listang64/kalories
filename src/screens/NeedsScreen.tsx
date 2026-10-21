@@ -17,7 +17,10 @@ export function NeedsScreen({ me }: { me: Profile }) {
   return (
     <div className="flex flex-col gap-7 pt-1">
       <p className="px-1 text-[15px] leading-snug text-text-2">
-        Calcul détaillé de ta dépense : métabolisme, journée, pas et sport. Tes mesures restent sur ce téléphone.
+        {me.needsSet
+          ? 'Calcul détaillé de ta dépense : métabolisme, journée, pas et sport.'
+          : 'Commence par calculer tes besoins : ton objectif du jour sera réglé sur toi.'}{' '}
+        Tes mesures restent sur ce téléphone.
       </p>
       <BodyFields form={form} onChange={update} />
       <DayFields form={form} onChange={update} />

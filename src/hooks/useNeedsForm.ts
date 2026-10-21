@@ -11,6 +11,7 @@ import {
   type Sex,
   type SportSession,
 } from '../lib/needs'
+import { useAppStore } from '../store/appStore'
 
 export interface NeedsForm {
   sex: Sex | null
@@ -40,6 +41,7 @@ const EMPTY: NeedsForm = {
 
 const MAX_SPORTS = 6
 const storageKey = (uid: string) => `kalories.needs.${uid}`
+const promptKey = (uid: string) => `kalories.needsPrompted.${uid}`
 const text = (value: unknown) => (typeof value === 'string' ? value.slice(0, 6) : '')
 const oneOf = <T extends string>(value: unknown, options: readonly T[], fallback: T): T =>
   options.find((option) => option === value) ?? fallback
@@ -124,4 +126,17 @@ export function missingFields(form: NeedsForm): string[] {
     [within(decimal(form.weight), 30, 300), 'poids (30 à 300 kg)'],
   ]
   return checks.filter(([ok]) => !ok).map(([, label]) => label)
+}
+
+export function useNeedsPrompt(uid: string, done: boolean) {
+  useEffect(() => {
+    if (done || useAppStore.getState().overlay !== null) return
+    try {
+      if (localStorage.getItem(promptKey(uid))) return
+      localStorage.setItem(promptKey(uid), '1')
+    } catch {
+      return
+    }
+    useAppStore.getState().setOverlay('needs')
+  }, [uid, done])
 }

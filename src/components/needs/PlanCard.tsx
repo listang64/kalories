@@ -24,10 +24,13 @@ export function PlanCard({ me, plan, sex, direction }: Props) {
   const kcal = Math.min(6000, Math.max(800, plan.kcal))
   const macros = { carbs: plan.carbs, fat: plan.fat, protein: plan.protein }
   const applied =
-    me.dailyKcalGoal === kcal && me.macroMode === 'manual' && MACROS.every(({ key }) => me.macroGoals[key] === macros[key])
+    me.needsSet &&
+    me.dailyKcalGoal === kcal &&
+    me.macroMode === 'manual' &&
+    MACROS.every(({ key }) => me.macroGoals[key] === macros[key])
 
   const apply = () => {
-    saveSettings(me.uid, { dailyKcalGoal: kcal, macroMode: 'manual', macroGoals: macros })
+    saveSettings(me.uid, { dailyKcalGoal: kcal, macroMode: 'manual', macroGoals: macros, needsSet: true })
     useAppStore.getState().showToast(`Objectif mis à jour : ${formatInt(kcal)} kcal`)
   }
 
