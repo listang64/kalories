@@ -24,6 +24,7 @@ import { useAppStore } from '../store/appStore'
 import { DayDetailScreen } from './DayDetailScreen'
 import { HistoryScreen } from './HistoryScreen'
 import { LoansScreen } from './LoansScreen'
+import { NeedsScreen } from './NeedsScreen'
 import { SettingsScreen } from './SettingsScreen'
 import { ShoppingScreen } from './ShoppingScreen'
 
@@ -102,6 +103,9 @@ export function HomeScreen({ me, people }: Props) {
       </BottomSheet>
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
         <LoansScreen me={me} partner={partner} />
+      </BottomSheet>
+      <BottomSheet open={overlay === 'needs'} title="Mes besoins" onClose={() => setOverlay(null)}>
+        <NeedsScreen me={me} />
       </BottomSheet>
       <RecipesSheet me={me} partner={partner} />
       <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />

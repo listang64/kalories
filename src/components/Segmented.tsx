@@ -8,7 +8,7 @@ interface Option<T extends string> {
 
 interface Props<T extends string> {
   label: string
-  value: T
+  value: T | null
   options: Option<T>[]
   onChange: (value: T) => void
 }

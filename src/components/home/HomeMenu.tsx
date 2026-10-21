@@ -6,13 +6,15 @@ import { ChefHatIcon } from '../icons/ChefHatIcon'
 import { GearIcon } from '../icons/GearIcon'
 import { HandshakeIcon } from '../icons/HandshakeIcon'
 import { StatsIcon } from '../icons/StatsIcon'
+import { TargetIcon } from '../icons/TargetIcon'
 
-export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'history' | 'settings'>
+export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'history' | 'needs' | 'settings'>
 
 const ITEMS: { target: MenuTarget; label: string; Icon: ComponentType<{ size?: number }> }[] = [
   { target: 'loans', label: 'Prêts', Icon: HandshakeIcon },
   { target: 'recipes', label: 'Recettes', Icon: ChefHatIcon },
   { target: 'history', label: 'Statistiques', Icon: StatsIcon },
+  { target: 'needs', label: 'Mes besoins', Icon: TargetIcon },
   { target: 'settings', label: 'Paramètres', Icon: GearIcon },
 ]
 
