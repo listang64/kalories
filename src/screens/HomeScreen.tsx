@@ -9,7 +9,6 @@ import { InstallBanner } from '../components/InstallBanner'
 import { HomeActions } from '../components/home/HomeActions'
 import { HomeHeader } from '../components/home/HomeHeader'
 import { MacroBlock } from '../components/home/MacroBlock'
-import { NeedsBanner } from '../components/home/NeedsBanner'
 import { RecipesSheet } from '../components/recipes/RecipesSheet'
 import { Rise } from '../components/Rise'
 import { BarcodeScanner } from '../components/scanner/BarcodeScanner'
@@ -68,11 +67,7 @@ export function HomeScreen({ me, people }: Props) {
       <Rise index={0}>
         <HomeHeader dateKey={today} onOpen={setOverlay} />
         <InstallBanner />
-        {!me.needsSet ? (
-          <NeedsBanner onPress={() => setOverlay('needs')} />
-        ) : (
-          !hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />
-        )}
+        {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
       <Rise index={1} className="mt-5">
         <MacroBlock

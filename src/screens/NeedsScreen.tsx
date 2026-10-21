@@ -19,7 +19,7 @@ export function NeedsScreen({ me }: { me: Profile }) {
       <p className="px-1 text-[15px] leading-snug text-text-2">
         {me.needsSet
           ? 'Calcul détaillé de ta dépense : métabolisme, journée, pas et sport.'
-          : 'Commence par calculer tes besoins : ton objectif du jour sera réglé sur toi.'}{' '}
+          : 'Calcule tes besoins pour régler ton objectif du jour sur toi, ou ferme pour passer cette étape.'}{' '}
         Tes mesures restent sur ce téléphone.
       </p>
       <BodyFields form={form} onChange={update} />
