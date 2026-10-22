@@ -41,7 +41,7 @@ export function useTitleDetails(item: WatchItem | null) {
       })
       .catch((error: unknown) => {
         if (!alive) return
-        const message = error instanceof WikiError ? error.message : 'Pas de connexion à Wikipédia'
+        const message = error instanceof WikiError ? error.message : 'Wikipédia ne répond pas pour l’instant, réessaie'
         setState({ key, result: { status: 'error', message } })
       })
     return () => {

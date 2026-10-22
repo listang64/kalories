@@ -24,7 +24,7 @@ export function useTitleSearch(text: string, kind: ScreenKind): TitleSearch {
         .then((hits) => setState({ key, result: { loading: false, hits, error: '' } }))
         .catch((error: unknown) => {
           if (controller.signal.aborted) return
-          const message = error instanceof WikiError ? error.message : 'Pas de connexion à Wikipédia'
+          const message = error instanceof WikiError ? error.message : 'Wikipédia ne répond pas pour l’instant, réessaie'
           setState({ key, result: { loading: false, hits: [], error: message } })
         })
     }, DELAY)
