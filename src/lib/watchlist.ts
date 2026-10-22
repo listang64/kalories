@@ -31,9 +31,17 @@ function clean(input: TitleInput): TitleInput {
   }
 }
 
-export async function addTitle(input: TitleInput, uid: string): Promise<void> {
+export function addTitle(input: TitleInput, uid: string): { id: string; saved: Promise<void> } {
+  const id = newId()
   const item = { ...clean(input), addedBy: uid, order: Date.now() }
-  await setDoc(currentSharedDoc('ecrans'), { titles: { [newId()]: item } }, { merge: true })
+  return { id, saved: setDoc(currentSharedDoc('ecrans'), { titles: { [id]: item } }, { merge: true }) }
+}
+
+export async function updateTitle(id: string, patch: Partial<TitleInput>): Promise<void> {
+  const fields = Object.entries(clean({ kind: 'film', title: 'x', year: null, ref: '', poster: '', ...patch }))
+    .filter(([key]) => key in patch)
+    .map(([key, value]) => [`titles.${id}.${key}`, value])
+  if (fields.length) await updateDoc(currentSharedDoc('ecrans'), Object.fromEntries(fields))
 }
 
 export async function removeTitle(id: string): Promise<void> {
