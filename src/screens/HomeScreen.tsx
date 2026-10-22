@@ -28,6 +28,7 @@ import { LoansScreen } from './LoansScreen'
 import { NeedsScreen } from './NeedsScreen'
 import { SettingsScreen } from './SettingsScreen'
 import { ShoppingScreen } from './ShoppingScreen'
+import { WatchScreen } from './WatchScreen'
 
 interface Props {
   me: Profile
@@ -105,6 +106,9 @@ export function HomeScreen({ me, people }: Props) {
       </BottomSheet>
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
         <LoansScreen me={me} partner={partner} />
+      </BottomSheet>
+      <BottomSheet open={overlay === 'watch'} title="Films et séries" onClose={() => setOverlay(null)}>
+        <WatchScreen me={me} partner={partner} />
       </BottomSheet>
       <BottomSheet open={overlay === 'needs'} title="Mes besoins" onClose={() => setOverlay(null)}>
         <NeedsScreen me={me} />

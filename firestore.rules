@@ -174,7 +174,7 @@ service cloud.firestore {
 
       match /shared/{name} {
         allow read, delete: if inHousehold(hid);
-        allow create, update: if name in ['courses', 'prets'] && inHouseholdAfter(hid);
+        allow create, update: if name in ['courses', 'prets', 'ecrans'] && inHouseholdAfter(hid);
       }
 
       match /recipes/{recipeId} {

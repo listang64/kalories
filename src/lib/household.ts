@@ -25,7 +25,7 @@ import { refreshHousehold } from './session'
 import { shareText, type ShareResult } from './share'
 import { normalizeCode, randomCode } from './shared'
 
-export type SharedName = 'courses' | 'prets'
+export type SharedName = 'courses' | 'prets' | 'ecrans'
 
 export function sharedDoc(householdId: string, name: SharedName): DocumentReference {
   return doc(db, 'households', householdId, 'shared', name)
@@ -141,25 +141,29 @@ function field(data: DocumentData | undefined, name: string): Record<string, unk
 export async function joinHousehold(me: Profile, invite: Invite, color: ColorId): Promise<void> {
   const previous = me.householdId
   if (!previous) throw new Error('Aucun foyer')
-  const [courses, loans, recipes] = await Promise.all([
+  const [courses, loans, screens, recipes] = await Promise.all([
     getDocFromServer(sharedDoc(previous, 'courses')),
     getDocFromServer(sharedDoc(previous, 'prets')),
+    getDocFromServer(sharedDoc(previous, 'ecrans')),
     getDocsFromServer(recipesOf(previous)),
   ])
   const items = field(courses.data(), 'items')
   const lent = field(loans.data(), 'loans')
+  const titles = field(screens.data(), 'titles')
   const batch = writeBatch(db)
   batch.update(doc(db, 'households', invite.householdId), { members: arrayUnion(me.uid), invite: invite.code })
   batch.update(doc(db, 'users', me.uid), { householdId: invite.householdId, color })
   batch.delete(doc(db, 'invites', invite.code))
   if (Object.keys(items).length > 0) batch.set(sharedDoc(invite.householdId, 'courses'), { items }, { merge: true })
   if (Object.keys(lent).length > 0) batch.set(sharedDoc(invite.householdId, 'prets'), { loans: lent }, { merge: true })
+  if (Object.keys(titles).length > 0) batch.set(sharedDoc(invite.householdId, 'ecrans'), { titles }, { merge: true })
   recipes.docs.forEach((recipe) => {
     batch.set(doc(recipesOf(invite.householdId), recipe.id), recipe.data())
     batch.delete(recipe.ref)
   })
   batch.delete(sharedDoc(previous, 'courses'))
   batch.delete(sharedDoc(previous, 'prets'))
+  batch.delete(sharedDoc(previous, 'ecrans'))
   batch.delete(doc(db, 'households', previous))
   await batch.commit()
   refreshHousehold()
