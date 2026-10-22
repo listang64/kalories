@@ -49,6 +49,7 @@ const ENWIKI = 'https://en.wikipedia.org/w/api.php'
 const TVMAZE = 'https://api.tvmaze.com'
 const POSTER_WIDTH = '342'
 const SYNOPSIS_MAX = 1400
+const RETRIES = 2
 
 const CLASSES: Record<ScreenKind, string[]> = {
   film: ['Q11424', 'Q202866', 'Q24869', 'Q506240', 'Q93204'],
@@ -64,9 +65,15 @@ const SECTION = /^==\s*(Synopsis|Résumé|Intrigue|Histoire|Scénario)\s*==\s*$/
 
 export class WikiError extends Error {}
 
-async function api(base: string, params: Record<string, string>, signal?: AbortSignal): Promise<Api> {
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function api(base: string, params: Record<string, string>, signal?: AbortSignal, attempt = 0): Promise<Api> {
   const query = new URLSearchParams({ format: 'json', formatversion: '2', origin: '*', ...params })
   const response = await fetch(`${base}?${query}`, { signal })
+  if (response.status === 429 && attempt < RETRIES) {
+    await pause(1200 * (attempt + 1))
+    return api(base, params, signal, attempt + 1)
+  }
   if (response.status === 429) throw new WikiError('Wikipédia est surchargé, réessaie dans un instant')
   if (!response.ok) throw new WikiError('Wikipédia ne répond pas')
   return (await response.json()) as Api
@@ -216,19 +223,16 @@ export async function titleDetails(ref: string, signal?: AbortSignal): Promise<T
   const makerIds = (kind === 'serie' && ids(claims, 'P170').length ? ids(claims, 'P170') : ids(claims, 'P57')).slice(0, 3)
   const fr = item.sitelinks?.frwiki?.title
   const en = item.sitelinks?.enwiki?.title
-  const [names, text, enPoster] = await Promise.all([
+  const imdb = values(claims, 'P345').find((value): value is string => typeof value === 'string')
+  const noShow: Show = { poster: '', cast: [] }
+  const [names, text, show] = await Promise.all([
     optional(labels([...castIds, ...makerIds], signal), {} as Record<string, string>),
     fr ? optional(synopsis(fr, signal), '') : Promise.resolve(''),
-    en ? optional(pageImage(ENWIKI, en, signal), '') : Promise.resolve(''),
+    kind === 'serie' && imdb ? optional(tvmaze(imdb, castIds.length === 0, signal), noShow) : Promise.resolve(noShow),
   ])
-  let cast = castIds.map((id) => names[id] ?? '').filter(Boolean)
-  let poster = enPoster
-  const imdb = values(claims, 'P345').find((value): value is string => typeof value === 'string')
-  if (kind === 'serie' && imdb && (!poster || cast.length === 0)) {
-    const show = await optional(tvmaze(imdb, cast.length === 0, signal), { poster: '', cast: [] })
-    poster ||= show.poster
-    if (cast.length === 0) cast = show.cast
-  }
+  const cast = castIds.length ? castIds.map((id) => names[id] ?? '').filter(Boolean) : show.cast
+  let poster = show.poster
+  if (!poster && en) poster = await optional(pageImage(ENWIKI, en, signal), '')
   if (!poster && fr) poster = await optional(pageImage(FRWIKI, fr, signal), '')
   const description = item.descriptions?.fr?.value ?? ''
   return {
