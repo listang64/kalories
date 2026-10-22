@@ -29,6 +29,7 @@ interface Drop {
   radius: number
   color: string
   glow: string
+  reverse: boolean
   delay: number
   duration: number
 }
@@ -73,12 +74,14 @@ function dropsFor(burst: Burst, side: ArcSide, target: StreamTarget, size: numbe
   const rand = seeded(burst.id * 31 + (side === 'left' ? 7 : 13))
   const to = gaugeLevel(burst.to, target.goal).fill
   const from = gaugeLevel(burst.from, target.goal).fill
-  const span = Math.max(to - from, 0.06)
+  const reverse = burst.to < burst.from
+  const span = Math.max(Math.abs(to - from), 0.06)
   const center = size / 2
   return Array.from({ length: count }, (_, i) => {
-    const t = Math.min(0.99, Math.max(0.01, to - span + (span * (i + 0.5)) / count + (rand() - 0.5) * 0.02))
-    const end = arcPoint(side, size, t)
-    const start = { x: center + (rand() - 0.5) * orb * 0.4, y: center + (rand() - 0.5) * orb * 0.4 }
+    const step = (span * (i + 0.5)) / count + (rand() - 0.5) * 0.02
+    const edge = arcPoint(side, size, Math.min(0.99, Math.max(0.01, reverse ? from - step : to - span + step)))
+    const core = { x: center + (rand() - 0.5) * orb * 0.4, y: center + (rand() - 0.5) * orb * 0.4 }
+    const [start, end] = reverse ? [edge, core] : [core, edge]
     const dx = end.x - start.x
     const dy = end.y - start.y
     const bend = (rand() - 0.5) * 0.8
@@ -89,6 +92,7 @@ function dropsFor(burst: Burst, side: ArcSide, target: StreamTarget, size: numbe
       radius: size * (0.7 + rand() * 0.45),
       color: i % 2 ? target.colors[1] : target.colors[0],
       glow: target.colors[1],
+      reverse,
       delay: (i * 0.055 + rand() * 0.06) * 1000,
       duration: (0.95 + rand() * 0.25) * 1000,
     }
@@ -111,15 +115,14 @@ function paint(ctx: CanvasRenderingContext2D, drop: Drop, elapsed: number, glow:
     ctx.arc(x, y, r, 0, 2 * Math.PI)
     ctx.fill()
   }
-  if (u > SPLASH) {
-    const s = (u - SPLASH) / (1 - SPLASH)
-    const end = drop.path[2]
-    ctx.globalAlpha = 0.45 * (1 - s)
-    ctx.shadowBlur = glow
-    ctx.beginPath()
-    ctx.arc(end.x, end.y, drop.radius * 0.03 * (0.4 + s), 0, 2 * Math.PI)
-    ctx.fill()
-  }
+  const s = drop.reverse ? u / (1 - SPLASH) : (u - SPLASH) / (1 - SPLASH)
+  if (s <= 0 || s >= 1) return
+  const at = drop.path[drop.reverse ? 0 : 2]
+  ctx.globalAlpha = 0.45 * (1 - s)
+  ctx.shadowBlur = glow
+  ctx.beginPath()
+  ctx.arc(at.x, at.y, drop.radius * 0.03 * (0.4 + s), 0, 2 * Math.PI)
+  ctx.fill()
 }
 
 export function FeedStream({ size, orb, bursts, targets, onDone }: Props) {

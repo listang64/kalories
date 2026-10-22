@@ -72,30 +72,28 @@ export function useFeedBursts(entries: PersonEntry[], blocked: boolean) {
 
   useEffect(() => {
     const target = snapshot(entries)
-    const uids = Object.keys(target)
-    const risers = uids.filter((uid) => (target[uid] ?? 0) > (shown[uid] ?? 0) + 1 && flying.current[uid] !== target[uid])
-    const others = uids.filter(
-      (uid) =>
-        !risers.includes(uid) &&
-        flying.current[uid] !== target[uid] &&
-        target[uid] !== shown[uid] &&
-        (armed || !(uid in shown)),
-    )
+    const gap = (uid: string) => (target[uid] ?? 0) - (shown[uid] ?? 0)
+    const moved = Object.keys(target).filter((uid) => flying.current[uid] !== target[uid] && target[uid] !== shown[uid])
+    const risers = moved.filter((uid) => gap(uid) > 1)
+    const fallers = moved.filter((uid) => armed && uid in shown && gap(uid) < -1)
+    const movers = [...risers, ...fallers]
+    const others = moved.filter((uid) => !movers.includes(uid) && (armed || !(uid in shown)))
     if (others.length) reveal(pick(target, others))
-    if (risers.length === 0) return
-    if (reduce) return reveal(pick(target, risers))
+    if (movers.length === 0) return
+    if (reduce) return reveal(pick(target, movers))
     if (blocked) return
-    const delay = armed ? SETTLE : OPENING
     const launch = window.setTimeout(() => {
-      const fresh = risers.map((uid) => ({ id: ++seq.current, uid, from: shown[uid] ?? 0, to: target[uid] ?? 0 }))
-      risers.forEach((uid) => (flying.current[uid] = target[uid] ?? 0))
+      const fresh = movers.map((uid) => ({ id: ++seq.current, uid, from: shown[uid] ?? 0, to: target[uid] ?? 0 }))
+      movers.forEach((uid) => (flying.current[uid] = target[uid] ?? 0))
       setBursts((current) => [...current, ...fresh])
-      setPulse((count) => count + 1)
+      if (risers.length) setPulse((count) => count + 1)
+      if (fallers.length) reveal(pick(target, fallers))
       window.setTimeout(() => {
-        reveal(pick(target, risers))
-        risers.forEach((uid) => flying.current[uid] === target[uid] && delete flying.current[uid])
+        if (risers.length) reveal(pick(target, risers))
+        if (fallers.length) setPulse((count) => count + 1)
+        movers.forEach((uid) => flying.current[uid] === target[uid] && delete flying.current[uid])
       }, TRAVEL)
-    }, delay)
+    }, armed ? SETTLE : OPENING)
     return () => window.clearTimeout(launch)
   }, [key, blocked, reduce, armed, seen.day])
 
