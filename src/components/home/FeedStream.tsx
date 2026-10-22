@@ -1,6 +1,6 @@
-import { useId } from 'react'
-import { motion } from 'motion/react'
+import { useEffect, useRef } from 'react'
 import { arcLayout, type ArcSide } from '../fluid/arcGeometry'
+import { addFluid } from '../fluid/loop'
 import type { Burst } from '../../hooks/useFeedBursts'
 import { gaugeLevel } from '../../lib/nutrition'
 
@@ -18,18 +18,27 @@ interface Props {
   onDone: (id: number) => void
 }
 
+interface Point {
+  x: number
+  y: number
+}
+
 interface Drop {
-  key: string
-  xs: number[]
-  ys: number[]
-  rs: number[]
+  burst: number
+  path: [Point, Point, Point]
+  radius: number
   color: string
+  glow: string
   delay: number
   duration: number
 }
 
+const MAX_DPR = 2
 const STEPS = [0, 0.2, 0.45, 0.7, 1]
-const RADII = [0, 0.036, 0.042, 0.034, 0.016]
+const RADII = [0, 0.036, 0.042, 0.034, 0]
+const TRAIL = 10
+const TRAIL_GAP = 0.022
+const SPLASH = 0.8
 
 function seeded(seed: number) {
   let s = seed % 233280
@@ -39,11 +48,25 @@ function seeded(seed: number) {
   }
 }
 
-function arcPoint(side: ArcSide, size: number, fill: number) {
+function arcPoint(side: ArcSide, size: number, fill: number): Point {
   const { r, gap } = arcLayout(size)
   const sweep = fill * (Math.PI - 2 * gap)
   const t = side === 'left' ? Math.PI + gap + sweep : Math.PI - gap - sweep
   return { x: size / 2 + r * Math.sin(t), y: size / 2 - r * Math.cos(t) }
+}
+
+const ease = (u: number) => u * u * (3 - 2 * u)
+
+function along([a, b, c]: Drop['path'], u: number): Point {
+  const e = ease(u)
+  const at = (p: number, q: number, r: number) => (1 - e) * (1 - e) * p + 2 * e * (1 - e) * q + e * e * r
+  return { x: at(a.x, b.x, c.x), y: at(a.y, b.y, c.y) }
+}
+
+function profile(u: number) {
+  const i = Math.max(1, STEPS.findIndex((step) => step >= u))
+  const [s0, s1, r0, r1] = [STEPS[i - 1] ?? 0, STEPS[i] ?? 1, RADII[i - 1] ?? 0, RADII[i] ?? 0]
+  return r0 + ((r1 - r0) * (u - s0)) / (s1 - s0)
 }
 
 function dropsFor(burst: Burst, side: ArcSide, target: StreamTarget, size: number, orb: number, count: number): Drop[] {
@@ -60,57 +83,96 @@ function dropsFor(burst: Burst, side: ArcSide, target: StreamTarget, size: numbe
     const dy = end.y - start.y
     const bend = (rand() - 0.5) * 0.8
     const control = { x: start.x + dx * 0.45 - dy * bend, y: start.y + dy * 0.45 + dx * bend }
-    const at = (u: number, a: number, b: number, c: number) => (1 - u) * (1 - u) * a + 2 * u * (1 - u) * b + u * u * c
-    const scale = 0.7 + rand() * 0.45
     return {
-      key: `${burst.id}-${side}-${i}`,
-      xs: STEPS.map((u) => at(u, start.x, control.x, end.x)),
-      ys: STEPS.map((u) => at(u, start.y, control.y, end.y)),
-      rs: RADII.map((r) => r * size * scale),
+      burst: burst.id,
+      path: [start, control, end],
+      radius: size * (0.7 + rand() * 0.45),
       color: i % 2 ? target.colors[1] : target.colors[0],
-      delay: i * 0.055 + rand() * 0.06,
-      duration: 0.95 + rand() * 0.25,
+      glow: target.colors[1],
+      delay: (i * 0.055 + rand() * 0.06) * 1000,
+      duration: (0.95 + rand() * 0.25) * 1000,
     }
   })
 }
 
+function paint(ctx: CanvasRenderingContext2D, drop: Drop, elapsed: number, glow: number) {
+  const u = (elapsed - drop.delay) / drop.duration
+  if (u <= 0 || u >= 1) return
+  ctx.fillStyle = drop.color
+  ctx.shadowColor = drop.glow
+  for (let k = TRAIL; k >= 0; k--) {
+    const v = u - k * TRAIL_GAP
+    const r = v > 0 ? profile(v) * drop.radius * (1 - k / (TRAIL + 2)) : 0
+    if (r < 0.3) continue
+    const { x, y } = along(drop.path, v)
+    ctx.globalAlpha = k ? 0.5 * (1 - k / (TRAIL + 1)) : 1
+    ctx.shadowBlur = k ? 0 : glow
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, 2 * Math.PI)
+    ctx.fill()
+  }
+  if (u > SPLASH) {
+    const s = (u - SPLASH) / (1 - SPLASH)
+    const end = drop.path[2]
+    ctx.globalAlpha = 0.45 * (1 - s)
+    ctx.shadowBlur = glow
+    ctx.beginPath()
+    ctx.arc(end.x, end.y, drop.radius * 0.03 * (0.4 + s), 0, 2 * Math.PI)
+    ctx.fill()
+  }
+}
+
 export function FeedStream({ size, orb, bursts, targets, onDone }: Props) {
-  const id = useId()
-  const blur = Math.max(2.5, size * 0.012)
+  const canvas = useRef<HTMLCanvasElement>(null)
+  const started = useRef(new Map<number, number>())
+  const margin = Math.round(size * 0.12)
+
+  useEffect(() => {
+    const element = canvas.current
+    const ctx = element?.getContext('2d')
+    if (!element || !ctx || bursts.length === 0) return
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+    const pixels = Math.round((size + 2 * margin) * dpr)
+    if (element.width !== pixels) element.width = element.height = pixels
+    const glow = Math.max(4, size * 0.025) * dpr
+    const live = new Set(bursts.map((burst) => burst.id))
+    started.current.forEach((_, id) => !live.has(id) && started.current.delete(id))
+    const drops = bursts.flatMap((burst) => {
+      const target = targets[burst.uid]
+      if (!target) return []
+      const count = target.sides.length > 1 ? 8 : 14
+      return target.sides.flatMap((side) => dropsFor(burst, side, target, size, orb, count))
+    })
+    const ends = new Map<number, number>()
+    drops.forEach((drop) => ends.set(drop.burst, Math.max(ends.get(drop.burst) ?? 0, drop.delay + drop.duration)))
+    const finished = new Set<number>()
+
+    return addFluid({
+      frame() {
+        const now = performance.now()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.clearRect(0, 0, pixels, pixels)
+        ctx.setTransform(dpr, 0, 0, dpr, margin * dpr, margin * dpr)
+        bursts.forEach((burst) => !started.current.has(burst.id) && started.current.set(burst.id, now))
+        drops.forEach((drop) => paint(ctx, drop, now - (started.current.get(drop.burst) ?? now), glow))
+        bursts.forEach((burst) => {
+          const elapsed = now - (started.current.get(burst.id) ?? now)
+          if (finished.has(burst.id) || elapsed < (ends.get(burst.id) ?? 0)) return
+          finished.add(burst.id)
+          onDone(burst.id)
+        })
+      },
+    })
+  }, [bursts, size, orb, targets, onDone, margin])
+
+  if (bursts.length === 0) return null
 
   return (
-    <svg aria-hidden="true" width={size} height={size} className="pointer-events-none absolute inset-0 overflow-visible">
-      <defs>
-        <filter id={`${id}goo`} filterUnits="userSpaceOnUse" x={-size * 0.1} y={-size * 0.1} width={size * 1.2} height={size * 1.2}>
-          <feGaussianBlur in="SourceGraphic" stdDeviation={blur} result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo" />
-          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-        </filter>
-      </defs>
-      {bursts.map((burst) => {
-        const target = targets[burst.uid]
-        if (!target) return null
-        const drops = target.sides.flatMap((side) =>
-          dropsFor(burst, side, target, size, orb, target.sides.length > 1 ? 8 : 14),
-        )
-        const last = drops.reduce<Drop | null>((a, b) => (a && a.delay + a.duration >= b.delay + b.duration ? a : b), null)
-        return (
-          <g key={burst.id} style={{ filter: `drop-shadow(0 0 ${blur * 1.6}px ${target.colors[1]})` }}>
-            <g filter={`url(#${id}goo)`}>
-              {drops.map((drop) => (
-                <motion.circle
-                  key={drop.key}
-                  fill={drop.color}
-                  initial={{ cx: drop.xs[0], cy: drop.ys[0], r: 0 }}
-                  animate={{ cx: drop.xs, cy: drop.ys, r: drop.rs }}
-                  transition={{ duration: drop.duration, delay: drop.delay, ease: [0.45, 0, 0.3, 1], times: STEPS }}
-                  onAnimationComplete={drop === last ? () => onDone(burst.id) : undefined}
-                />
-              ))}
-            </g>
-          </g>
-        )
-      })}
-    </svg>
+    <canvas
+      ref={canvas}
+      aria-hidden="true"
+      className="pointer-events-none absolute"
+      style={{ left: -margin, top: -margin, width: size + 2 * margin, height: size + 2 * margin }}
+    />
   )
 }
