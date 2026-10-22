@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { colorById } from '../../config/colors'
 import { useSession } from '../../store/sessionStore'
 import { OrbCss } from './fallback/OrbCss'
@@ -11,6 +11,7 @@ interface Props {
   label: string
   onPress?: () => void
   spin?: number
+  pulse?: number
 }
 
 const GLOW_RATIO = 0.34
@@ -23,10 +24,14 @@ function useOrbColors(): string[] {
   return [first.colorA, first.colorB, second.colorA, second.colorB]
 }
 
-export function FluidOrb({ size, label, onPress, spin = 1 }: Props) {
+export function FluidOrb({ size, label, onPress, spin = 1, pulse = 0 }: Props) {
   const fluid = useFluidSupport()
   const gauge = useRef<FluidGauge | null>(null)
   const colors = useOrbColors()
+
+  useEffect(() => {
+    if (pulse) gauge.current?.startRipple()
+  }, [pulse])
 
   if (!fluid.enabled) return <OrbCss size={size} label={label} colors={colors} onPress={onPress} />
 

@@ -165,7 +165,7 @@ vec3 lobe(float i, float t) {
     env = s * s;
     rate = PI * sin(2.0 * PI * f) / (0.72 * period);
   }
-  float strength = 0.18 * (0.65 + 0.35 * hash11(cycle * 3.7 + i * 11.1));
+  float strength = 0.25 * (0.65 + 0.35 * hash11(cycle * 3.7 + i * 11.1));
   float angle = 2.0 * PI * hash11(cycle * 1.3 + i * 7.9) + 0.35 * (f - 0.5);
   return vec3(angle, strength * env, strength * rate);
 }
@@ -175,12 +175,12 @@ vec4 orb(vec2 p) {
   float R = uGeom.x * breath * (1.0 - 0.06 * uPress);
   vec2 uv = p / R;
   float theta = atan(p.y, p.x);
-  float shape = 0.026 * sin(3.0 * theta + uTime * 0.7) + 0.018 * sin(2.0 * theta - uTime * 0.53 + 1.3);
+  float shape = 0.036 * sin(3.0 * theta + uTime * 0.7) + 0.026 * sin(2.0 * theta - uTime * 0.53 + 1.3);
   vec2 flow = vec2(0.0);
   for (int i = 0; i < 3; i++) {
     vec3 l = lobe(float(i), uTime);
     float delta = atan(sin(theta - l.x), cos(theta - l.x));
-    shape += l.y * (exp(-delta * delta / 0.42) - 0.26);
+    shape += l.y * (exp(-delta * delta / 0.5) - 0.3);
     vec2 dir = vec2(cos(l.x), sin(l.x));
     vec2 off = uv - dir * 0.7;
     flow += (dir * l.y * 2.6 + vec2(-dir.y, dir.x) * l.z * 3.0) * exp(-dot(off, off) * 2.2);
