@@ -149,29 +149,62 @@ vec4 liquidGauge(Gauge g) {
   return vec4(inside * edge + glowCol * haloA, edge + haloA);
 }
 
+float hash11(float n) {
+  return fract(sin(n * 12.9898) * 43758.5453);
+}
+
+vec3 lobe(float i, float t) {
+  float period = 7.0 + 2.6 * i;
+  float phase = t / period + 0.37 * i;
+  float cycle = floor(phase);
+  float f = fract(phase) / 0.72;
+  float env = 0.0;
+  float rate = 0.0;
+  if (f < 1.0) {
+    float s = sin(PI * f);
+    env = s * s;
+    rate = PI * sin(2.0 * PI * f) / (0.72 * period);
+  }
+  float strength = 0.09 * (0.6 + 0.4 * hash11(cycle * 3.7 + i * 11.1));
+  float angle = 2.0 * PI * hash11(cycle * 1.3 + i * 7.9) + 0.35 * (f - 0.5);
+  return vec3(angle, strength * env, strength * rate);
+}
+
 vec4 orb(vec2 p) {
   float breath = 1.0 + 0.015 * (1.0 - cos(uTime * PI * 0.5));
   float R = uGeom.x * breath * (1.0 - 0.06 * uPress);
-  float d = length(p) - R;
+  vec2 uv = p / R;
+  float theta = atan(p.y, p.x);
+  float shape = 0.012 * sin(3.0 * theta + uTime * 0.7) + 0.008 * sin(2.0 * theta - uTime * 0.53 + 1.3);
+  vec2 flow = vec2(0.0);
+  for (int i = 0; i < 3; i++) {
+    vec3 l = lobe(float(i), uTime);
+    float delta = atan(sin(theta - l.x), cos(theta - l.x));
+    shape += l.y * (exp(-delta * delta / 0.32) - 0.22);
+    vec2 dir = vec2(cos(l.x), sin(l.x));
+    vec2 off = uv - dir * 0.7;
+    flow += (dir * l.y * 3.0 + vec2(-dir.y, dir.x) * l.z * 3.0) * exp(-dot(off, off) * 2.4);
+  }
+  float d = length(p) - R * (1.0 + shape);
   vec3 glowCol = mix(uColB, uColD, 0.5);
   float halo = exp(-max(d, 0.0) / (R * 0.2)) * 0.42 * (1.0 - smoothstep(0.45 * uMargin, uMargin, d));
   if (d > 1.0) return vec4(glowCol * halo, halo);
 
   float edge = clamp(0.5 - d, 0.0, 1.0);
-  vec2 uv = p / R;
   float a = uTime * 0.2 * uSpin;
-  vec2 w = mat2(cos(a), -sin(a), sin(a), cos(a)) * uv * 0.95;
+  vec2 w = mat2(cos(a), -sin(a), sin(a), cos(a)) * (uv - flow) * 0.95;
   vec2 warp = vec2(snoise(w * 0.8 + uTime * 0.1), snoise(w * 0.8 - uTime * 0.1 + 5.2));
   float n = 0.75 * snoise(w + 0.7 * warp) + 0.25 * snoise(w * 2.2 - uTime * 0.05);
   float b = uTime * 0.16 * uSpin;
-  float m = smoothstep(-0.45, 0.45, 0.85 * n + 0.8 * dot(uv, vec2(cos(b), sin(b))));
+  float m = smoothstep(-0.45, 0.45, 0.85 * n + 0.8 * dot(uv - flow, vec2(cos(b), sin(b))));
   float tone = 0.5 + 0.5 * fbm(w * 1.4 - uTime * 0.08);
   vec3 violet = mix(uColA, uColB, tone);
   vec3 red = mix(uColC, uColD, tone);
   vec3 col = mix(violet, red, m);
   col += 0.14 * (1.0 - abs(m * 2.0 - 1.0)) * mix(uColB, uColD, 0.5);
 
-  float z = sqrt(max(1.0 - dot(uv, uv), 0.0));
+  float rn = length(uv) / (1.0 + shape);
+  float z = sqrt(max(1.0 - rn * rn, 0.0));
   col *= 0.5 + 0.5 * z;
   col += 0.22 * pow(1.0 - z, 3.0) * glowCol;
   vec2 h = uv - vec2(-0.38, 0.45);
