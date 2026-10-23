@@ -100,8 +100,10 @@ export function HomeScreen({ me, people }: Props) {
         open={overlay === 'shopping'}
         title="Liste de courses"
         onClose={() => setOverlay(null)}
-        action={<SortButton items={shopping.items} />}
       >
+        <div className="mb-4 flex justify-start">
+          <SortButton items={shopping.items} />
+        </div>
         <ShoppingScreen me={me} partner={partner} items={shopping.items} denied={shopping.denied} />
       </BottomSheet>
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>

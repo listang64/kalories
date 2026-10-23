@@ -34,7 +34,7 @@ export function SortButton({ items }: { items: ShoppingItem[] }) {
         type="button"
         onClick={() => void sort()}
         disabled={sorting || pending.length === 0}
-        className="h-10 px-2 text-[17px] font-semibold text-accent disabled:opacity-40"
+        className="press h-10 rounded-full bg-accent px-5 text-[17px] font-semibold text-black disabled:opacity-40"
       >
         {sorting ? 'Tri…' : 'Trier'}
       </button>
