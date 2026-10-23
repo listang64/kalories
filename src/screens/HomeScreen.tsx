@@ -107,7 +107,7 @@ export function HomeScreen({ me, people }: Props) {
       <BottomSheet open={overlay === 'loans'} title="Prêts" onClose={() => setOverlay(null)}>
         <LoansScreen me={me} partner={partner} />
       </BottomSheet>
-      <BottomSheet open={overlay === 'watch'} title="Films et séries" onClose={() => setOverlay(null)}>
+      <BottomSheet open={overlay === 'watch'} title="Films et séries à voir" onClose={() => setOverlay(null)}>
         <WatchScreen me={me} partner={partner} />
       </BottomSheet>
       <BottomSheet open={overlay === 'needs'} title="Mes besoins" onClose={() => setOverlay(null)}>

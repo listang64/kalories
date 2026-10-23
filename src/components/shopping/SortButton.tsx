@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { motion } from 'motion/react'
 import { classifyAisles } from '../../lib/aisles'
 import { geminiErrorMessage } from '../../lib/gemini'
 import { useLocalSettings } from '../../lib/localSettings'
 import { sharedErrorMessage } from '../../lib/shared'
 import { saveAisles, type ShoppingItem } from '../../lib/shopping'
 import { useAppStore } from '../../store/appStore'
+import { LoadingDots } from '../LoadingDots'
 
 export function SortButton({ items }: { items: ShoppingItem[] }) {
   const [sorting, setSorting] = useState(false)
@@ -26,13 +29,30 @@ export function SortButton({ items }: { items: ShoppingItem[] }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => void sort()}
-      disabled={sorting || pending.length === 0}
-      className={`h-10 px-2 text-[17px] font-semibold text-accent disabled:opacity-40 ${sorting ? 'animate-pulse disabled:opacity-100' : ''}`}
-    >
-      {sorting ? 'Tri…' : 'Trier'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => void sort()}
+        disabled={sorting || pending.length === 0}
+        className="h-10 px-2 text-[17px] font-semibold text-accent disabled:opacity-40"
+      >
+        {sorting ? 'Tri…' : 'Trier'}
+      </button>
+      {sorting &&
+        createPortal(
+          <motion.div
+            role="status"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/75"
+          >
+            <p className="text-[32px] font-bold text-accent">Tri en cours</p>
+            <span className="text-accent">
+              <LoadingDots />
+            </span>
+          </motion.div>,
+          document.body,
+        )}
+    </>
   )
 }
