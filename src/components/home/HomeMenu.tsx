@@ -1,4 +1,4 @@
-import { useEffect, type ComponentType } from 'react'
+import { useEffect, type ComponentType, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Overlay } from '../../store/appStore'
@@ -45,7 +45,7 @@ function MenuLines({ cross }: { cross: boolean }) {
   )
 }
 
-export function MenuButton({ open, onOpen }: { open: boolean; onOpen: (anchor: DOMRect) => void }) {
+export function MenuButton({ open, onOpen, style }: { open: boolean; onOpen: (anchor: DOMRect) => void; style: CSSProperties }) {
   return (
     <button
       type="button"
@@ -53,6 +53,7 @@ export function MenuButton({ open, onOpen }: { open: boolean; onOpen: (anchor: D
       aria-expanded={open}
       onClick={(event) => onOpen(event.currentTarget.getBoundingClientRect())}
       className={`press ${HUB}`}
+      style={style}
     >
       <MenuLines cross={false} />
     </button>
@@ -63,9 +64,10 @@ interface MenuProps {
   anchor: DOMRect | null
   onClose: () => void
   onSelect: (target: MenuTarget) => void
+  style: CSSProperties
 }
 
-export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
+export function MenuPanel({ anchor, onClose, onSelect, style }: MenuProps) {
   const reduce = useReducedMotion() === true
   const open = anchor !== null
 
@@ -79,7 +81,7 @@ export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
   return createPortal(
     <AnimatePresence>
       {anchor && (
-        <div className="fixed inset-0 z-30">
+        <div className="fixed inset-0 z-30" style={style}>
           <button type="button" aria-label="Fermer le menu" onClick={onClose} className="absolute inset-0 cursor-default" />
           <motion.div
             aria-hidden="true"
@@ -103,9 +105,9 @@ export function MenuPanel({ anchor, onClose, onSelect }: MenuProps) {
                   type="button"
                   autoFocus={index === 0}
                   onClick={() => onSelect(item.target)}
-                  className="press flex items-center gap-2.5 rounded-full px-3 py-2 text-[24px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_rgba(255,122,26,0.45)] outline-none focus-visible:bg-white/10"
+                  className="press flex items-center gap-2.5 rounded-full px-3 py-2 text-[24px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap text-accent [text-shadow:0_0_18px_color-mix(in_srgb,var(--color-accent)_45%,transparent)] outline-none focus-visible:bg-white/10"
                 >
-                  <span className="text-accent/75 drop-shadow-[0_0_6px_rgba(255,122,26,0.45)]">
+                  <span className="text-accent/75 drop-shadow-[0_0_6px_color-mix(in_srgb,var(--color-accent)_45%,transparent)]">
                     <item.Icon size={21} />
                   </span>
                   {item.label}
@@ -140,14 +142,14 @@ function Rail({ anchor, reduce }: { anchor: DOMRect; reduce: boolean }) {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute" style={{ right, top, height, width: 0 }}>
       <motion.div
-        className="absolute inset-y-0 -left-px w-[2px] origin-top rounded-full bg-[linear-gradient(to_bottom,rgba(255,122,26,0.7),rgba(255,122,26,0.35)_70%,transparent)]"
+        className="absolute inset-y-0 -left-px w-[2px] origin-top rounded-full bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--color-accent)_70%,transparent),color-mix(in_srgb,var(--color-accent)_35%,transparent)_70%,transparent)]"
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1, transition: { duration: reduce ? 0 : 0.4, ease: 'easeOut' } }}
         exit={{ scaleY: 0, transition: { duration: 0.2, delay: 0.1 } }}
       />
       {!reduce && (
         <motion.div
-          className="absolute -left-[1.5px] h-16 w-[3px] rounded-full bg-[linear-gradient(to_bottom,transparent,#ffb27a,transparent)] blur-[0.5px]"
+          className="absolute -left-[1.5px] h-16 w-[3px] rounded-full bg-[linear-gradient(to_bottom,transparent,color-mix(in_srgb,var(--color-accent)_60%,white),transparent)] blur-[0.5px]"
           initial={{ y: -64, opacity: 0 }}
           animate={{ y: [-64, height], opacity: [0, 1, 1, 0], transition: { duration: 2.6, ease: 'easeInOut', repeat: Infinity, delay: 0.5 } }}
           exit={{ opacity: 0 }}
@@ -165,7 +167,7 @@ function Rail({ anchor, reduce }: { anchor: DOMRect; reduce: boolean }) {
               exit={{ scaleX: 0, transition: { duration: 0.12 } }}
             />
             <motion.span
-              className="absolute top-0 left-0 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_10px_rgba(255,122,26,0.8)]"
+              className="absolute top-0 left-0 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_10px_color-mix(in_srgb,var(--color-accent)_80%,transparent)]"
               initial={{ scale: 0 }}
               animate={
                 reduce

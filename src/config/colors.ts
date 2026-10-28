@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 export type ColorId = 'violet' | 'rouge' | 'bleu' | 'vert' | 'turquoise' | 'rose'
 
 export interface PersonColor {
@@ -21,4 +23,9 @@ const [FALLBACK] = COLORS as [PersonColor]
 
 export function colorById(id: unknown): PersonColor {
   return COLORS.find((color) => color.id === id) ?? FALLBACK
+}
+
+export function accentStyle(color: string): CSSProperties {
+  const halo = `0 0 28px color-mix(in srgb, ${color} 35%, transparent)`
+  return { '--accent': color, '--color-accent': color, '--halo-accent': halo, '--shadow-accent': halo } as CSSProperties
 }

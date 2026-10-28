@@ -18,6 +18,7 @@ import { useMeals } from '../hooks/useMeals'
 import { useNeedsPrompt } from '../hooks/useNeedsForm'
 import { useShoppingList } from '../hooks/useShoppingList'
 import { useToday } from '../hooks/useToday'
+import { accentStyle } from '../config/colors'
 import { useLocalSettings } from '../lib/localSettings'
 import type { MealItem } from '../lib/nutrition'
 import type { Profile } from '../lib/profiles'
@@ -49,6 +50,7 @@ export function HomeScreen({ me, people }: Props) {
   const closeSettings = useAppStore((s) => s.closeSettings)
   useNeedsPrompt(me.uid, me.needsSet)
 
+  const accent = accentStyle(me.colorB)
   const mine = personEntry(me, meals)
   const entries = people.map((person) => personEntry(person, meals))
   const partner = people.find((person) => person.uid !== me.uid) ?? null
@@ -66,7 +68,7 @@ export function HomeScreen({ me, people }: Props) {
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
-        <HomeHeader dateKey={today} onOpen={setOverlay} />
+        <HomeHeader dateKey={today} onOpen={setOverlay} accent={accent} />
         <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
@@ -88,6 +90,7 @@ export function HomeScreen({ me, people }: Props) {
           onScan={() => setScanning(true)}
           onAdd={() => openAdd()}
           onShopping={() => setOverlay('shopping')}
+          accent={accent}
         />
       </Rise>
       <BottomSheet open={overlay === 'day'} title="Journée" onClose={() => setOverlay(null)}>

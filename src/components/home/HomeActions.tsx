@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { motion } from 'motion/react'
 import { BarcodeIcon } from '../icons/BarcodeIcon'
 import { CartIcon } from '../icons/CartIcon'
@@ -8,16 +9,17 @@ interface Props {
   onScan: () => void
   onAdd: () => void
   onShopping: () => void
+  accent: CSSProperties
 }
 
 const TAP = { scale: 0.9 }
 const SPRING = { type: 'spring', stiffness: 500, damping: 24 } as const
 const ORANGE_BUTTON =
-  'relative grid size-13 place-items-center rounded-full bg-accent text-black shadow-[0_0_22px_rgba(255,122,26,0.35)]'
+  'relative grid size-13 place-items-center rounded-full bg-accent text-black shadow-[0_0_22px_color-mix(in_srgb,var(--color-accent)_35%,transparent)]'
 
-export function HomeActions({ shoppingCount, onScan, onAdd, onShopping }: Props) {
+export function HomeActions({ shoppingCount, onScan, onAdd, onShopping, accent }: Props) {
   return (
-    <div className="grid grid-cols-3 items-center">
+    <div className="grid grid-cols-3 items-center" style={accent}>
       <div className="flex justify-start">
         <motion.button
           type="button"

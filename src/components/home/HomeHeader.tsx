@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useOnline } from '../../hooks/useOnline'
 import { formatLongDate } from '../../lib/dates'
@@ -8,9 +8,10 @@ import { WeatherBadge } from './WeatherBadge'
 interface Props {
   dateKey: string
   onOpen: (target: MenuTarget) => void
+  accent: CSSProperties
 }
 
-export function HomeHeader({ dateKey, onOpen }: Props) {
+export function HomeHeader({ dateKey, onOpen, accent }: Props) {
   const online = useOnline()
   const [anchor, setAnchor] = useState<DOMRect | null>(null)
   const close = useCallback(() => setAnchor(null), [])
@@ -22,11 +23,12 @@ export function HomeHeader({ dateKey, onOpen }: Props) {
         <h1 className="flex-1 text-center text-[min(5.9vw,calc((100vw_-_120px)/12))] leading-tight font-semibold tracking-[-0.02em] whitespace-nowrap text-accent underline decoration-accent/50 decoration-2 underline-offset-[6px]">
           {formatLongDate(dateKey)}
         </h1>
-        <MenuButton open={anchor !== null} onOpen={setAnchor} />
+        <MenuButton open={anchor !== null} onOpen={setAnchor} style={accent} />
       </div>
       <MenuPanel
         anchor={anchor}
         onClose={close}
+        style={accent}
         onSelect={(target) => {
           setAnchor(null)
           onOpen(target)
