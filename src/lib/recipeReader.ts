@@ -14,8 +14,11 @@ d'une fiche ou d'un écran, ou simplement le nom d'un plat.
 - Juste un nom de plat : propose une recette classique et fiable (stepsWritten à false).
 Renvoie la recette structurée, en français :
 - name : nom court du plat. category : starter (entrée), main (plat), dessert, ou other.
-- ingredients : un par ligne, quantity avec son unité tel qu'écrit (ex. "200 g", "3", "1 c. à soupe"),
-  name sans la quantité. group : quand la recette sépare ses ingrédients par préparation (« Pour la pâte »,
+- ingredients : un par ligne. quantity : toujours un poids en grammes (ex. "200 g", "1200 g"), pour tous
+  les ingrédients sans exception, y compris liquides, ingrédients à l'unité et cuillères ; convertis les
+  autres unités avec un poids moyen réaliste (ex. 1 œuf ≈ 50 g, 10 cl de lait ≈ 100 g, 1 c. à soupe d'huile
+  ≈ 10 g, 1 pincée de sel ≈ 1 g). name sans la quantité ; pour un ingrédient compté à l'unité, ajoute le
+  nombre entre parenthèses (ex. "Œufs (3)", "Oignons (2)"). group : quand la recette sépare ses ingrédients par préparation (« Pour la pâte »,
   « Crème », « Glaçage »…), le nom court de cette partie avec une majuscule (ex. "Pâte", "Crème") ; sinon
   vide. Garde l'ordre de la recette, les ingrédients d'une même partie à la suite. Pour un simple nom de
   plat à plusieurs préparations (gâteau, tarte, entremets…), groupe aussi les ingrédients par préparation.
