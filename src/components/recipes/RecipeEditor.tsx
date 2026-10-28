@@ -104,7 +104,7 @@ export function RecipeEditor({ recipe, householdId, uid, onSaved, onDeleted, onD
             value={draft.servings}
             onChange={(servings) => patch({ servings })}
             decimals={false}
-            digits={2}
+            digits={3}
             placeholder="—"
           />
         </div>

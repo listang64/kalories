@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatInt } from '../../lib/format'
-import { formatMinutes, groupItems, type Ingredient, type RecipeInput, type Step } from '../../lib/recipes'
+import { formatMinutes, groupItems, RECIPE_LIMITS, type Ingredient, type RecipeInput, type Step } from '../../lib/recipes'
 import { scaleQuantity } from '../../lib/recipeScale'
 import { mergeEntries, type ShoppingEntry } from '../../lib/shopping'
 import { CartIcon } from '../icons/CartIcon'
@@ -46,14 +46,14 @@ function ServingsControl({ value, onChange }: { value: number; onChange: (value:
         value={value}
         suffix="pers."
         min={1}
-        max={50}
+        max={RECIPE_LIMITS.servings}
         onCommit={onChange}
-        inputClassName="w-9 rounded-lg bg-white/8 py-1 text-center text-[16px]"
+        inputClassName="w-11 rounded-lg bg-white/8 py-1 text-center text-[16px]"
       />
       <button
         type="button"
         aria-label="Une personne de plus"
-        disabled={value >= 50}
+        disabled={value >= RECIPE_LIMITS.servings}
         onClick={() => onChange(value + 1)}
         className={STEP_BUTTON}
       >

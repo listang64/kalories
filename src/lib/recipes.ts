@@ -66,6 +66,7 @@ export const RECIPE_LIMITS = {
   ingredients: 80,
   groups: 12,
   steps: 60,
+  servings: 999,
 }
 
 export function recipesOf(householdId: string) {
@@ -128,7 +129,7 @@ export function parseRecipe(data: DocumentData | undefined): RecipeInput | null 
     name,
     category: isRecipeCategory(data.category) ? data.category : 'other',
     prepMinutes: count(data.prepMinutes, 1440),
-    servings: count(data.servings, 50),
+    servings: count(data.servings, RECIPE_LIMITS.servings),
     ingredients: list(data.ingredients)
       .map(parseIngredient)
       .filter((ingredient): ingredient is Ingredient => ingredient !== null)
