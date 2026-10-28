@@ -24,6 +24,7 @@ const CHIP = 'flex h-8 items-center gap-1.5 rounded-full bg-white/8 px-3 text-[1
 export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShopping, onAddToDay }: Props) {
   const author = usePerson(recipe.createdBy)
   const [servings, setServings] = useState(recipe.servings)
+  const [portion, setPortion] = useState<number | null>(null)
 
   return (
     <article className="flex flex-col gap-4 pb-4">
@@ -59,7 +60,14 @@ export function RecipeView({ recipe, uid, favorite, onFavorite, onEdit, onShoppi
         )}
       </header>
       <NutritionCard recipe={recipe} onCalculate={onEdit} onAddToDay={onAddToDay} />
-      <IngredientsCard recipe={recipe} servings={servings} onServings={setServings} onShopping={onShopping} />
+      <IngredientsCard
+        recipe={recipe}
+        servings={servings}
+        portion={portion}
+        onServings={setServings}
+        onPortion={setPortion}
+        onShopping={onShopping}
+      />
       <StepsCard steps={recipe.steps} />
       <CookingCard recipe={recipe} />
     </article>

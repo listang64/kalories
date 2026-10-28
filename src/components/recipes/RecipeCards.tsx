@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { formatInt } from '../../lib/format'
 import { formatMinutes, groupItems, RECIPE_LIMITS, type Ingredient, type RecipeInput, type Step } from '../../lib/recipes'
-import { scaleQuantity } from '../../lib/recipeScale'
+import { scaleQuantity, totalGrams } from '../../lib/recipeScale'
 import { mergeEntries, type ShoppingEntry } from '../../lib/shopping'
 import { CartIcon } from '../icons/CartIcon'
 import { ChevronIcon } from '../icons/ChevronIcon'
@@ -63,15 +63,37 @@ function ServingsControl({ value, onChange }: { value: number; onChange: (value:
   )
 }
 
+function PortionField({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-black/30 py-2 pr-3 pl-3.5">
+      <span className="text-[14px] leading-snug text-text-2">Une part pour une personne</span>
+      <NumberField
+        label="Poids d’une part en grammes"
+        value={Math.round(value)}
+        suffix="g"
+        min={10}
+        max={5000}
+        onCommit={onChange}
+        inputClassName="w-14 rounded-lg bg-white/8 py-1 text-center text-[16px]"
+      />
+    </div>
+  )
+}
+
 interface IngredientsProps {
   recipe: RecipeInput
   servings: number | null
+  portion: number | null
   onServings: (servings: number) => void
+  onPortion: (portion: number | null) => void
   onShopping: (entries: ShoppingEntry[]) => void
 }
 
-export function IngredientsCard({ recipe, servings, onServings, onShopping }: IngredientsProps) {
-  const factor = servings && recipe.servings ? servings / recipe.servings : 1
+export function IngredientsCard({ recipe, servings, portion, onServings, onPortion, onShopping }: IngredientsProps) {
+  const total = recipe.nutrition?.grams ?? totalGrams(recipe.ingredients.map((ingredient) => ingredient.quantity))
+  const base = total && recipe.servings ? total / recipe.servings : null
+  const share = base ? (portion ?? base) / base : 1
+  const factor = (servings && recipe.servings ? servings / recipe.servings : 1) * share
   const ingredients = recipe.ingredients.map((ingredient) => ({
     ...ingredient,
     quantity: scaleQuantity(ingredient.quantity, factor),
@@ -86,10 +108,17 @@ export function IngredientsCard({ recipe, servings, onServings, onShopping }: In
         <p className="mt-3 text-[15px] text-text-2">Aucun ingrédient noté.</p>
       ) : (
         <>
+          {base && <PortionField value={portion ?? base} onChange={(value) => onPortion(Math.abs(value - base) < 1 ? null : value)} />}
           {factor !== 1 && recipe.servings && (
             <p className="mt-2 flex items-center justify-between gap-3 text-[13px] text-text-2">
               <span>Quantités recalculées (recette pour {recipe.servings})</span>
-              <button type="button" onClick={() => onServings(recipe.servings ?? 1)} className="shrink-0 font-medium text-accent">
+              <button
+                type="button"
+                onClick={() => {
+                  onServings(recipe.servings ?? 1)
+                  onPortion(null)
+                }}
+                className="shrink-0 font-medium text-accent">
                 Rétablir
               </button>
             </p>

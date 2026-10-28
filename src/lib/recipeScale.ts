@@ -52,3 +52,12 @@ export function sumQuantities(quantities: string[]): string {
   const total = amounts.reduce((sum, amount) => sum + (amount?.from ?? 0), 0)
   return `${show(total, METRIC.test(first.rest))}${first.rest}`
 }
+
+export function totalGrams(quantities: string[]): number | null {
+  const grams = quantities.map(leading).map((amount) => {
+    const unit = /^\s*(kg|g|gr)\b/i.exec(amount?.rest ?? '')?.[1]?.toLowerCase()
+    return amount && unit && amount.to === null ? amount.from * (unit === 'kg' ? 1000 : 1) : 0
+  })
+  const total = grams.reduce((sum, value) => sum + value, 0)
+  return total > 0 ? total : null
+}
