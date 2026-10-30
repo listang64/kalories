@@ -3,7 +3,7 @@ import { probableMealType, type MealType } from '../config/meals'
 import type { Meal, MealRef } from '../lib/meals'
 import type { DayProgress, MealItem } from '../lib/nutrition'
 
-export type Overlay = 'settings' | 'add' | 'day' | 'history' | 'shopping' | 'loans' | 'recipes' | 'needs' | 'watch'
+export type Overlay = 'settings' | 'add' | 'day' | 'history' | 'shopping' | 'loans' | 'recipes' | 'needs' | 'watch' | 'game'
 export type AddStep = 'type' | 'capture' | 'analyzing' | 'review'
 
 export interface DraftPhoto {

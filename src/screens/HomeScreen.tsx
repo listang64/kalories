@@ -3,6 +3,7 @@ import { AddMealSheet } from '../components/AddMealSheet'
 import { BottomSheet } from '../components/BottomSheet'
 import { CalorieLegend } from '../components/home/CalorieLegend'
 import { MealOfferDialog } from '../components/day/MealOfferDialog'
+import { GameSheet } from '../components/game/GameSheet'
 import { CalorieRing } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
 import { InstallBanner } from '../components/InstallBanner'
@@ -118,6 +119,7 @@ export function HomeScreen({ me, people }: Props) {
       <BottomSheet open={overlay === 'needs'} title="Mes besoins" onClose={() => setOverlay(null)}>
         <NeedsScreen me={me} />
       </BottomSheet>
+      <GameSheet open={overlay === 'game'} onClose={() => setOverlay(null)} />
       <RecipesSheet me={me} partner={partner} />
       <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>

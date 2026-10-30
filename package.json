@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:words": "node scripts/check-word-pairs.mjs"
   },
   "dependencies": {
     "barcode-detector": "3.2.2",
