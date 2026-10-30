@@ -8,7 +8,7 @@ import { PowerPicker } from './PowerPicker'
 import { BigButton, Counter, Label, Panel, Stage } from './ui'
 import { WordPicker } from './WordPicker'
 
-export function SetupScreen({ onStart }: { onStart: () => void }) {
+export function SetupScreen({ played, onStart }: { played: string[]; onStart: () => void }) {
   const settings = useGameStore((s) => s.settings)
   const setSettings = useGameStore((s) => s.setSettings)
   const { pairs, failed } = useWordLibrary()
@@ -23,10 +23,10 @@ export function SetupScreen({ onStart }: { onStart: () => void }) {
   }
 
   const start = () => {
-    const { recent, names, apply } = useGameStore.getState()
-    const pair = choosePair(pairs ?? [], settings, recent)
-    if (!pair) return
-    apply(createGame(settings, pair, names.slice(0, settings.players)))
+    const { names, deal } = useGameStore.getState()
+    const draw = choosePair(pairs ?? [], settings, played)
+    if (!draw) return
+    deal(draw, createGame(settings, draw.pair, names.slice(0, settings.players)))
     onStart()
   }
 

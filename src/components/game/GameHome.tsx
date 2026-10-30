@@ -53,7 +53,7 @@ function Rules() {
     <details className="rounded-card border border-line bg-surface-2 p-4 text-[14px] leading-relaxed text-text-2">
       <summary className="cursor-pointer text-[16px] font-semibold text-text">Comment on joue ?</summary>
       <p className="mt-2">🧑‍🤝‍🧑 Les Civils partagent le même mot. Ils gagnent en éliminant tous les intrus.</p>
-      <p className="mt-1">🕵️ Les Imposteurs ont un mot proche. Ils gagnent quand ils sont autant que les Civils.</p>
+      <p className="mt-1">🕵️ Les Imposteurs ont un mot proche… sans savoir qu’ils sont imposteurs. Ils gagnent quand ils sont autant que les Civils.</p>
       <p className="mt-1">🧳 Le Touriste n’a aucun mot. Éliminé, il peut gagner seul en devinant le mot des Civils.</p>
       <p className="mt-1">À chaque manche : un indice chacun, un débat, puis un vote secret pour éliminer un joueur.</p>
     </details>

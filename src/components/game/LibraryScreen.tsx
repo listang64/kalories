@@ -1,8 +1,7 @@
-import { useState } from 'react'
 import { useWordLibrary } from '../../hooks/useWordLibrary'
 import { useGameStore } from '../../lib/game/store'
 import type { Rewards, TieRule } from '../../lib/game/types'
-import { categoriesOf, RECENT_GAMES } from '../../lib/game/words'
+import { categoriesOf } from '../../lib/game/words'
 import { LoadingDots } from '../LoadingDots'
 import { Chip, Counter, Label, Panel, Stage } from './ui'
 
@@ -20,11 +19,10 @@ const REWARDS: { key: keyof Rewards; label: string }[] = [
   { key: 'bouffon', label: 'Bouffon' },
 ]
 
-export function LibraryScreen() {
+export function LibraryScreen({ played }: { played: string[] }) {
   const settings = useGameStore((s) => s.settings)
   const setSettings = useGameStore((s) => s.setSettings)
   const { pairs } = useWordLibrary()
-  const [open, setOpen] = useState<string | null>(null)
 
   return (
     <Stage>
@@ -45,9 +43,6 @@ export function LibraryScreen() {
             </Chip>
           ))}
         </div>
-        <Chip active={settings.avoidRecent} onClick={() => setSettings({ avoidRecent: !settings.avoidRecent })}>
-          {settings.avoidRecent ? '✓ ' : ''}Éviter les paires des {RECENT_GAMES} dernières parties
-        </Chip>
       </Panel>
       <Panel className="flex flex-col gap-2.5">
         <Label>Points</Label>
@@ -67,32 +62,20 @@ export function LibraryScreen() {
         {!pairs ? (
           <LoadingDots />
         ) : (
-          <ul className="divide-y divide-white/6">
-            {categoriesOf(pairs).map((category) => (
-              <li key={category.name}>
-                <button
-                  type="button"
-                  aria-expanded={open === category.name}
-                  onClick={() => setOpen(open === category.name ? null : category.name)}
-                  className="flex w-full items-center justify-between py-3 text-left text-[16px]"
-                >
+          <>
+            <p className="mb-3 text-[14px] leading-snug text-text-2">
+              Paires déjà jouées par votre foyer : {pairs.filter((pair) => played.includes(pair.id)).length} sur {pairs.length}. Chaque paire
+              ne sort qu’une fois ; quand tout a été joué, la liste repart de zéro.
+            </p>
+            <ul className="divide-y divide-white/6">
+              {categoriesOf(pairs).map((category) => (
+                <li key={category.name} className="flex items-center justify-between py-3 text-[16px]">
                   {category.name}
                   <span className="text-[14px] text-text-2">{category.count}</span>
-                </button>
-                {open === category.name && (
-                  <ul className="pb-3 text-[14px] leading-relaxed text-text-2">
-                    {pairs
-                      .filter((pair) => pair.category === category.name)
-                      .map((pair) => (
-                        <li key={pair.id}>
-                          {pair.word_civil} / {pair.word_undercover} · <span className="text-[12px]">{pair.difficulty}</span>
-                        </li>
-                      ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </Panel>
     </Stage>

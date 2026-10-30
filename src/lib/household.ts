@@ -25,7 +25,7 @@ import { refreshHousehold } from './session'
 import { shareText, type ShareResult } from './share'
 import { normalizeCode, randomCode } from './shared'
 
-export type SharedName = 'courses' | 'prets' | 'ecrans'
+export type SharedName = 'courses' | 'prets' | 'ecrans' | 'imposteur'
 
 export function sharedDoc(householdId: string, name: SharedName): DocumentReference {
   return doc(db, 'households', householdId, 'shared', name)

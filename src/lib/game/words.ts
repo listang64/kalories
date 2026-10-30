@@ -7,8 +7,6 @@ export const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: 'difficile', label: 'Difficile' },
 ]
 
-export const RECENT_GAMES = 20
-
 let library: Promise<WordPair[]> | null = null
 
 export function loadPairs(): Promise<WordPair[]> {
@@ -35,20 +33,30 @@ export function eligiblePairs(pairs: WordPair[], settings: Settings): WordPair[]
   )
 }
 
-export function choosePair(pairs: WordPair[], settings: Settings, recent: string[]): Game['pair'] | null {
+export interface Draw {
+  pair: Game['pair']
+  reset: string[]
+}
+
+export function choosePair(pairs: WordPair[], settings: Settings, played: string[]): Draw | null {
   if (settings.manual) {
-    return { id: null, category: 'Paire perso', civil: settings.manual.civil.trim(), imposteur: settings.manual.imposteur.trim() }
+    const { civil, imposteur } = settings.manual
+    return { pair: { id: null, category: 'Paire perso', civil: civil.trim(), imposteur: imposteur.trim() }, reset: [] }
   }
   const eligible = eligiblePairs(pairs, settings)
-  const fresh = settings.avoidRecent ? eligible.filter((pair) => !recent.includes(pair.id)) : eligible
+  const seen = new Set(played)
+  const fresh = eligible.filter((pair) => !seen.has(pair.id))
   const pair = pickOne(fresh.length ? fresh : eligible)
   if (!pair) return null
   const swap = randomInt(2) === 1
   return {
-    id: pair.id,
-    category: pair.category,
-    civil: swap ? pair.word_undercover : pair.word_civil,
-    imposteur: swap ? pair.word_civil : pair.word_undercover,
+    pair: {
+      id: pair.id,
+      category: pair.category,
+      civil: swap ? pair.word_undercover : pair.word_civil,
+      imposteur: swap ? pair.word_civil : pair.word_undercover,
+    },
+    reset: fresh.length ? [] : eligible.map((item) => item.id).filter((id) => seen.has(id)),
   }
 }
 

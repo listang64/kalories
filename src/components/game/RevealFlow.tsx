@@ -9,6 +9,9 @@ import { BigButton, Hero, Panel, Stage } from './ui'
 
 type Step = 'pass' | 'confirm' | 'show' | 'done'
 
+const WORD_PITCH =
+  'Civil ou Imposteur ? Toi seul ne le sais pas. Écoute bien les indices : s’ils ne collent pas à ton mot, l’intrus, c’est peut-être toi.'
+
 export function RevealFlow({ game }: { game: Game }) {
   const apply = useGameStore((s) => s.apply)
   const seat = game.revealed
@@ -93,12 +96,15 @@ export function RevealFlow({ game }: { game: Game }) {
 function RoleCard({ game, seat, name, onDone }: { game: Game; seat: number; name: string; onDone: () => void }) {
   const player = game.players[seat]
   if (!player) return null
-  const camp = CAMPS[player.camp]
   const word = player.camp === 'civil' ? game.pair.civil : player.camp === 'imposteur' ? game.pair.imposteur : null
 
   return (
     <Stage key="show">
-      <Hero emoji={camp.emoji} title={`${name}, tu es ${camp.name.toUpperCase()}`} text={camp.pitch} />
+      {word ? (
+        <Hero emoji="🤫" title={`${name}, voici ton mot`} text={WORD_PITCH} />
+      ) : (
+        <Hero emoji={CAMPS.touriste.emoji} title={`${name}, tu es TOURISTE`} text={CAMPS.touriste.pitch} />
+      )}
       <Panel className="text-center">
         {word ? (
           <>

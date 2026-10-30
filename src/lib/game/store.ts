@@ -3,7 +3,8 @@ import { defaultCounts } from './roles'
 import { DEFAULT_REWARDS, historyOf, recordGame, type BoardEntry, type HistoryEntry } from './scoring'
 import { readSession, writeSession } from './storage'
 import type { Game, Settings } from './types'
-import { RECENT_GAMES } from './words'
+import { markPlayed } from './played'
+import type { Draw } from './words'
 
 interface Saved {
   game: Game | null
@@ -17,6 +18,7 @@ interface Saved {
 interface GameStore extends Saved {
   setSettings: (patch: Partial<Settings>) => void
   apply: (game: Game) => void
+  deal: (draw: Draw, game: Game) => void
   abandon: () => void
   resetBoard: () => void
 }
@@ -29,7 +31,6 @@ export const DEFAULT_SETTINGS: Settings = {
   categories: [],
   difficulties: ['facile', 'moyen', 'difficile'],
   manual: null,
-  avoidRecent: true,
   timer: 120,
   tieRule: 'revote',
   rewards: DEFAULT_REWARDS,
@@ -47,10 +48,16 @@ export const useGameStore = create<GameStore>((set) => ({
         game,
         board: recordGame(state.board, game),
         history: [historyOf(game), ...state.history],
-        recent: game.pair.id ? [game.pair.id, ...state.recent].slice(0, RECENT_GAMES) : state.recent,
         names: game.players.map((player) => player.name),
       }
     }),
+  deal: ({ pair, reset }, game) => {
+    if (pair.id) markPlayed(pair.id, reset).catch(() => undefined)
+    set((state) => ({
+      game,
+      recent: pair.id ? [...state.recent.filter((id) => !reset.includes(id)), pair.id] : state.recent,
+    }))
+  },
   abandon: () => set({ game: null }),
   resetBoard: () => set({ board: [], history: [] }),
 }))

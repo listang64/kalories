@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePlayedPairs } from '../../hooks/usePlayedPairs'
 import { createGame } from '../../lib/game/engine'
 import { useGameStore } from '../../lib/game/store'
 import { choosePair, loadPairs } from '../../lib/game/words'
@@ -23,6 +24,7 @@ const TITLES: Record<GameView, string> = {
 
 export function GameSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const game = useGameStore((s) => s.game)
+  const played = usePlayedPairs()
   const initial: GameView = game && game.phase !== 'end' ? 'play' : 'home'
   const [view, setView] = useState<GameView>(initial)
   const [wasOpen, setWasOpen] = useState(open)
@@ -32,9 +34,9 @@ export function GameSheet({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   const replay = async () => {
-    const { settings, recent, names, apply } = useGameStore.getState()
-    const pair = choosePair(settings.manual ? [] : await loadPairs(), settings, recent)
-    if (pair) apply(createGame(settings, pair, names))
+    const { settings, names, deal } = useGameStore.getState()
+    const draw = choosePair(settings.manual ? [] : await loadPairs(), settings, played)
+    if (draw) deal(draw, createGame(settings, draw.pair, names))
   }
 
   return (
@@ -47,13 +49,13 @@ export function GameSheet({ open, onClose }: { open: boolean; onClose: () => voi
       {view === 'play' && game ? (
         <PlayScreen game={game} onReplay={() => void replay()} onBoard={() => setView('board')} />
       ) : view === 'setup' ? (
-        <SetupScreen onStart={() => setView('play')} />
+        <SetupScreen played={played} onStart={() => setView('play')} />
       ) : view === 'board' ? (
         <BoardScreen />
       ) : view === 'history' ? (
         <GameHistory />
       ) : view === 'library' ? (
-        <LibraryScreen />
+        <LibraryScreen played={played} />
       ) : (
         <GameHome onOpen={setView} />
       )}

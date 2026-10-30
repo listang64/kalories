@@ -33,7 +33,6 @@ export interface Settings {
   categories: string[]
   difficulties: Difficulty[]
   manual: { civil: string; imposteur: string } | null
-  avoidRecent: boolean
   timer: number
   tieRule: TieRule
   rewards: Rewards

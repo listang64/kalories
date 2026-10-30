@@ -7,6 +7,7 @@ const CATEGORIES = [
   'Cinéma et culture', 'Transports', 'Nature', 'Sciences', 'Vie quotidienne', 'Histoire', 'Espace',
   'Horreur et mystère', 'Économie et commerce', 'Loisirs', 'Corps et santé', 'Mythologies et légendes',
   'Univers marin', 'Écologie', 'École et éducation', 'Objets et inventions', 'Culture générale',
+  'Films et séries', 'Dessins animés et jeux vidéo', 'Personnages de fiction', 'Personnalités', 'Marques et produits',
 ]
 const DIFFICULTIES = ['facile', 'moyen', 'difficile']
 const norm = (word) => word.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
