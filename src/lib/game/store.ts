@@ -32,7 +32,6 @@ export const DEFAULT_SETTINGS: Settings = {
   difficulties: ['facile', 'moyen', 'difficile'],
   manual: null,
   timer: 120,
-  tieRule: 'revote',
   rewards: DEFAULT_REWARDS,
 }
 

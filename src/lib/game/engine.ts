@@ -17,11 +17,8 @@ export function createGame(settings: Settings, pair: Game['pair'], names: string
     round: 0,
     revealed: 0,
     order: [],
-    turn: 0,
     mime: null,
     mimed: [],
-    vote: null,
-    tie: [],
     queue: [],
     events: [],
     bonuses: {},
@@ -32,7 +29,7 @@ export function createGame(settings: Settings, pair: Game['pair'], names: string
 }
 
 const CAUSE_TEXT: Record<Cause, string> = {
-  vote: 'éliminé par le vote',
+  vote: 'éliminé par le groupe',
   juge: 'désigné par le Juge Marteau',
   amour: 'parti par amour',
   vengeance: 'emporté par la Rancunière',

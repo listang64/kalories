@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import { judgeOf } from '../../lib/game/elimination'
 import { eliminateSeat, guessWord } from '../../lib/game/engine'
 import { useGameStore } from '../../lib/game/store'
 import type { Game } from '../../lib/game/types'
-import { judgeOf } from '../../lib/game/voting'
 import { BigButton, Hero, PlayerGrid, Stage } from './ui'
 
 export function ResolveScreen({ game }: { game: Game }) {

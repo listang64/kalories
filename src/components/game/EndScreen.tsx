@@ -33,7 +33,7 @@ export function EndScreen({ game, onReplay, onBoard }: { game: Game; onReplay: (
                   </span>
                   <span className="block text-[13px] text-text-2">
                     {CAMPS[player.camp].name}
-                    {player.powers.map((id) => ` · ${powerById(id).emoji} ${powerById(id).name}`).join('')} · {player.votes} voix
+                    {player.powers.map((id) => ` · ${powerById(id).emoji} ${powerById(id).name}`).join('')}
                   </span>
                 </span>
                 <span className="text-[17px] font-semibold tabular-nums">

@@ -18,7 +18,7 @@ export interface Power {
   holders: 0 | 1 | 2
   onRoundStart?: (game: Game) => void
   onEliminated?: (ctx: PowerContext, player: Player, cause: Cause) => void
-  onTally?: (ctx: PowerContext, tally: Map<number, number>) => void
+  onDesignate?: (ctx: PowerContext, target: Player) => boolean
 }
 
 const holders = (game: Game, id: PowerId) => game.players.filter((player) => player.powers.includes(id))
@@ -28,8 +28,8 @@ const juge: Power = {
   id: 'juge',
   name: 'Le Juge Marteau',
   emoji: '⚖️',
-  rule: 'En cas d’égalité qui persiste, il choisit qui part. Même éliminé, il garde son marteau.',
-  secret: 'Tu es aussi le Juge Marteau : si un vote reste à égalité, c’est toi qui tranches.',
+  rule: 'Si le groupe n’arrive pas à se décider, c’est lui qui tranche. Même éliminé, il garde son marteau.',
+  secret: 'Tu es aussi le Juge Marteau : si le groupe hésite entre plusieurs joueurs, c’est toi qui tranches.',
   holders: 1,
 }
 
@@ -53,7 +53,7 @@ const mime: Power = {
   id: 'mime',
   name: 'Le Mime Marcel',
   emoji: '🤐',
-  rule: 'À chaque manche, un joueur différent doit donner son indice en mimant. L’app le lui souffle en secret.',
+  rule: 'À chaque manche, l’app désigne un joueur différent qui doit donner son indice en mimant.',
   secret: '',
   holders: 0,
   onRoundStart: (game) => {
@@ -101,13 +101,13 @@ const revenant: Power = {
   id: 'revenant',
   name: 'Le Revenant',
   emoji: '👻',
-  rule: 'Une fois éliminé, il continue de discuter et de voter depuis l’au-delà.',
-  secret: 'Tu es aussi le Revenant : même éliminé, tu continueras à parler et à voter.',
+  rule: 'Une fois éliminé, il continue de débattre et de donner son avis depuis l’au-delà.',
+  secret: 'Tu es aussi le Revenant : même éliminé, tu continueras à débattre avec le groupe.',
   holders: 1,
   onEliminated: (ctx, player) => {
     if (!player.powers.includes('revenant')) return
     player.ghost = true
-    ctx.log(`👻 ${player.name} revient en Revenant : il votera encore.`)
+    ctx.log(`👻 ${player.name} revient en Revenant : il continue de débattre.`)
   },
 }
 
@@ -115,23 +115,14 @@ const boomerang: Power = {
   id: 'boomerang',
   name: 'Le Retour à l’envoyeur',
   emoji: '🪃',
-  rule: 'La première fois qu’il a le plus de voix, les votes contre lui reviennent sur ceux qui ont voté pour lui.',
-  secret: 'Tu es aussi le Retour à l’envoyeur : la première fois qu’on vote contre toi, les voix reviennent sur tes accusateurs.',
+  rule: 'La première fois que le groupe veut l’éliminer, ça rebondit : il est épargné et ses accusateurs doivent désigner quelqu’un d’autre.',
+  secret: 'Tu es aussi le Retour à l’envoyeur : la première fois que le groupe veut t’éliminer, tu es épargné.',
   holders: 1,
-  onTally: (ctx, tally) => {
-    const { game } = ctx
-    if (game.flags.boomerangUsed || !game.vote) return
-    const top = Math.max(...tally.values())
-    const leaders = [...tally].filter(([, count]) => count === top).map(([seat]) => seat)
-    const target = leaders.length === 1 ? game.players[leaders[0] ?? -1] : undefined
-    if (!target?.powers.includes('boomerang')) return
-    game.flags.boomerangUsed = true
-    tally.set(target.seat, 0)
-    for (const [voter, choice] of Object.entries(game.vote.ballots)) {
-      const seat = Number(voter)
-      if (choice === target.seat && game.players[seat]?.alive) tally.set(seat, (tally.get(seat) ?? 0) + 1)
-    }
-    ctx.log(`🪃 Retour à l’envoyeur ! Les voix contre ${target.name} reviennent sur ses accusateurs.`)
+  onDesignate: (ctx, target) => {
+    if (ctx.game.flags.boomerangUsed || !target.powers.includes('boomerang')) return false
+    ctx.game.flags.boomerangUsed = true
+    ctx.log(`🪃 Retour à l’envoyeur ! ${target.name} est épargné : ses accusateurs doivent désigner quelqu’un d’autre.`)
+    return true
   },
 }
 
@@ -139,8 +130,8 @@ const bouffon: Power = {
   id: 'bouffon',
   name: 'Le Bouffon',
   emoji: '🤡',
-  rule: 'S’il est le tout premier éliminé par un vote, il rit le dernier et gagne des points bonus.',
-  secret: 'Tu es aussi le Bouffon : si tu es le premier éliminé par un vote, tu gagnes des points bonus.',
+  rule: 'S’il est le tout premier éliminé par le groupe, il rit le dernier et gagne des points bonus.',
+  secret: 'Tu es aussi le Bouffon : si tu es le premier éliminé par le groupe, tu gagnes des points bonus.',
   holders: 1,
   onEliminated: (ctx, player, cause) => {
     if (!player.powers.includes('bouffon') || ctx.game.flags.firstVoteOut) return

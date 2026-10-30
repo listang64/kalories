@@ -46,7 +46,6 @@ export function dealRoles(settings: Settings, names: string[]): Player[] {
     alive: true,
     ghost: false,
     out: null,
-    votes: 0,
   }))
   const pool = shuffle(players)
   for (const id of settings.powers) {

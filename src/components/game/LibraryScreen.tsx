@@ -1,16 +1,11 @@
 import { useWordLibrary } from '../../hooks/useWordLibrary'
 import { useGameStore } from '../../lib/game/store'
-import type { Rewards, TieRule } from '../../lib/game/types'
+import type { Rewards } from '../../lib/game/types'
 import { categoriesOf } from '../../lib/game/words'
 import { LoadingDots } from '../LoadingDots'
 import { Chip, Counter, Label, Panel, Stage } from './ui'
 
 const TIMERS = [0, 60, 120, 180, 300]
-const TIE_RULES: { value: TieRule; label: string }[] = [
-  { value: 'revote', label: 'Vote décisif' },
-  { value: 'hasard', label: 'Au hasard' },
-  { value: 'aucun', label: 'Personne' },
-]
 const REWARDS: { key: keyof Rewards; label: string }[] = [
   { key: 'civil', label: 'Civil gagnant' },
   { key: 'imposteur', label: 'Imposteur gagnant' },
@@ -27,19 +22,11 @@ export function LibraryScreen({ played }: { played: string[] }) {
   return (
     <Stage>
       <Panel className="flex flex-col gap-3">
-        <Label>Discussion</Label>
+        <Label>Chrono du débat</Label>
         <div className="flex flex-wrap gap-2">
           {TIMERS.map((seconds) => (
             <Chip key={seconds} active={settings.timer === seconds} onClick={() => setSettings({ timer: seconds })}>
               {seconds ? `${seconds / 60} min` : 'Sans chrono'}
-            </Chip>
-          ))}
-        </div>
-        <Label>Si l’égalité persiste (sans Juge)</Label>
-        <div className="flex flex-wrap gap-2">
-          {TIE_RULES.map((rule) => (
-            <Chip key={rule.value} active={settings.tieRule === rule.value} onClick={() => setSettings({ tieRule: rule.value })}>
-              {rule.label}
             </Chip>
           ))}
         </div>

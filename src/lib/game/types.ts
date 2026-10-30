@@ -1,9 +1,8 @@
 export type Camp = 'civil' | 'imposteur' | 'touriste'
 export type PowerId = 'juge' | 'tourtereaux' | 'mime' | 'rancuniere' | 'rivaux' | 'revenant' | 'boomerang' | 'bouffon'
 export type Difficulty = 'facile' | 'moyen' | 'difficile'
-export type TieRule = 'aucun' | 'revote' | 'hasard'
 export type Cause = 'vote' | 'juge' | 'amour' | 'vengeance'
-export type Phase = 'reveal' | 'describe' | 'discuss' | 'vote' | 'tie' | 'resolve' | 'summary' | 'end'
+export type Phase = 'reveal' | 'play' | 'resolve' | 'summary' | 'end'
 
 export interface WordPair {
   id: string
@@ -34,7 +33,6 @@ export interface Settings {
   difficulties: Difficulty[]
   manual: { civil: string; imposteur: string } | null
   timer: number
-  tieRule: TieRule
   rewards: Rewards
 }
 
@@ -46,17 +44,9 @@ export interface Player {
   alive: boolean
   ghost: boolean
   out: { round: number; cause: Cause } | null
-  votes: number
 }
 
 export type Pending = { kind: 'guess'; seat: number } | { kind: 'revenge'; seat: number } | { kind: 'judge'; seats: number[] }
-
-export interface VoteState {
-  candidates: number[]
-  voters: number[]
-  ballots: Record<number, number>
-  attempt: number
-}
 
 export interface GameEvent {
   round: number
@@ -73,11 +63,8 @@ export interface Game {
   round: number
   revealed: number
   order: number[]
-  turn: number
   mime: number | null
   mimed: number[]
-  vote: VoteState | null
-  tie: number[]
   queue: Pending[]
   events: GameEvent[]
   bonuses: Record<number, number>

@@ -55,7 +55,7 @@ function Rules() {
       <p className="mt-2">🧑‍🤝‍🧑 Les Civils partagent le même mot. Ils gagnent en éliminant tous les intrus.</p>
       <p className="mt-1">🕵️ Les Imposteurs ont un mot proche… sans savoir qu’ils sont imposteurs. Ils gagnent quand ils sont autant que les Civils.</p>
       <p className="mt-1">🧳 Le Touriste n’a aucun mot. Éliminé, il peut gagner seul en devinant le mot des Civils.</p>
-      <p className="mt-1">À chaque manche : un indice chacun, un débat, puis un vote secret pour éliminer un joueur.</p>
+      <p className="mt-1">À chaque manche : un indice chacun à voix haute, un débat, puis le groupe désigne dans l’app le joueur éliminé.</p>
     </details>
   )
 }
