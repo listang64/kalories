@@ -40,7 +40,7 @@ const MESSAGES: Record<GeminiErrorKind, string> = {
   unavailable: 'Analyse impossible pour l’instant',
   unreadable: 'Réponse de Gemini illisible',
   rejected: 'Gemini n’a pas pu lire ce contenu',
-  link: 'Ce lien ne se lit pas : enregistre la vidéo sur ton téléphone puis ajoute-la avec le bouton Vidéo',
+  link: 'Seuls les liens YouTube sont pris en charge',
 }
 
 export function geminiErrorMessage(error: unknown): string {
