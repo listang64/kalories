@@ -16,6 +16,8 @@ export type GeminiErrorKind =
   | 'busy'
   | 'unavailable'
   | 'unreadable'
+  | 'rejected'
+  | 'link'
 
 export class GeminiError extends Error {
   readonly kind: GeminiErrorKind
@@ -37,6 +39,8 @@ const MESSAGES: Record<GeminiErrorKind, string> = {
   busy: 'Gemini est surchargé, réessaie dans un instant',
   unavailable: 'Analyse impossible pour l’instant',
   unreadable: 'Réponse de Gemini illisible',
+  rejected: 'Gemini n’a pas pu lire ce contenu',
+  link: 'Ce lien ne se lit pas : enregistre la vidéo sur ton téléphone puis ajoute-la avec le bouton Vidéo',
 }
 
 export function geminiErrorMessage(error: unknown): string {
@@ -53,7 +57,8 @@ interface GeminiErrorBody {
 
 const RETRY_DELAY = 800
 
-function kindForStatus(status: number): GeminiErrorKind {
+function kindForStatus(status: number, message: string): GeminiErrorKind {
+  if (status === 400 && !/api.?key/i.test(message)) return 'rejected'
   if (status === 400 || status === 401 || status === 403) return 'invalid-key'
   if (status === 404) return 'model'
   if (status === 429) return 'quota'
@@ -111,7 +116,8 @@ export async function generateContent(body: object, key: string, model: string, 
   }
   if (!response.ok) {
     const data = (await response.json().catch(() => ({}))) as GeminiErrorBody
-    throw new GeminiError(kindForStatus(response.status), `HTTP ${response.status} · ${data.error?.message ?? ''}`)
+    const message = data.error?.message ?? ''
+    throw new GeminiError(kindForStatus(response.status, message), `HTTP ${response.status} · ${message}`)
   }
   const data = (await response.json().catch(() => null)) as GeminiResponse | null
   return data?.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''

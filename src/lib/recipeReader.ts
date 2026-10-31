@@ -11,6 +11,11 @@ d'une fiche ou d'un écran, ou simplement le nom d'un plat.
   étapes illisibles), rédige avec tes connaissances les étapes complètes et fiables pour réussir ce plat, avec
   exactement les ingrédients et quantités de la recette ; complète alors la cuisson (cookMinutes, cookTemp,
   cookNote) si elle manque, et mets stepsWritten à true. Sinon, ce qui n'est pas indiqué reste vide ou à 0.
+- Vidéo (lien YouTube ou fichier vidéo) : regarde et écoute toute la vidéo. Relève les ingrédients montrés,
+  cités à l'oral, écrits à l'écran ou dans la description, et les étapes dans l'ordre où elles sont faites.
+  Si une quantité n'est pas dite, estime-la d'après ce que tu vois. Rédige des étapes complètes et claires
+  (stepsWritten à false si la vidéo montre toute la préparation, true si tu as dû la compléter).
+- Description d'une page de vidéo (TikTok, Instagram…) : sers-t'en comme du texte de la recette.
 - Juste un nom de plat : propose une recette classique et fiable (stepsWritten à false).
 Renvoie la recette structurée, en français :
 - name : nom court du plat. category : starter (entrée), main (plat), dessert, ou other.
@@ -68,21 +73,69 @@ export interface ReadRecipe {
   wroteSteps: boolean
 }
 
-export async function readRecipe(text: string, photos: string[], key: string, model: string): Promise<ReadRecipe | null> {
+export interface RecipeVideo {
+  name: string
+  mimeType: string
+  data: string
+}
+
+export interface RecipeSources {
+  text: string
+  photos: string[]
+  link: string
+  video: RecipeVideo | null
+}
+
+const YOUTUBE = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/i
+const LINK_PROMPT = `Ouvre cette page (vidéo TikTok, Instagram ou autre site de cuisine). Recopie fidèlement tout ce
+qui concerne la recette : titre, légende ou description de l'auteur, ingrédients et quantités, étapes, temps et
+cuisson. N'invente rien. Si la page est inaccessible ou ne contient aucune recette, réponds seulement : INACCESSIBLE`
+
+export function videoLink(input: string): { url: string; youtube: boolean } | null {
+  const url = /https?:\/\/\S+/i.exec(input.trim())?.[0]
+  if (!url) return null
+  const id = YOUTUBE.exec(url)?.[1]
+  return id ? { url: `https://www.youtube.com/watch?v=${id}`, youtube: true } : { url, youtube: false }
+}
+
+async function pageText(url: string, key: string, model: string): Promise<string> {
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: `${LINK_PROMPT}\n${url}` }] }],
+    tools: [{ url_context: {} }],
+    generationConfig: { temperature: 0.2 },
+  }
+  try {
+    const { text } = await generateWithFallback(body, key, model, 60_000)
+    return /INACCESSIBLE/.test(text) ? '' : text.trim()
+  } catch (error) {
+    if (error instanceof GeminiError && ['offline', 'quota', 'no-key'].includes(error.kind)) throw error
+    return ''
+  }
+}
+
+export async function readRecipe(sources: RecipeSources, key: string, model: string): Promise<ReadRecipe | null> {
+  const { photos, video } = sources
+  const link = videoLink(sources.link)
+  const page = link && !link.youtube ? await pageText(link.url, key, model) : ''
+  const text = sources.text.trim()
+  if (link && !link.youtube && !page && !text && photos.length === 0 && !video) throw new GeminiError('link')
+  const intro = [text, page && `Description de la page ${link?.url} :\n${page}`].filter(Boolean).join('\n\n')
   const body = {
     systemInstruction: { parts: [{ text: PROMPT }] },
     contents: [
       {
         role: 'user',
         parts: [
-          { text: text.trim() || 'Recette en photo.' },
+          ...(link?.youtube ? [{ fileData: { fileUri: link.url } }] : []),
+          ...(video ? [{ inlineData: { mimeType: video.mimeType, data: video.data } }] : []),
           ...photos.map((src) => ({ inlineData: { mimeType: 'image/jpeg', data: base64Of(src) } })),
+          { text: intro || (link?.youtube || video ? 'Recette en vidéo.' : 'Recette en photo.') },
         ],
       },
     ],
     generationConfig: { temperature: 0.3, responseMimeType: 'application/json', responseJsonSchema: SCHEMA },
   }
-  const { text: answer } = await generateWithFallback(body, key, model, 60_000)
+  const { text: answer } = await generateWithFallback(body, key, model, link?.youtube || video ? 180_000 : 60_000)
   let data: Record<string, unknown>
   try {
     data = JSON.parse(answer.replace(/^```(?:json)?\s*|\s*```$/g, '')) as Record<string, unknown>
