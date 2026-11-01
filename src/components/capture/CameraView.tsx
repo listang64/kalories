@@ -16,6 +16,8 @@ interface Props {
   onFavorites: () => void
 }
 
+const SIDE =
+  'flex min-w-0 flex-col items-center gap-0.5 rounded-2xl bg-black/45 px-2.5 py-1.5 text-[12px] leading-tight text-text backdrop-blur-md min-[400px]:flex-row min-[400px]:gap-2 min-[400px]:rounded-full min-[400px]:px-3.5 min-[400px]:py-2.5 min-[400px]:text-[14px]'
 const PILL = 'flex h-10 items-center gap-2 rounded-full bg-black/45 px-3.5 text-[14px] text-text backdrop-blur-md'
 
 export function CameraView({ active, onPhoto, onFiles, onScan, onFavorites }: Props) {
@@ -85,16 +87,12 @@ export function CameraView({ active, onPhoto, onFiles, onScan, onFavorites }: Pr
         </span>
         Favoris
       </button>
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-center p-4">
-        <button type="button" onClick={() => galleryRef.current?.click()} className={`absolute left-4 ${PILL}`}>
+      <div className="absolute inset-x-0 bottom-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-4">
+        <button type="button" onClick={() => galleryRef.current?.click()} className={`justify-self-start ${SIDE}`}>
           <GalleryIcon size={18} />
           Galerie
         </button>
-        <button type="button" onClick={onScan} className={`absolute right-4 ${PILL}`}>
-          <BarcodeIcon size={18} />
-          Code-barres
-        </button>
-        {live && (
+        {live ? (
           <motion.button
             type="button"
             aria-label="Prendre la photo"
@@ -105,7 +103,13 @@ export function CameraView({ active, onPhoto, onFiles, onScan, onFavorites }: Pr
           >
             <span className="size-[54px] rounded-full bg-accent shadow-[0_0_20px_rgba(255,122,26,0.5)]" />
           </motion.button>
+        ) : (
+          <span className="size-[68px]" />
         )}
+        <button type="button" onClick={onScan} className={`justify-self-end ${SIDE}`}>
+          <BarcodeIcon size={18} />
+          Code-barres
+        </button>
       </div>
       <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={pick} />
       <input ref={captureRef} type="file" accept="image/*" capture="environment" multiple hidden onChange={pick} />
