@@ -3,12 +3,16 @@ import { DayList } from '../components/history/DayList'
 import { HistoryChart, type ChartSeries } from '../components/history/HistoryChart'
 import { CeilingKey, HistoryLegend } from '../components/history/HistoryLegend'
 import { StatsCards } from '../components/history/StatsCards'
+import { DocumentIcon } from '../components/icons/DocumentIcon'
 import { Segmented } from '../components/Segmented'
 import { KCAL_METRIC, METRICS, type Metric } from '../config/metrics'
 import { useMeals } from '../hooks/useMeals'
 import { useToday } from '../hooks/useToday'
 import { buildHistory, HISTORY_DAYS, lastDays, statsFor } from '../lib/history'
 import { goalsOf, type Profile } from '../lib/profiles'
+import { shareFile } from '../lib/share'
+import { statsFileName, statsPdf } from '../lib/statsPdf'
+import { useAppStore } from '../store/appStore'
 
 const OPTIONS = METRICS.map(({ key, label }) => ({ value: key, label }))
 
@@ -33,6 +37,11 @@ export function HistoryScreen({ me, people }: Props) {
     goal: goalsOf(person)[selected],
   }))
   const shown = series.length > 1 ? series.filter((s) => !hidden.includes(s.id)) : series
+  const exportPdf = async () => {
+    const blob = statsPdf({ person: me, meals, days, today })
+    const file = new File([blob], statsFileName(me.name, today), { type: 'application/pdf' })
+    if ((await shareFile(file).catch(() => null)) === 'downloaded') useAppStore.getState().showToast('PDF téléchargé')
+  }
   const toggle = (id: string) =>
     setHidden((current) => (current.includes(id) ? current.filter((h) => h !== id) : [...current, id]))
 
@@ -57,6 +66,14 @@ export function HistoryScreen({ me, people }: Props) {
         })}
       />
       <DayList points={points} series={series} metric={metric} />
+      <button
+        type="button"
+        onClick={() => void exportPdf()}
+        className="press flex h-13 w-full items-center justify-center gap-2 rounded-full bg-white/8 text-[16px] font-semibold text-accent"
+      >
+        <DocumentIcon />
+        Exporter mes stats en PDF
+      </button>
     </div>
   )
 }
