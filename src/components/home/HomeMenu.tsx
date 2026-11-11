@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Overlay } from '../../store/appStore'
 import { ChefHatIcon } from '../icons/ChefHatIcon'
+import { ClockIcon } from '../icons/ClockIcon'
 import { FilmIcon } from '../icons/FilmIcon'
 import { GearIcon } from '../icons/GearIcon'
 import { HandshakeIcon } from '../icons/HandshakeIcon'
@@ -10,13 +11,14 @@ import { MaskIcon } from '../icons/MaskIcon'
 import { StatsIcon } from '../icons/StatsIcon'
 import { TargetIcon } from '../icons/TargetIcon'
 
-export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'watch' | 'game' | 'history' | 'needs' | 'settings'>
+export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'watch' | 'game' | 'hours' | 'history' | 'needs' | 'settings'>
 
 const ITEMS: { target: MenuTarget; label: string; Icon: ComponentType<{ size?: number }> }[] = [
   { target: 'loans', label: 'Prêts', Icon: HandshakeIcon },
   { target: 'recipes', label: 'Recettes', Icon: ChefHatIcon },
   { target: 'watch', label: 'Films et séries', Icon: FilmIcon },
   { target: 'game', label: 'Jeu de l’imposteur', Icon: MaskIcon },
+  { target: 'hours', label: 'Horaires', Icon: ClockIcon },
   { target: 'history', label: 'Statistiques', Icon: StatsIcon },
   { target: 'needs', label: 'Mes besoins', Icon: TargetIcon },
   { target: 'settings', label: 'Paramètres', Icon: GearIcon },

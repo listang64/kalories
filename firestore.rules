@@ -141,6 +141,16 @@ service cloud.firestore {
           && request.resource.data.protein100 is number;
       }
 
+      match /horaires/{docId} {
+        allow read, delete: if signedIn() && me() == uid;
+        allow create, update: if signedIn() && me() == uid
+          && ((docId == 'reglages'
+              && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'week', 'targets', 'balance']))
+            || (docId.matches('^[0-9]{4}-[0-9]{2}$')
+              && request.resource.data.keys().hasOnly(['days'])
+              && request.resource.data.days is map));
+      }
+
       match /inbox/{offerId} {
         allow read, delete: if signedIn() && me() == uid;
         allow create: if signedIn() && me() != uid
