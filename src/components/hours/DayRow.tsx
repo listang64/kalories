@@ -4,7 +4,7 @@ import { entryMinutes, type DayEntry, type WeekDay } from '../../lib/hours/model
 import { completeSlots, formatDuration, formatSlot, slotsMinutes } from '../../lib/hours/time'
 import { CheckIcon } from '../icons/CheckIcon'
 import { CutleryIcon } from '../icons/CutleryIcon'
-import { GREEN } from './ui'
+import { GREEN, RED } from './ui'
 
 interface Props {
   date: string
@@ -30,7 +30,12 @@ function Slots({ slots, muted }: { slots: DayEntry['slots']; muted?: boolean }) 
 }
 
 function Content({ entry, template, future }: { entry: DayEntry | undefined; template: WeekDay | null; future: boolean }) {
-  if (entry?.off) return <span className="text-[15px] text-text-2">Non travaillé</span>
+  if (entry?.off)
+    return (
+      <span className="text-[15px] text-text-2">
+        Non travaillé · <span style={entry.justified ? undefined : { color: RED }}>{entry.justified ? 'justifié' : 'non justifié'}</span>
+      </span>
+    )
   if (entry) return <Slots slots={entry.slots} />
   if (template)
     return (
@@ -68,6 +73,11 @@ export function DayRow({ date, today, entry, template, onOpen, onValidate }: Pro
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1 pr-1">
           {entry && !entry.off && <span className="text-[16px] font-semibold tabular-nums">{formatDuration(minutes)}</span>}
+          {entry?.off && !entry.justified && template && (
+            <span className="text-[16px] font-semibold tabular-nums" style={{ color: RED }}>
+              {formatDuration(-slotsMinutes(template.slots))}
+            </span>
+          )}
           {!entry && template && <span className="text-[14px] text-text-2 tabular-nums">{formatDuration(slotsMinutes(template.slots))}</span>}
           {entry?.meal && !entry.off && (
             <span className="text-accent" aria-label="Repas pris au travail">

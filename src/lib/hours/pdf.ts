@@ -100,7 +100,10 @@ function plages(settings: HoursSettings, date: string, entry: DayEntry | undefin
   const template = templateFor(settings, date)
   const expected = template ? completeSlots(template.slots) : []
   if (!entry) return [{ text: '—', fill: GRAY }]
-  if (entry.off) return [{ text: 'Non travaillé', fill: expected.length ? RED : GRAY }]
+  if (entry.off)
+    return entry.justified
+      ? [{ text: 'Non travaillé (justifié)', fill: GRAY }]
+      : [{ text: 'Non travaillé (non justifié)', fill: expected.length ? RED : GRAY }]
   return completeSlots(entry.slots).flatMap((slot, i) => {
     const model = expected[i]
     return [

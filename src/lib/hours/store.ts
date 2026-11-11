@@ -14,6 +14,7 @@ export function saveDay(uid: string, date: string, entry: DayEntry): Promise<voi
     slots: entry.off ? [] : completeSlots(entry.slots),
     meal: entry.off ? false : entry.meal,
     off: entry.off,
+    justified: entry.off ? entry.justified : true,
     note: entry.note.trim().slice(0, 400),
   }
   return setDoc(doc(hoursOf(uid), monthOf(date)), { days: { [dayOf(date)]: clean } }, { merge: true })

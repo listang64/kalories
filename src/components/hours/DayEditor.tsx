@@ -19,8 +19,8 @@ interface Props {
 
 function initial(entry: DayEntry | undefined, template: WeekDay | null): DayEntry {
   if (entry) return { ...entry, slots: entry.off ? [] : entry.slots }
-  if (template) return { slots: template.slots, meal: template.meal, off: false, note: '' }
-  return { slots: [{ start: '08:00', end: '12:00' }], meal: false, off: false, note: '' }
+  if (template) return { slots: template.slots, meal: template.meal, off: false, justified: true, note: '' }
+  return { slots: [{ start: '08:00', end: '12:00' }], meal: false, off: false, justified: true, note: '' }
 }
 
 const fail = (error: unknown) => useAppStore.getState().showToast(sharedErrorMessage(error))
@@ -59,6 +59,20 @@ export function DayEditor({ uid, date, entry, template, onDone }: Props) {
         ]}
         onChange={(value) => patch(value === 'off' ? { off: true } : { off: false, slots: draft.slots.length ? draft.slots : initial(undefined, template).slots })}
       />
+      {draft.off && (
+        <Card className="flex flex-col gap-1">
+          <CheckRow checked={draft.justified} onChange={(justified) => patch({ justified })}>
+            Absence justifiée
+          </CheckRow>
+          <p className="text-[13px] leading-snug text-text-2">
+            {draft.justified
+              ? 'Arrêt de travail, congé, férié… : aucune heure retirée du compteur.'
+              : template
+                ? `Non justifiée : ${formatDuration(slotsMinutes(template.slots))} retirées du compteur.`
+                : 'Non justifiée : aucune heure n’était prévue ce jour-là.'}
+          </p>
+        </Card>
+      )}
       {!draft.off && (
         <Card className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between">

@@ -24,7 +24,7 @@ export function MonthView({ uid, data, month, today, onMonth, onDay, onSettings 
   const validate = (date: string) => {
     const template = templateFor(data.settings, date)
     if (!template) return
-    saveDay(uid, date, { slots: template.slots, meal: template.meal, off: false, note: '' }).catch((error: unknown) =>
+    saveDay(uid, date, { slots: template.slots, meal: template.meal, off: false, justified: true, note: '' }).catch((error: unknown) =>
       useAppStore.getState().showToast(sharedErrorMessage(error)),
     )
   }

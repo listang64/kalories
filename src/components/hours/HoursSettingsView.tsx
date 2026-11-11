@@ -116,7 +116,7 @@ function BalanceSettings({ uid, data, today }: Props) {
         {changed ? 'Mettre à jour le compteur' : `Solde enregistré au ${formatShortDate(saved.date)}`}
       </button>
       <p className="text-[13px] leading-snug text-text-2">
-        Ensuite, chaque journée saisie après cette date ajoute ses heures en plus ou retire ses heures en moins par rapport à ton horaire type. Un jour non travaillé ne change rien.
+        Ensuite, chaque journée saisie après cette date ajoute ses heures en plus ou retire ses heures en moins par rapport à ton horaire type. Un jour non travaillé justifié ne change rien ; non justifié, il retire les heures prévues.
       </p>
     </Card>
   )

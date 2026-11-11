@@ -5,6 +5,7 @@ export interface DayEntry {
   slots: Slot[]
   meal: boolean
   off: boolean
+  justified: boolean
   note: string
 }
 
@@ -64,7 +65,13 @@ function parseSlots(value: unknown): Slot[] {
 export function parseEntry(value: unknown): DayEntry | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
-  return { slots: parseSlots(raw.slots), meal: raw.meal === true, off: raw.off === true, note: text(raw.note, 400) }
+  return {
+    slots: parseSlots(raw.slots),
+    meal: raw.meal === true,
+    off: raw.off === true,
+    justified: raw.justified !== false,
+    note: text(raw.note, 400),
+  }
 }
 
 export function parseMonth(data: Record<string, unknown> | undefined): MonthDays {
@@ -153,7 +160,8 @@ export function expectedMinutes(settings: HoursSettings, date: string): number {
 }
 
 export function dayGap(settings: HoursSettings, date: string, entry: DayEntry | undefined): number {
-  if (!entry || entry.off) return 0
+  if (!entry) return 0
+  if (entry.off) return entry.justified ? 0 : -expectedMinutes(settings, date)
   return entryMinutes(entry) - expectedMinutes(settings, date)
 }
 
