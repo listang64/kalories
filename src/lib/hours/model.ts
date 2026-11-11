@@ -147,13 +147,25 @@ export const entryMinutes = (entry: DayEntry | undefined) => (entry && !entry.of
 export const monthMinutes = (days: MonthDays | undefined) =>
   Object.values(days ?? {}).reduce((sum, entry) => sum + entryMinutes(entry), 0)
 
+export function expectedMinutes(settings: HoursSettings, date: string): number {
+  const template = templateFor(settings, date)
+  return template ? slotsMinutes(completeSlots(template.slots)) : 0
+}
+
+export function dayGap(settings: HoursSettings, date: string, entry: DayEntry | undefined): number {
+  if (!entry || entry.off) return 0
+  return entryMinutes(entry) - expectedMinutes(settings, date)
+}
+
 export function balanceAt(settings: HoursSettings, months: Record<string, MonthDays>, date: string): number {
   const from = settings.balance
   let total = from ? from.hours * 60 : 0
-  for (const [month, target] of Object.entries(settings.targets)) {
-    const end = lastDayOf(month)
-    if (end > date || (from && end <= from.date)) continue
-    total += monthMinutes(months[month]) - target * 60
+  for (const [month, days] of Object.entries(months)) {
+    for (const [day, entry] of Object.entries(days)) {
+      const key = `${month}-${day}`
+      if (key > date || (from && key <= from.date)) continue
+      total += dayGap(settings, key, entry)
+    }
   }
   return Math.round(total)
 }

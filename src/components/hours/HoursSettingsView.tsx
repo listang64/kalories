@@ -62,7 +62,7 @@ function Targets({ uid, data, today }: Props) {
         })}
       </ul>
       <p className="mt-2 text-[13px] leading-snug text-text-2">
-        En heures décimales (151,75 = 151h45 ; 0,50 = 30 min). Un mois sans objectif ne compte pas dans le compteur.
+        En heures décimales (151,75 = 151h45 ; 0,50 = 30 min).
       </p>
     </Card>
   )
@@ -116,7 +116,7 @@ function BalanceSettings({ uid, data, today }: Props) {
         {changed ? 'Mettre à jour le compteur' : `Solde enregistré au ${formatShortDate(saved.date)}`}
       </button>
       <p className="text-[13px] leading-snug text-text-2">
-        Ensuite, l’écart de chaque mois terminé (heures effectuées − objectif) s’ajoute automatiquement.
+        Ensuite, chaque journée saisie après cette date ajoute ses heures en plus ou retire ses heures en moins par rapport à ton horaire type. Un jour non travaillé ne change rien.
       </p>
     </Card>
   )
