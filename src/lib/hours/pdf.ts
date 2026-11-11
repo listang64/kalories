@@ -156,7 +156,7 @@ export function hoursPdf({ name, month, today, settings, months }: HoursPdfSourc
       cell(`${SHORT_DAYS[weekday - 1] ?? ''} ${dayOf(date)}`, INK, weekday >= 6 ? 'regular' : 'bold'),
       { pieces: plages(settings, date, entry) },
       cell(working ? formatDuration(minutes) : '—', changed ? RED : working ? INK : GRAY, working ? 'bold' : 'regular'),
-      cell(working ? (entry?.meal ? 'Oui' : 'Non') : '—', working ? INK : GRAY),
+      cell(working ? (entry?.meal ? 'Oui' : 'Non') : '—', !working ? GRAY : entry?.meal !== (templateFor(settings, date)?.meal ?? false) ? RED : INK),
       cell(fit(entry?.note.replace(/\s+/g, ' ') ?? '', 'regular', 8, (COLUMNS[4]?.width ?? 150) - 10), entry?.off ? INK : GRAY, 'regular', 8),
     ])
   })
