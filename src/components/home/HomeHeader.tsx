@@ -9,9 +9,10 @@ interface Props {
   dateKey: string
   onOpen: (target: MenuTarget) => void
   accent: CSSProperties
+  hidden: MenuTarget[]
 }
 
-export function HomeHeader({ dateKey, onOpen, accent }: Props) {
+export function HomeHeader({ dateKey, onOpen, accent, hidden }: Props) {
   const online = useOnline()
   const [anchor, setAnchor] = useState<DOMRect | null>(null)
   const close = useCallback(() => setAnchor(null), [])
@@ -27,6 +28,7 @@ export function HomeHeader({ dateKey, onOpen, accent }: Props) {
       </div>
       <MenuPanel
         anchor={anchor}
+        hidden={hidden}
         onClose={close}
         style={accent}
         onSelect={(target) => {

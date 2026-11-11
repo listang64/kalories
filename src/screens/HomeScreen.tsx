@@ -5,6 +5,7 @@ import { CalorieLegend } from '../components/home/CalorieLegend'
 import { MealOfferDialog } from '../components/day/MealOfferDialog'
 import { GameSheet } from '../components/game/GameSheet'
 import { HoursSheet } from '../components/hours/HoursSheet'
+import { TraceScreen } from '../components/trace/TraceScreen'
 import { CalorieRing } from '../components/home/CalorieRing'
 import { GeminiBanner } from '../components/home/GeminiBanner'
 import { InstallBanner } from '../components/InstallBanner'
@@ -20,6 +21,7 @@ import { useMeals } from '../hooks/useMeals'
 import { useNeedsPrompt } from '../hooks/useNeedsForm'
 import { useShoppingList } from '../hooks/useShoppingList'
 import { useToday } from '../hooks/useToday'
+import { isAdmin } from '../config/admins'
 import { accentStyle } from '../config/colors'
 import { useLocalSettings } from '../lib/localSettings'
 import type { MealItem } from '../lib/nutrition'
@@ -70,7 +72,7 @@ export function HomeScreen({ me, people }: Props) {
   return (
     <main className="safe-screen flex h-full flex-col px-5">
       <Rise index={0}>
-        <HomeHeader dateKey={today} onOpen={setOverlay} accent={accent} />
+        <HomeHeader dateKey={today} onOpen={setOverlay} accent={accent} hidden={isAdmin(me.uid) ? [] : ['trace']} />
         <InstallBanner />
         {!hasKey && <GeminiBanner onPress={() => setOverlay('settings')} />}
       </Rise>
@@ -122,6 +124,7 @@ export function HomeScreen({ me, people }: Props) {
       </BottomSheet>
       <GameSheet open={overlay === 'game'} onClose={() => setOverlay(null)} />
       <HoursSheet me={me} open={overlay === 'hours'} onClose={() => setOverlay(null)} />
+      {isAdmin(me.uid) && <TraceScreen open={overlay === 'trace'} onClose={() => setOverlay(null)} />}
       <RecipesSheet me={me} partner={partner} />
       <AddMealSheet me={me} progress={{ kcal: mine.day.totals.kcal, goal: mine.day.goals.kcal }} />
       <BottomSheet open={overlay === 'settings' || settingsOnTop} title="Paramètres" onClose={closeSettings}>

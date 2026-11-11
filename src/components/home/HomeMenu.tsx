@@ -8,17 +8,25 @@ import { FilmIcon } from '../icons/FilmIcon'
 import { GearIcon } from '../icons/GearIcon'
 import { HandshakeIcon } from '../icons/HandshakeIcon'
 import { MaskIcon } from '../icons/MaskIcon'
+import { PencilIcon } from '../icons/PencilIcon'
 import { StatsIcon } from '../icons/StatsIcon'
 import { TargetIcon } from '../icons/TargetIcon'
 
-export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'watch' | 'game' | 'hours' | 'history' | 'needs' | 'settings'>
+export type MenuTarget = Extract<Overlay, 'loans' | 'recipes' | 'watch' | 'game' | 'hours' | 'trace' | 'history' | 'needs' | 'settings'>
 
-const ITEMS: { target: MenuTarget; label: string; Icon: ComponentType<{ size?: number }> }[] = [
+interface MenuItem {
+  target: MenuTarget
+  label: string
+  Icon: ComponentType<{ size?: number }>
+}
+
+const ITEMS: MenuItem[] = [
   { target: 'loans', label: 'Prêts', Icon: HandshakeIcon },
   { target: 'recipes', label: 'Recettes', Icon: ChefHatIcon },
   { target: 'watch', label: 'Films et séries', Icon: FilmIcon },
   { target: 'game', label: 'Jeu de l’imposteur', Icon: MaskIcon },
   { target: 'hours', label: 'Horaires', Icon: ClockIcon },
+  { target: 'trace', label: 'Calque de dessin', Icon: PencilIcon },
   { target: 'history', label: 'Statistiques', Icon: StatsIcon },
   { target: 'needs', label: 'Mes besoins', Icon: TargetIcon },
   { target: 'settings', label: 'Paramètres', Icon: GearIcon },
@@ -26,6 +34,7 @@ const ITEMS: { target: MenuTarget; label: string; Icon: ComponentType<{ size?: n
 
 const FIRST = 34
 const STEP = 58
+const MIN_STEP = 44
 const BRANCH = 22
 const TAIL = 30
 const SLIDE = { type: 'spring', stiffness: 420, damping: 34 } as const
@@ -66,14 +75,16 @@ export function MenuButton({ open, onOpen, style }: { open: boolean; onOpen: (an
 
 interface MenuProps {
   anchor: DOMRect | null
+  hidden: MenuTarget[]
   onClose: () => void
   onSelect: (target: MenuTarget) => void
   style: CSSProperties
 }
 
-export function MenuPanel({ anchor, onClose, onSelect, style }: MenuProps) {
+export function MenuPanel({ anchor, hidden, onClose, onSelect, style }: MenuProps) {
   const reduce = useReducedMotion() === true
   const open = anchor !== null
+  const items = ITEMS.filter((item) => !hidden.includes(item.target))
 
   useEffect(() => {
     if (!open) return
@@ -95,15 +106,15 @@ export function MenuPanel({ anchor, onClose, onSelect, style }: MenuProps) {
             exit={{ opacity: 0, x: reduce ? 0 : 60, transition: { duration: 0.26, delay: 0.1 } }}
           />
           <nav aria-label="Menu">
-            <Rail anchor={anchor} reduce={reduce} />
-            {ITEMS.map((item, index) => (
+            <Rail anchor={anchor} reduce={reduce} items={items} />
+            {items.map((item, index) => (
               <motion.div
                 key={item.target}
                 className="absolute flex -translate-y-1/2 items-center"
-                style={{ right: railRight(anchor) + BRANCH - 4, top: itemTop(anchor, index) }}
+                style={{ right: railRight(anchor) + BRANCH - 4, top: itemTop(anchor, index, items.length) }}
                 initial={{ x: reduce ? 0 : '110vw', opacity: 0 }}
                 animate={{ x: 0, opacity: 1, transition: { ...SLIDE, delay: 0.08 + index * 0.06 } }}
-                exit={{ x: reduce ? 0 : '110vw', opacity: 0, transition: { duration: 0.22, delay: (ITEMS.length - 1 - index) * 0.03 } }}
+                exit={{ x: reduce ? 0 : '110vw', opacity: 0, transition: { duration: 0.22, delay: (items.length - 1 - index) * 0.03 } }}
               >
                 <button
                   type="button"
@@ -136,11 +147,13 @@ export function MenuPanel({ anchor, onClose, onSelect, style }: MenuProps) {
 }
 
 const railRight = (rect: DOMRect) => window.innerWidth - (rect.left + rect.width / 2)
-const itemTop = (rect: DOMRect, index: number) => rect.bottom + FIRST + index * STEP
+const stepFor = (rect: DOMRect, count: number) =>
+  Math.max(MIN_STEP, Math.min(STEP, (window.innerHeight - rect.bottom - FIRST - TAIL - 24) / Math.max(1, count - 1)))
+const itemTop = (rect: DOMRect, index: number, count: number) => rect.bottom + FIRST + index * stepFor(rect, count)
 
-function Rail({ anchor, reduce }: { anchor: DOMRect; reduce: boolean }) {
+function Rail({ anchor, reduce, items }: { anchor: DOMRect; reduce: boolean; items: MenuItem[] }) {
   const top = anchor.bottom + 4
-  const height = itemTop(anchor, ITEMS.length - 1) + TAIL - top
+  const height = itemTop(anchor, items.length - 1, items.length) + TAIL - top
   const right = railRight(anchor)
 
   return (
@@ -159,8 +172,8 @@ function Rail({ anchor, reduce }: { anchor: DOMRect; reduce: boolean }) {
           exit={{ opacity: 0 }}
         />
       )}
-      {ITEMS.map((item, index) => {
-        const y = itemTop(anchor, index) - top
+      {items.map((item, index) => {
+        const y = itemTop(anchor, index, items.length) - top
         return (
           <div key={item.target} className="absolute" style={{ top: y }}>
             <motion.span
