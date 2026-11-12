@@ -20,6 +20,7 @@ async function openCamera(): Promise<MediaStream> {
 export function useCamera(active: boolean) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [state, setState] = useState<CameraState>('starting')
+  const [track, setTrack] = useState<MediaStreamTrack | null>(null)
 
   useEffect(() => {
     if (!active) return
@@ -30,6 +31,7 @@ export function useCamera(active: boolean) {
       generation += 1
       stream?.getTracks().forEach((track) => track.stop())
       stream = null
+      setTrack(null)
       if (videoRef.current) videoRef.current.srcObject = null
     }
 
@@ -47,6 +49,7 @@ export function useCamera(active: boolean) {
           video.srcObject = next
           await video.play().catch(() => undefined)
         }
+        setTrack(next.getVideoTracks()[0] ?? null)
         setState('ready')
       } catch (error) {
         if (id === generation) setState(isCameraDenied(error) ? 'denied' : 'unavailable')
@@ -62,5 +65,5 @@ export function useCamera(active: boolean) {
     }
   }, [active])
 
-  return { videoRef, state }
+  return { videoRef, state, track }
 }

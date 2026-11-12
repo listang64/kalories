@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useCamera } from '../../hooks/useCamera'
 import { usePinch } from '../../hooks/usePinch'
+import { useTorch } from '../../hooks/useTorch'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import { useTraceStore } from '../../lib/trace/store'
 import { useAppStore } from '../../store/appStore'
 import { ChevronIcon } from '../icons/ChevronIcon'
 import { CloseIcon } from '../icons/CloseIcon'
+import { FlashIcon } from '../icons/FlashIcon'
 import { GalleryIcon } from '../icons/GalleryIcon'
 import { LockIcon } from '../icons/LockIcon'
 import { TracePanel } from './TracePanel'
@@ -14,7 +16,9 @@ import { TracePanel } from './TracePanel'
 const ROUND = 'press grid size-11 place-items-center rounded-full bg-black/60 text-text backdrop-blur-md'
 
 function TraceView({ onClose }: { onClose: () => void }) {
-  const { videoRef, state } = useCamera(true)
+  const { videoRef, state, track } = useCamera(true)
+  const torch = useTorch(track)
+  const [flashHint, setFlashHint] = useState(false)
   const { image, placement, opacity, mirror, contrast, locked, place, setImage, set } = useTraceStore()
   const gestures = usePinch(placement, place, locked || !image)
   const [panel, setPanel] = useState(true)
@@ -28,6 +32,11 @@ function TraceView({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   const pick = () => input.current?.click()
+  const flash = async () => {
+    const done = await torch.toggle()
+    setFlashHint(!done)
+    if (!done) window.setTimeout(() => setFlashHint(false), 3500)
+  }
   const cameraSettings = () => {
     onClose()
     useAppStore.getState().openSettingsOnTop('camera')
@@ -55,18 +64,34 @@ function TraceView({ onClose }: { onClose: () => void }) {
         <button type="button" aria-label="Fermer le calque" onClick={onClose} className={ROUND}>
           <CloseIcon size={20} />
         </button>
-        {image && (
+        <span className="flex items-center gap-2">
           <button
             type="button"
-            aria-pressed={locked}
-            onClick={() => set({ locked: !locked })}
-            className={`press flex h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold backdrop-blur-md ${locked ? 'bg-accent text-black' : 'bg-black/60 text-text'}`}
+            aria-label={torch.on ? 'Éteindre le flash' : 'Allumer le flash'}
+            aria-pressed={torch.on}
+            onClick={() => void flash()}
+            className={`press grid size-11 place-items-center rounded-full backdrop-blur-md ${torch.on ? 'bg-accent text-black' : 'bg-black/60 text-text'} ${torch.supported ? '' : 'opacity-50'}`}
           >
-            <LockIcon size={18} open={!locked} />
-            {locked ? 'Image bloquée' : 'Bloquer l’image'}
+            <FlashIcon size={20} />
           </button>
-        )}
+          {image && (
+            <button
+              type="button"
+              aria-pressed={locked}
+              onClick={() => set({ locked: !locked })}
+              className={`press flex h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold backdrop-blur-md ${locked ? 'bg-accent text-black' : 'bg-black/60 text-text'}`}
+            >
+              <LockIcon size={18} open={!locked} />
+              {locked ? 'Image bloquée' : 'Bloquer l’image'}
+            </button>
+          )}
+        </span>
       </div>
+      {flashHint && (
+        <p role="status" className="absolute inset-x-6 top-[calc(var(--safe-top)+66px)] z-10 rounded-card bg-black/75 px-4 py-3 text-center text-[14px]">
+          Le flash n’est pas accessible depuis ce navigateur sur ce téléphone.
+        </p>
+      )}
       {(state === 'denied' || state === 'unavailable') && (
         <div className="absolute inset-x-6 top-[calc(var(--safe-top)+72px)] z-10 rounded-card bg-black/75 p-4 text-center text-[15px]">
           <p>{state === 'denied' ? 'La caméra est bloquée pour Kalories.' : 'Caméra indisponible.'}</p>
